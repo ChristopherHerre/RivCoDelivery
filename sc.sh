@@ -9,4 +9,4 @@ echo "git commit -m: "
 read user_input
 git commit -m $user_input
 echo "name of branch: "
-git push -u origin https://github.com/ChristopherHerre/RivCoDelivery.git
+git push -u origin main
