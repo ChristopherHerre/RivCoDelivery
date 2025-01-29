@@ -1,6 +1,7 @@
 cd /Users/chrisherre/Downloads/RivCo-Delivery-master
 rm -rf node_modules
-npm run build
+npm install
+git remote add origin https://github.com/ChristopherHerre/RivCoDelivery.git
 git config --global user.email "cherre@student.rcc.edu"
 git reset
 git add .
