@@ -12,7 +12,7 @@ import { DeliveryAddress } from './RestaurantsList';
 import axios from 'axios';
 import qs from 'qs';
 import UserOrders from './UserOrders';
-import OrderList from './OrderList';
+import DriverOrders from './DriverOrders';
 import { 
 	GoogleOAuthProvider, 
 	GoogleLogin, 
@@ -214,18 +214,7 @@ export function App() {
 									/>
 								}
 							/>
-							<Route
-								path={"/orders"}
-								element={
-									<OrderList
-										orders={orders}
-										setOrders={setOrders}
-										orderItems={orderItems}
-										setOrderItems={setOrderItems}
-										USDollar={USDollar}
-									/>
-								}
-							/>
+							
 							<Route
 								path={"/user-orders"}
 								element={

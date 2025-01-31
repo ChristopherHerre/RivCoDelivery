@@ -11,6 +11,13 @@ dotenv.config();
 const app = express();
 const IP = '0.0.0.0';
 const PORT = 8080;
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+// Handle all routes by serving the index.html file
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
 
 // Set headers to avoid Cross-Origin-Opener-Policy issues
 app.use((req, res, next) => {
@@ -22,6 +29,8 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.json());
+
+
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -367,7 +376,7 @@ app.post('/api/co', async (req, res) => {
 });
 
 // Route to get all orders for the authenticated user
-app.get('/api/user/orders', async (req, res) => {
+/*app.get('/api/user/orders', async (req, res) => {
     const googleId = req.headers.authorization ? req.headers.authorization.split(' ')[1] : null;
     if (!googleId) {
         console.error('Google ID not provided');
@@ -378,6 +387,35 @@ app.get('/api/user/orders', async (req, res) => {
     try {
         const [results] = await pool.execute(query, [googleId]);
         res.json(results);
+    } catch (err) {
+        console.error('Error executing query:', err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
+});
+*/
+app.get('/api/user/orders', async (req, res) => {
+    const googleId = req.headers.authorization ? req.headers.authorization.split(' ')[1] : null;
+    if (!googleId) {
+        console.error('Google ID not provided');
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    let { page, limit } = req.query;
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+    const offset = (page - 1) * limit;
+
+    console.log(`Fetching orders for Google ID: ${googleId}, Page: ${page}, Limit: ${limit}`);
+
+    const query = 'SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC LIMIT ? OFFSET ?';
+    try {
+        const [results] = await pool.execute(query, [googleId, limit, offset]);
+        
+        // Count total orders for pagination metadata
+        const countQuery = 'SELECT COUNT(*) AS total FROM orders WHERE user_id = ?';
+        const [[{ total }]] = await pool.execute(countQuery, [googleId]);
+
+        res.json({ orders: results, total, page, limit });
     } catch (err) {
         console.error('Error executing query:', err);
         res.status(500).json({ error: 'Database query failed' });

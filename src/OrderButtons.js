@@ -18,6 +18,7 @@ export function OrderButtons(props) {
 	const [total, setTotal] = useState(0.00);
 	const [loading, setLoading] = useState(true);
 	const [ordersLoading, setOrdersLoading] = useState(true);
+	const [selectedOrderItems, setSelectedOrderItems] = useState([]);
 
 	useEffect(() => {
 		setOrderItems([]);
@@ -65,6 +66,8 @@ export function OrderButtons(props) {
 		total,
 		attempt = 1)
 	{
+		
+		
 		console.log("oid: " 
 			+ id + " " 
 			+ instructionsp + " " 
@@ -77,6 +80,8 @@ export function OrderButtons(props) {
 			console.log(res.data);
 			setOrderItems(res.data);
 			setLoading(false);
+			const items = fetchOrderItems(id); // Replace with actual logic to get order items
+    	setSelectedOrderItems(items);
 		} catch (err) {
 			if (attempt < MAX_RETRY_ATTEMPTS) {
 				getOrderItems(id, instructionsp, knockTypep, businessTypep, f, s, tax, total, attempt + 1);
@@ -103,7 +108,6 @@ export function OrderButtons(props) {
 
 	return (
 		<div className="container">
-			<h1>Orders</h1>
 			{ordersLoading ? (
 				<Spinner />
 			) : (
@@ -178,34 +182,67 @@ export function OrderButtons(props) {
 									<option value="closed">Closed</option>
 								</select>
 							</div>
+							<div className="currency-item">
+								<b className="label">Order Items: </b>
+								<button
+									className="btn form-control btn-primary mb-2"
+									onClick={() => getOrderItems(
+										order.id, 
+										order.instructions, 
+										order.knock_type, 
+										order.business_type,
+										order.delivery_fee, 
+										order.subtotal, 
+										order.tax, 
+										order.total
+									)}
+								>
+									View Order Items
+								</button>
+							</div>
 						</div>
 						<div className="col-lg-6">
-							<table className="table table-striped">
-								<thead>
-									<tr>
-										<th>Item</th>
-										<th>Quantity</th>
-										<th>Price</th>
-									</tr>
-								</thead>
-								<tbody>
-									{loading ? (
+						<div className="currency-item">
+							<b className="label">Order Items: </b>
+							<button
+								className="btn form-control btn-primary mb-2"
+								onClick={() => getOrderItems(
+									order.id, 
+									order.instructions, 
+									order.knock_type, 
+									order.business_type,
+									order.delivery_fee, 
+									order.subtotal, 
+									order.tax, 
+									order.total
+								)}
+							>
+								View Order Items
+							</button>
+						</div>
+						{selectedOrderItems.length > 0 && (
+							<div className="order-items">
+								<table className="table table-striped">
+									<thead>
 										<tr>
-											<td colSpan="3">
-												<Spinner />
-											</td>
+											<th>Item</th>
+											<th>Quantity</th>
+											<th>Price</th>
 										</tr>
-									) : (
-										orderItems.map((item, key2) => (
-											<tr key={key2}>
+									</thead>
+									<tbody>
+										{selectedOrderItems.map(item => (
+											<tr key={item.id}>
 												<td>{item.name}</td>
 												<td>{item.quantity}</td>
-												<td>{USDollar.format(item.price)}</td>
+												<td>{item.price}</td>
 											</tr>
-										))
-									)}
-								</tbody>
-							</table>
+										))}
+									</tbody>
+								</table>
+							</div>
+						)}
+
 						</div>
 					</div>
 				))
