@@ -273,10 +273,7 @@ export default function RestaurantsList(props) {
                     <h1>Would you like a ride to somewhere, or do you want to place a delivery order?</h1>
                     <br />
                     <div className="row">
-                        <div className="col-lg-2">
-                        
-                        </div>
-                        <div className="col-lg-8 m-4">
+                        <div className="col-lg-8">
                             <DeliveryAddress
                                 showGetLocation={showGetLocation} 
                                 setShowGetLocation={setShowGetLocation}
@@ -289,9 +286,6 @@ export default function RestaurantsList(props) {
                                 placeholder="### Street"
                                 onChange={(e) => resetAddressWarning(e)}
                             />
-                        </div>
-                        <div className="col-lg-2">
-                        
                         </div>
                     </div>
                     {debug ? addressDisplayed : ""}

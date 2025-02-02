@@ -77,7 +77,7 @@ export function App() {
 			<iframe
 				src="https://www.gofundme.com/f/rivcodelivery-customer-and-supplier-management-project/widget/large?sharesheet=managehero&attribution_id=sl:69051672-bc13-4f4b-a0e5-e94edae727d0"
 				width="100%"
-				height="600"
+				height="500"
 				frameBorder="0"
 				scrolling="no"
 				title="GoFundMe"
@@ -159,19 +159,19 @@ export function App() {
 				</a> : ""}
 				<Link to="/donate">
 					<button className={full ?
-							"btn btn-secondary mt-1 form-control" 
+							"btn btn-secondary mt-1 mr-1 form-control" 
 							: 
-							"btn btn-secondary mt-1"}>
-						<i className="bi bi-currency-dollar"></i>
+							"btn btn-secondary mt-1 mr-1 "}>
+						<i className="bi bi-credit-card-fill"> </i>
 						Donate
 					</button>
 				</Link>
-				{profile ? <div className="dropdown-menu form-control" aria-labelledby="dropdownMenuLink">
-					<Link to="/admin" className="dropdown-item">
+				{profile ? <div className="dropdown-menu bg-dark form-control text-white " aria-labelledby="dropdownMenuLink">
+					<Link to="/admin" className="dropdown-item text-white hover-black">
 						<i className="bi bi-sliders2-vertical"> </i>
 						Restaurant Control Panel
 					</Link>
-					<Link to="/orders" className="dropdown-item">
+					<Link to="/orders" className="dropdown-item text-white hover-black">
 						<i className="bi bi-box2"> </i>
 						Driver Orders
 					</Link>
@@ -398,19 +398,46 @@ export function App() {
 							<Route
 								path={"/donate"}
 								element={
-									<GoFundMeEmbed />
+								<>
+									<div className="row">
+										<div className="col-12 col-md-6">
+											<h1>Donate Today to Support Continued Development!</h1>
+											<p>Donating even a small amount will help me in developing:</p>
+											<ol>
+												<li>New features</li>
+												<li>Bug fixes</li>
+												<li>Better documentation</li>
+												<li>YouTube videos and tutorials for installing this project live</li>
+											</ol>
+											<p>Additionally, I am raising money to pay for hosting for this website and other expenses related to this project.</p>
+										</div>
+										<div className="col-12 col-md-6 text-end">
+											<GoFundMeEmbed />
+										</div>
+									</div>
+									<div className="row bg-dark text-white p-5 m-1">
+										<div className="col-12 text-center mx-auto">
+											<a href="https://github.com/ChristopherHerre/RivCoDelivery">
+												<button className="btn btn-lg btn-primary">
+													<i class="bi bi-github"> </i>
+													Download Project From GitHub
+												</button>
+											</a>
+										</div>
+									</div>
+								</>
 								}
 							/>
 						</Routes>
 					</div>
 					<div className="row">
 						<div className="col-12 d-md-none">
-							<AdminDropdown full={1} />
+							<AdminDropdown className="mr-1" full={1} />
 							
 						</div>
 						<div class="dropdown-divider"></div>
 						<div className="col-6 d-none d-md-block">
-							<AdminDropdown />
+							<AdminDropdown className="mr-1" />
 							
 						</div>
 					</div>
