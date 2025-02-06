@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import ShowMenu from './ShowMenu';
-import ShowMenuItem from './ShowMenuItem';
-import RestaurantsList from './RestaurantsList';
-import Cart from './Cart';
-import Admin from './Admin';
-import Admin2 from './Admin2';
-import Checkout from './Checkout';
-import Success from './Success';
-import { DeliveryAddress } from './RestaurantsList';
+import ShowMenu from './users/ShowMenu';
+import ShowMenuItem from './users/ShowMenuItem';
+import RestaurantsList from './users/RestaurantsList';
+import Cart from './users/Cart';
+import Admin from './restaurants/Admin';
+import Admin2 from './restaurants/Admin2';
+import Checkout from './users/Checkout';
+import Success from './users/Success';
+import { DeliveryAddress } from './users/RestaurantsList';
 import axios from 'axios';
 import qs from 'qs';
-import UserOrders from './UserOrders';
-import DriverOrders from './DriverOrders';
+import UserOrders from './users/UserOrders';
+import DriverOrders from './drivers/DriverOrders';
 import { 
 	GoogleOAuthProvider, 
 	GoogleLogin, 
@@ -35,8 +35,8 @@ export function Spinner() {
 
 
 export function App() {
-	const storedAddress = localStorage.getItem('exactAddress');
-	const initialAddress = storedAddress ? JSON.parse(storedAddress) : {};
+	//const storedAddress = localStorage.getItem('exactAddress');
+	//const initialAddress = storedAddress ? JSON.parse(storedAddress) : {};
 	const [cart, setCart] = useState([]);
 	const [cartAmount, setCartAmount] = useState(0);
 	const [orders, setOrders] = useState([]);
@@ -47,11 +47,11 @@ export function App() {
 	const [deliveryFee, setDeliveryFee] = useState(0.00);
 	const [menuItem, setMenuItem] = useState(-1);
 	const [showGetLocation, setShowGetLocation] = useState(true);
-	const [address, setAddress] = useState(initialAddress);
+	const [address, setAddress] = useState("Unknown");
 	const [debug, setDebug] = useState(false);
 	const [distance, setDistance] = useState(0);
-	const [latitude, setLatitude] = useState(localStorage.getItem("latitude"));
-	const [longitude, setLongitude] = useState(localStorage.getItem("longitude"));
+	const [latitude, setLatitude] = useState(null);
+	const [longitude, setLongitude] = useState(null);
 	const [profile, setProfile] = useState(null);
 	const [loginLoading, setLoginLoading] = useState(false);
 
@@ -77,7 +77,7 @@ export function App() {
 			<iframe
 				src="https://www.gofundme.com/f/rivcodelivery-customer-and-supplier-management-project/widget/large?sharesheet=managehero&attribution_id=sl:69051672-bc13-4f4b-a0e5-e94edae727d0"
 				width="100%"
-				height="500"
+				height="525"
 				frameBorder="0"
 				scrolling="no"
 				title="GoFundMe"
@@ -178,13 +178,13 @@ export function App() {
 				</div> : ""}
 			</div>
 		);
-		//}
 	};
 
-	function servicesForm() {
+	function webPage() {
 		return (
 			<BrowserRouter>
 				<>
+					<a href="/user">User</a>
 					<div className="row">
 						<div className="col-12 col-lg-6">
 							<Link to="/">
@@ -276,16 +276,10 @@ export function App() {
 							<Route
 								path={"/orders"}
 								element={
-									/*<OrderList
-										orders={orders}
-										setOrders={setOrders}
-										orderItems={orderItems}
-										setOrderItems={setOrderItems}
-										USDollar={USDollar}
-									/>*/
 									<DriverOrders />
 								}
 							/>
+							
 							<Route
 								path={"/user-orders"}
 								element={
@@ -301,23 +295,7 @@ export function App() {
 							<Route
 								path={"/failure"}
 								element={
-									<div className="text-center">
-										<h1>
-											<span className="text-danger">
-												<i className="bi bi-exclamation-triangle"> </i>
-												There was an error! Your order was not placed.
-											</span>
-										</h1>
-										<h2>Troubleshooting</h2>
-										<ol>
-											<li>
-												Return to your <b><i className="bi bi-cart"> </i>Cart </b>
-												to try again.
-											</li>
-											<li>Try to place your order at a later time if the service is down temporarily for maintainence.</li>
-											<li>Contact customer support and describe the issue or include a screenshot.</li>
-										</ol>
-									</div>
+									<Failure />
 								}
 							/>
 							<Route
@@ -398,34 +376,7 @@ export function App() {
 							<Route
 								path={"/donate"}
 								element={
-								<>
-									<div className="row">
-										<div className="col-12 col-md-6">
-											<h1>Donate Today to Support Continued Development!</h1>
-											<p>Donating even a small amount will help me in developing:</p>
-											<ol>
-												<li>New features</li>
-												<li>Bug fixes</li>
-												<li>Better documentation</li>
-												<li>YouTube videos and tutorials for installing this project live</li>
-											</ol>
-											<p>Additionally, I am raising money to pay for hosting for this website and other expenses related to this project.</p>
-										</div>
-										<div className="col-12 col-md-6 text-end">
-											<GoFundMeEmbed />
-										</div>
-									</div>
-									<div className="row bg-dark text-white p-5 m-1">
-										<div className="col-12 text-center mx-auto">
-											<a href="https://github.com/ChristopherHerre/RivCoDelivery">
-												<button className="btn btn-lg btn-primary">
-													<i class="bi bi-github"> </i>
-													Download Project From GitHub
-												</button>
-											</a>
-										</div>
-									</div>
-								</>
+									<Donate />
 								}
 							/>
 						</Routes>
@@ -433,16 +384,67 @@ export function App() {
 					<div className="row">
 						<div className="col-12 d-md-none">
 							<AdminDropdown className="mr-1" full={1} />
-							
 						</div>
 						<div class="dropdown-divider"></div>
 						<div className="col-6 d-none d-md-block">
 							<AdminDropdown className="mr-1" />
-							
 						</div>
 					</div>
 				</>
 			</BrowserRouter>
+		);
+	}
+
+	function Donate() {
+		return (<>
+			<div className="row">
+				<div className="col-12 col-md-6">
+					<h1>Donate Today to Support Continued Development!</h1>
+					<p>Donating even a small amount will help me in developing:</p>
+					<ol>
+						<li>New features</li>
+						<li>Bug fixes</li>
+						<li>Better documentation</li>
+						<li>YouTube videos and tutorials for installing this project live</li>
+					</ol>
+					<p>Additionally, I am raising money to pay for hosting for this website and other expenses related to this project.</p>
+				</div>
+				<div className="col-12 col-md-6 text-end">
+					<GoFundMeEmbed />
+				</div>
+			</div>
+			<div className="row bg-dark text-white p-5 m-1">
+				<div className="col-12 text-center mx-auto">
+					<a href="https://github.com/ChristopherHerre/RivCoDelivery">
+						<button className="btn btn-lg btn-primary">
+							<i className="bi bi-github"> </i>
+							Download Project From GitHub
+						</button>
+					</a>
+				</div>
+			</div>
+		</>);
+	}
+
+	function Failure() {
+		return (
+			<div className="text-center">
+				<h1>
+					<span className="text-danger">
+						<i className="bi bi-exclamation-triangle"> </i>
+						There was an error! Your order was not placed.
+					</span>
+				</h1>
+				<h2>Troubleshooting</h2>
+				<ol>
+					<li>
+						Return to your <b><i className="bi bi-cart"> </i>Cart </b>
+						to try again.
+					</li>
+					<li>Try to place your order at a later time if the service is down temporarily for maintainence.</li>
+					<li>Contact customer support and describe the issue or include a screenshot.</li>
+				</ol>
+			</div>
 		);
 	}
 
@@ -478,11 +480,11 @@ export function App() {
 			console.error('Error verifying token after multiple attempts:', err);
 		}
 	}
-
 	return (
-		servicesForm()
+		webPage()
 	);
 }
+
 export function dbPost2(e, inputs, route) {
 	if (e != null) e.preventDefault(e);
 	const url = API_URL + "/api/" + route;

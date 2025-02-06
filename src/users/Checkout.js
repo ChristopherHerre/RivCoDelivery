@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import currency from 'currency.js';
 import { CartItemDetails, calcSubtotal, Subtotal, Ingredients } from './Cart';
-import { roundedToFixed, API_URL, Spinner } from './App';
+import { roundedToFixed, API_URL, Spinner } from '../App';
 import { DeliveryAddress, getStreetOnly } from './RestaurantsList';
 import axios from 'axios';
 

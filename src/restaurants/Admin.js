@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import qs from 'qs';
-import { API_URL } from './App';
+import { API_URL } from '../App';
 
 export default function Admin(props) {
     const [arr, setArr] = useState([]);

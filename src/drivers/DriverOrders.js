@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { dbPost2, API_URL, Spinner, MAX_RETRY_ATTEMPTS } from './App';
+import { dbPost2, API_URL, Spinner, MAX_RETRY_ATTEMPTS } from '../App';
 
 function DriverOrders() {
     const [driverOrders, setDriverOrders] = useState([]);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { API_URL, Spinner, MAX_RETRY_ATTEMPTS } from './App';
+import { API_URL, Spinner, MAX_RETRY_ATTEMPTS } from '../App';
 
 function UserOrders() {
     const [userOrders, setUserOrders] = useState([]);

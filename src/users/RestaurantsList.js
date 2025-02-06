@@ -1,8 +1,89 @@
 ﻿import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { API_URL, Spinner, MAX_RETRY_ATTEMPTS } from './App';
+import { API_URL, Spinner, MAX_RETRY_ATTEMPTS } from '../App';
 const mapApiJs = 'https://maps.googleapis.com/maps/api/js';
+
+export function DeliveryAddress(props) {
+    const showGetLocation = props.showGetLocation;
+    const setShowGetLocation = props.setShowGetLocation;
+    const [fullAddress, setFullAddress] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
+    useEffect(() => {
+        async function loadAddress() {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const addr = await getFullAddress(props.address);
+                setFullAddress(addr);
+            } catch (error) {
+                console.error("Error loading address:", error);
+                setError("Unable to load address");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadAddress();
+    }, [props.address, showGetLocation]);
+
+    function defaultAddress() {
+        return "Please enter delivery address";
+    }
+
+    function editAddress(e) {
+        e.preventDefault();
+        setShowGetLocation(true);
+        navigate("/");
+    }
+
+    return (
+        <div>
+            <b>Deliver to: </b>
+            {isLoading ? (
+                <Spinner />
+            ) : error ? (
+                <span className="text-danger">{error}</span>
+            ) : (
+                <>
+                    {!showGetLocation ? (
+                        <mark>{fullAddress || defaultAddress()}</mark>
+                    ) : (
+                        <u className="text-danger">Address Required!</u>
+                    )}
+                    <span> </span>
+                    <b>
+                        <a href="#" onClick={editAddress}>
+                            <i className="bi bi-pencil-square"></i>
+                        </a>
+                    </b>
+                </>
+            )}
+        </div>
+    );
+}
+
+export async function getFullAddress(address) {
+    if (address === undefined) {
+        try {
+            const response = await axios.get(`${API_URL}/api/user/full-address`, {
+                withCredentials: true
+            });
+            address = response.data.address;
+        } catch (error) {
+            console.error('Error fetching address:', error);
+            return "Error";
+        }
+    }
+
+    const streetNumber = address.streetNumber + " ";
+    const street = address.street ? address.street + ", " : "";
+    const city = address.city ? address.city + ", " : "";
+    const state = address.state ? address.state + " " : "";
+    const zip = address.zip;
+    return streetNumber + street + city + state + zip;
+}
 
 export default function RestaurantsList(props) {
     const USDollar = props.USDollar;
@@ -32,6 +113,28 @@ export default function RestaurantsList(props) {
     const [loadingApiKey, setLoadingApiKey] = useState(false);
 
     useEffect(() => {
+        const fetchAddress = async () => {
+            try {
+                const res = await axios.get(`${API_URL}/api/user/address`, {
+                    withCredentials: true
+                });
+                setAddress(res.data.address);
+                setLatitude(res.data.latitude);
+                setLongitude(res.data.longitude);
+                if (res.data.address.streetNumber) {
+                    setShowGetLocation(false);
+                }
+            } catch (err) {
+                console.error('Error fetching address:', err);
+            }
+        };
+
+        if (!showGetLocation) {
+            fetchAddress();
+        }
+    }, [showGetLocation]);
+    
+    useEffect(() => {
         const fetchApiKey = async (attempt = 1) => {
             console.log("Fetching API key...");
             setLoadingApiKey(true);
@@ -50,7 +153,6 @@ export default function RestaurantsList(props) {
                 setLoadingApiKey(false);
             }
         };
-
         if (showGetLocation) {
             console.log("showGetLocation is true, fetching API key...");
             fetchApiKey();
@@ -166,19 +268,23 @@ export default function RestaurantsList(props) {
 
     const onChangeAddress = (autocomplete) => {
         const place = autocomplete.getPlace();
-        if (place != null && place != undefined) {
+        if (place) {
             const address = extractAddress(place);
-            setAddress(address);
-            console.log(place.geometry.location);
-            setLatitude(place.geometry.location.lat());
-            setLongitude(place.geometry.location.lng());
-            setShowGetLocation(false);
-            localStorage.setItem('exactAddress', JSON.stringify(address));
-            localStorage.setItem('latitude', place.geometry.location.lat());
-            localStorage.setItem('longitude', place.geometry.location.lng());
-        } else {
-            setAddress(null);
-            console.log("ERROR - Place null or undefined!");
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            axios.post(`${API_URL}/api/user/address`, 
+                { 
+                    address,
+                    latitude: lat,
+                    longitude: lng 
+                }, 
+                { withCredentials: true }
+            ).then(() => {
+                setAddress(address);
+                setLatitude(lat);
+                setLongitude(lng);
+                setShowGetLocation(false);
+            }).catch(err => console.error('Error saving address:', err));
         }
     };
 
@@ -270,7 +376,7 @@ export default function RestaurantsList(props) {
             showGetLocation ? 
                 <div className="row search p-5">
                     <h2>Welcome to Riverside County Delivery!</h2>
-                    <h1>Would you like a ride to somewhere, or do you want to place a delivery order?</h1>
+                    <h1>We deliver items and we provide rides locally.</h1>
                     <br />
                     <div className="row">
                         <div className="col-lg-8">
@@ -385,51 +491,3 @@ export function getStreetOnly(address) {
     return address.streetNumber + " " + address.street;
 }
 
-export function getFullAddress(address) {
-    if (address == undefined) {
-        return "Error";
-    }
-    const streetNumber = address.streetNumber + " ";
-    const street = address.street ? address.street + ", " : "";
-    const city = address.city ? address.city + ", " : "";
-    const state = address.state ? address.state + " " : "";
-    const zip = address.zip;
-    return streetNumber + street + city + state + zip;
-}
-
-export function DeliveryAddress(props) {
-    const showGetLocation = props.showGetLocation;
-    const setShowGetLocation = props.setShowGetLocation;
-    const address = props.address;
-    const navigate = useNavigate();
-    const defaultAddress = function () {
-        return <span className='text-danger'>
-            <u>Address Required Below!</u>
-        </span>
-    };
-    function changeAddress(e) {
-        e.preventDefault();
-        setShowGetLocation(true);
-        navigate("/");
-    }
-    return (
-        <div>
-            <h6>
-                <b>Deliver to: </b>
-                {showGetLocation ? 
-                    defaultAddress() : 
-                    (<span>
-                        <mark className="linespacing">
-                            {getFullAddress(address)}
-                        </mark>
-                        <span> </span>
-                        <a 
-                            href="#"
-                            onClick={(e) => changeAddress(e)}>
-                            Update
-                        </a>
-                    </span>)}
-            </h6>
-        </div>
-    );
-}

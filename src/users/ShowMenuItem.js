@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios';
 import QuantitySelector from './QuantitySelector';
 import currency from 'currency.js';
-import { API_URL, Spinner, MAX_RETRY_ATTEMPTS } from './App';
+import { API_URL, Spinner, MAX_RETRY_ATTEMPTS } from '../App';
 
 export default function ShowMenuItem(props) {
     const USDollar = props.USDollar;

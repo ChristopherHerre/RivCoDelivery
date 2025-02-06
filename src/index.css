@@ -10,6 +10,9 @@ h1, h2, h3, h4, h5, h6 {
 h5.indent {
     margin: 10px;
 }
+.hover-black:hover {
+    color: black;
+}
 ol, ol.li {
     margin:0;
     padding:20px;

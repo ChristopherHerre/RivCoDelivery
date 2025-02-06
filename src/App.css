@@ -15,10 +15,6 @@ h1, h2, h3, h4, h5, h6 {
     color:#fff;
 }
 
-.hover-black:hover {
-  color: black;
-}
-
 @media (prefers-reduced-motion: no-preference) {
     .App-logo {
     animation: App-logo-spin infinite 20s linear;
