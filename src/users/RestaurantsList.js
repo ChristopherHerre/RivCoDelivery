@@ -7,35 +7,56 @@ const mapApiJs = 'https://maps.googleapis.com/maps/api/js';
 export function DeliveryAddress(props) {
     const showGetLocation = props.showGetLocation;
     const setShowGetLocation = props.setShowGetLocation;
+    const address = props.address;
+    const setAddress = props.setAddress;
     const [fullAddress, setFullAddress] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     useEffect(() => {
-        async function loadAddress() {
-            setIsLoading(true);
+        const loadAddress = async () => {
             setError(null);
             try {
-                const addr = await getFullAddress(props.address);
+                const addr = await getFullAddress(address);
+                console.log(addr);
                 setFullAddress(addr);
+                if (addr.length > 0 && !addr.includes("null")) {
+                     setShowGetLocation(false);
+                } else {
+                     setShowGetLocation(true);
+                }
             } catch (error) {
                 console.error("Error loading address:", error);
                 setError("Unable to load address");
+                setShowGetLocation(true);
             } finally {
                 setIsLoading(false);
             }
-        }
+        };
         loadAddress();
-    }, [props.address, showGetLocation]);
+    }, [address, setShowGetLocation]);
 
-    function defaultAddress() {
-        return "Please enter delivery address";
-    }
-
-    function editAddress(e) {
+    async function editAddress(e) {
         e.preventDefault();
-        setShowGetLocation(true);
-        navigate("/");
+        try {
+            const response = await fetch('/api/user/address', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const result = await response.json();
+            if (result.success) {
+                setShowGetLocation(true);
+                setAddress("");
+                setFullAddress("");
+                navigate("/");
+            } else {
+                console.error('Failed to update address');
+            }
+        } catch (error) {
+            console.error('Error updating address:', error);
+        }
     }
 
     return (
@@ -44,17 +65,21 @@ export function DeliveryAddress(props) {
             {isLoading ? (
                 <Spinner />
             ) : error ? (
-                <span className="text-danger">{error}</span>
+                <span className="text-danger">
+                    {error}
+                </span>
             ) : (
                 <>
                     {!showGetLocation ? (
-                        <mark>{fullAddress || defaultAddress()}</mark>
+                        <mark>{fullAddress}</mark>
                     ) : (
-                        <u className="text-danger">Address Required!</u>
+                        <u className="text-danger">
+                            Address Required!
+                        </u>
                     )}
                     <span> </span>
                     <b>
-                        <a href="#" onClick={editAddress}>
+                        <a href="#" onClick={(e) => editAddress(e)}>
                             <i className="bi bi-pencil-square"></i>
                         </a>
                     </b>
@@ -82,6 +107,8 @@ export async function getFullAddress(address) {
     const city = address.city ? address.city + ", " : "";
     const state = address.state ? address.state + " " : "";
     const zip = address.zip;
+    //if (streetNumber == null || street == null || city == null || state == null || zip == null)
+    //    return null;
     return streetNumber + street + city + state + zip;
 }
 
@@ -361,6 +388,7 @@ export default function RestaurantsList(props) {
     });
 
     function Welcome() {
+        
         useEffect(() => {
             if (apiKey) {
                 console.log('API Key is set, initializing map script in Welcome...');
@@ -384,6 +412,7 @@ export default function RestaurantsList(props) {
                                 showGetLocation={showGetLocation} 
                                 setShowGetLocation={setShowGetLocation}
                                 address={address} 
+                                setAddress={setAddress}
                             />
                             <input
                                 className="form-control mt-0 text-bg-dark rounded"

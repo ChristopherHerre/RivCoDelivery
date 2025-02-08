@@ -24,6 +24,8 @@ function haversine_dist(lat, lng, lat2, lng2) {
     return d;
 }
 
+app.set('trust proxy', 1);
+
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, "build")));
 
@@ -101,32 +103,33 @@ passport.use(new GoogleStrategy({
     done(null, profile);
 }));
 
-// Create OAuth2 client
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+app.use(express.json()); // Middleware to parse JSON requests
 
-const checkRole = (requiredRole) => {
-    return async (req, res, next) => {
-      try {
-        if (!req.session?.user?.sub) {
-          return res.status(401).json({ message: 'Authentication required' });
-        }
-        const [results] = await pool.execute(
-          'SELECT role FROM users WHERE id = ? AND active = 1',
-          [req.session.user.sub]
+app.post('/api/addRestaurant', async (req, res) => {
+    const { name, address, latitude, longitude } = req.body;
+    if (!name || !address || !latitude || !longitude) {
+        return res.status(400).json({ error: "All fields are required" });
+    }
+    try {
+        const connection = await mysql.createConnection({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+        });
+        const [result] = await connection.execute(
+            "INSERT INTO restaurants (name, address, latitude, longitude) VALUES (?, ?, ?, ?)",
+            [name, address, latitude, longitude]
         );
-        if (!results.length || results[0].role < requiredRole) {
-          return res.status(403).json({ message: 'Access denied' });
-        }
-        next();
-      } catch (err) {
-        console.error('Role check error:', err);
-        res.status(500).json({ message: 'Internal server error' });
-      }
-    };
-  };
-app.get('/api/health', (req, res) => {
-  res.status(200).send('OK'); // Responds with HTTP 200 and a simple message
+        connection.end();
+        res.status(201).json({ message: "Restaurant added successfully", id: result.insertId });
+    } catch (error) {
+        console.error("Database error:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 });
+
+
 // Route to verify Google token
 app.post('/api/google-login', async (req, res) => {
     const { token } = req.body;
@@ -137,19 +140,45 @@ app.post('/api/google-login', async (req, res) => {
         });
         const payload = ticket.getPayload();
         const { sub, email, name, picture } = payload;
-        
         // Check if user exists, if not create them
         const [user] = await pool.execute(
             'INSERT INTO users (id, name, email) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, email = ?',
             [sub, name, email, name, email]
         );
-
         req.session.user = { sub, email, name, picture };
         res.json({ sub, email, name, picture });
     } catch (error) {
         console.error('Error:', error);
         res.status(401).json({ error: 'Invalid token' });
     }
+});
+
+// Create OAuth2 client
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const checkRole = (requiredRole) => {
+    return async (req, res, next) => {
+        try {
+            if (!req.session?.user?.sub) {
+                return res.status(401).json({ message: 'Authentication required' });
+            }
+            const [results] = await pool.execute(
+                'SELECT role FROM users WHERE id = ?',
+                [req.session.user.sub]
+            );
+            if (!results.length || results[0].role < requiredRole) {
+                return res.status(403).json({ message: 'Access denied' });
+            }
+            next();
+        } catch (err) {
+            console.error('Role check error:', err);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    };
+};
+
+app.get('/api/health', (req, res) => {
+  res.status(200).send('OK');
 });
 
 // Route to retrieve session information
@@ -169,16 +198,14 @@ app.get('/api/profile', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({
             //displayName: req.user.displayName,
-            email: req.user.email // Include the email address in the response
+            email: req.user.email
         });
-        
     } else {
         console.log("not authenticated");
         res.redirect('/');
     }
 });
 
-// Routes
 app.get('/api/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
 );
@@ -266,7 +293,6 @@ app.get('/api/menu/item/search', async (req, res) => {
     }
 });
 
-// Route to fetch menu item ingredients
 app.get('/api/menu/item/ingredients', async (req, res) => {
     const { menuItem } = req.query;
     if (!menuItem) {
@@ -313,7 +339,6 @@ app.get('/api/restaurants/:restaurant', async (req, res) => {
     }
 });
 
-// Route to fetch menu item details
 app.get('/api/menu/item', async (req, res) => {
     const { menuItem } = req.query;
     if (!menuItem) {
@@ -353,69 +378,60 @@ const orderLimiter = rateLimit({
     message: { error: 'Too many orders, please try again in an hour' }
 });
   
-app.post('/api/co', orderLimiter, checkRole(1), async (req, res) => {
+app.post('/api/co', async (req, res) => {
+    console.log("Placing order...");
+    console.log(req.body);
     const userInputData = req.body[0];
-    const cartClone = req.body[1]; 
-    // Validate input data
-    if (!Array.isArray(userInputData) || userInputData.length !== 12 || !Array.isArray(cartClone)) {
-        return res.status(400).json({ error: 'Invalid request format' });
+    const cartClone = req.body[1];
+    const googleId = req.headers.authorization 
+        ? req.headers.authorization.split(' ')[1] : null;
+    console.log('userInputData:', userInputData);
+    if (!Array.isArray(userInputData) || userInputData.length !== 12) {
+        console.error('Invalid userInputData:', userInputData);
+        return res.status(400).json({ error: 'Invalid user input data' });
     }
-    // Validate numeric values
-    const numericFields = ['item_count', 'delivery_fee', 'subtotal', 'distance', 'tax', 'total'];
-    const isValidNumeric = userInputData.slice(5).every(val => !isNaN(val) && val >= 0);
-    if (!isValidNumeric) {
-        return res.status(400).json({ error: 'Invalid numeric values' });
+    if (!googleId) {
+        console.error('Google ID not provided');
+        return res.status(401).json({ error: 'User not authenticated' });
     }
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-        // Use authenticated user ID from session
-        const userId = req.session.user.sub;
-        const orderQuery = `
-            INSERT INTO orders (
-                user_id, address, instructions, business_type, 
-                knock_type, item_count, restaurant, restaurant_address, 
-                delivery_fee, subtotal, distance, tax, total
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const [orderResult] = await connection.execute(orderQuery, [
-            userId, 
-            ...userInputData.map(item => item?.toString().slice(0, 255))
-        ]);
+        console.log("googleId: " + googleId);
+        const orderQuery = 'INSERT INTO orders (user_id, address, instructions, business_type, knock_type, item_count, restaurant, restaurant_address, delivery_fee, subtotal, distance, tax, total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        const [orderResult] = await connection.execute(orderQuery, [googleId, ...userInputData]);
         const orderId = orderResult.insertId;
-        // Validate cart items
-        const validCartItems = cartClone.every(item => 
-            item && typeof item.name === 'string' && 
-            !isNaN(item.price) && !isNaN(item.quantity)
-        );
-        if (!validCartItems) {
-            throw new Error('Invalid cart items');
-        }
         const orderItemsQuery = 'INSERT INTO order_items (order_id, name, size, price, quantity, ingredients) VALUES ?';
-        const orderItemsValues = cartClone.map(item => [
-            orderId,
-            item.name?.toString().slice(0, 100),
-            item.size?.toString().slice(0, 50),
-            parseFloat(item.price),
-            parseInt(item.quantity),
-            item.ingredients?.toString().slice(0, 1000)
-        ]);
+        const orderItemsValues = cartClone.map(item => [orderId, ...item]);
         await connection.query(orderItemsQuery, [orderItemsValues]);
         await connection.commit();
-        res.status(201).json({ 
-            success: true,
-            orderId,
-            message: 'Order placed successfully'
-        });
+        console.log("Order placed successfully");
+        res.status(201).json({ message: 'Order placed successfully', orderId });
     } catch (err) {
         await connection.rollback();
-        console.error('Order transaction failed:', err);
-        res.status(500).json({ 
-            error: 'Order processing failed',
-            message: process.env.NODE_ENV === 'development' ? err.message : 'Internal error'
-        });
+        console.error('Error executing transaction:', err);
+        res.status(500).json({ error: 'Transaction failed' });
     } finally {
         connection.release();
+    }
+});
+
+app.put('/api/user/address', async (req, res) => {
+    if (!req.session.user?.sub) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const userId = req.session.user.sub;
+
+    try {
+        await pool.execute(
+            'UPDATE users SET address_street_number = NULL, address_street = NULL, address_city = NULL, address_state = NULL, address_zip = NULL, address_latitude = NULL, address_longitude = NULL WHERE id = ?',
+            [userId]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error updating address:', err);
+        res.status(500).json({ error: 'Failed to update address' });
     }
 });
 
@@ -478,11 +494,9 @@ app.get('/api/user/orders', async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
-
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
-
     try {
         const query = 'SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC LIMIT ? OFFSET ?';
         const [results] = await pool.execute(query, [
@@ -498,14 +512,11 @@ app.get('/api/user/orders', async (req, res) => {
 });
 
 app.get('/api/orders', checkRole(1), async (req, res) => {
-    // Check if user is authenticated via session
-
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
-
     try {
-        const query = 'SELECT * FROM orders WHERE open=1 ORDER BY date DESC LIMIT ? OFFSET ?';
+        const query = `SELECT * FROM orders WHERE open = '0' ORDER BY date DESC LIMIT ? OFFSET ?`;
         const [results] = await pool.execute(query, [
             limit.toString(), 
             offset.toString()
