@@ -8,11 +8,12 @@ import Admin from './restaurants/Admin';
 import Admin2 from './restaurants/Admin2';
 import Checkout from './users/Checkout';
 import Success from './users/Success';
-import { DeliveryAddress } from './users/RestaurantsList';
+import { DeliveryAddress, getFullAddress } from './users/RestaurantsList';
 import axios from 'axios';
 import qs from 'qs';
 import UserOrders from './users/UserOrders';
 import DriverOrders from './drivers/DriverOrders';
+//import { DeliveryAddress } from './users/RestaurantsList';
 import { 
 	GoogleOAuthProvider, 
 	GoogleLogin, 
@@ -35,26 +36,22 @@ export function Spinner() {
 
 
 export function App() {
-	//const storedAddress = localStorage.getItem('exactAddress');
-	//const initialAddress = storedAddress ? JSON.parse(storedAddress) : {};
 	const [cart, setCart] = useState([]);
 	const [cartAmount, setCartAmount] = useState(0);
-	const [orders, setOrders] = useState([]);
-	const [orderItems, setOrderItems] = useState([]);
 	const [restaurant, setRestaurant] = useState(-1);
 	const [restaurantName, setRestaurantName] = useState("");
 	const [restaurantAddress, setRestaurantAddress] = useState("");
 	const [deliveryFee, setDeliveryFee] = useState(0.00);
 	const [menuItem, setMenuItem] = useState(-1);
 	const [showGetLocation, setShowGetLocation] = useState(true);
-	const [address, setAddress] = useState("Unknown");
+	const [address, setAddress] = useState("");
 	const [debug, setDebug] = useState(false);
 	const [distance, setDistance] = useState(0);
 	const [latitude, setLatitude] = useState(null);
 	const [longitude, setLongitude] = useState(null);
 	const [profile, setProfile] = useState(null);
 	const [loginLoading, setLoginLoading] = useState(false);
-
+	
 	useEffect(() => {
 		console.log("useEffect App");
 		let ca = 0;
@@ -70,7 +67,7 @@ export function App() {
 		};
 		fetchProfile().catch(error => 
 			 console.error('Error in fetchProfile:', error));
-	}, [cart, setCart, setCartAmount, setOrderItems]);
+	}, [cart, setCart, setCartAmount]);
 
 	const GoFundMeEmbed = () => {
 		return (
@@ -184,7 +181,6 @@ export function App() {
 		return (
 			<BrowserRouter>
 				<>
-					<a href="/user">User</a>
 					<div className="row">
 						<div className="col-12 col-lg-6">
 							<Link to="/">
@@ -196,14 +192,19 @@ export function App() {
 								</button>
 							</Link>
 							<div className="col-12">
-								<DeliveryAddress 
+								{profile ? <DeliveryAddress 
 									showGetLocation={showGetLocation} 
 									setShowGetLocation={setShowGetLocation} 
 									address={address} 
-								/>
+									setAddress={setAddress}
+								/> : 
+								<div>
+									<><u className="text-danger">
+										You must sign in to place an order!
+									</u></>
+								</div>}
 							</div>
 						</div>
-						
 						<div className="col-12 col-lg-6">
 							{profile ? <ShowGoogleUserInfo profile={profile} /> : ""}
 							<div className="row">
@@ -448,17 +449,18 @@ export function App() {
 		);
 	}
 
-	function handleGoogleLoginSuccess(response) {
+	async function handleGoogleLoginSuccess(response) {
 		console.log('Login Successful', response);
 		const login = async (attempt = 1) => {
 			try {
 				const res = await axios.post(API_URL + '/api/google-login', {
 					token: response.credential
-				}, { withCredentials: true });
+				}, { withCredentials: true });		
 				console.log('Backend response:', res.data);
 				setProfile(res.data);
 				localStorage.setItem('profile', JSON.stringify(res.data));
 				setLoginLoading(false);
+				setShowGetLocation(true);
 			} catch (err) {
 				if (attempt < MAX_RETRY_ATTEMPTS) {
 					console.error('Error verifying token, retrying...', err);

@@ -53,7 +53,6 @@ export default function ShowMenu(props) {
         }
     }
     populateMenuData();
-
     return (
         <>
             <Link to="/">
@@ -61,11 +60,10 @@ export default function ShowMenu(props) {
                     <i className="bi bi-arrow-return-left"></i> Back
                 </button>
             </Link>
-
             {loaded ? <h2 className="m-1">{restaurantName} Menu</h2> : ""}
             {
                 loaded ? Object.keys(result).map((category, categoryIndex) => (
-                    <div key={categoryIndex}>
+                    <span key={categoryIndex}>
                         <div className="row">
                             {result[category].map((data, key) => {
                                 const isNewCategory = data.category != null && lastCategory != data.category;
@@ -74,21 +72,36 @@ export default function ShowMenu(props) {
                                 }
                                 return (
                                     <React.Fragment key={data.id}>
-                                        {isNewCategory && <h5 className="indent">{data.category}</h5>}
+                                        {isNewCategory &&
+                                        <h5 className="indent">
+                                            {data.category}
+                                        </h5>}
                                         <div className={"col-md-6"} key={data.id}>
                                             <Link to="/menu/item">
                                                 <button
-                                                    className="btn btn-primary m-1 w-100"
-                                                    onClick={(e) => changeMenuItem(data)}>
+                                                        className="btn btn-primary m-1 w-100"
+                                                        onClick={(e) => changeMenuItem(data)}>
                                                     {data.name}
                                                     <span> - $</span>
-                                                    {data.price != null && <span className="fw-bold">{data.price}</span>}
+                                                    {data.price != null &&
+                                                    <span className="fw-bold">
+                                                        {data.price}
+                                                    </span>}
                                                     {data.price2 != null && <span> - $</span>}
-                                                    {data.price2 != null && <span className="fw-bold">{data.price2}</span>}
+                                                    {data.price2 != null &&
+                                                    <span className="fw-bold">
+                                                        {data.price2}
+                                                    </span>}
                                                     {data.price3 != null && <span> - $</span>}
-                                                    {data.price3 != null && <span className="fw-bold">{data.price3}</span>}
+                                                    {data.price3 != null &&
+                                                    <span className="fw-bold">
+                                                        {data.price3}
+                                                    </span>}
                                                     {data.price4 != null && <span> - $</span>}
-                                                    {data.price4 != null && <span className="fw-bold">{data.price4}</span>}
+                                                    {data.price4 != null &&
+                                                    <span className="fw-bold">
+                                                        {data.price4}
+                                                    </span>}
                                                 </button>
                                             </Link>
                                         </div>
@@ -96,7 +109,7 @@ export default function ShowMenu(props) {
                                 );
                             })}
                         </div>
-                    </div>
+                    </span>
                 ))
                 : 
                 (<Spinner />)

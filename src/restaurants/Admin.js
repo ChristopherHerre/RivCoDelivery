@@ -7,12 +7,6 @@ export default function Admin(props) {
     const [arr, setArr] = useState([]);
     const [arr2, setArr2] = useState([]);
     const [restaurant, setRestaurant] = useState(1);
-//    const [latitude, setLatitude] = useState(-1);
-//    const [longitude, setLongitude] = useState(-1);
-    const latitude = props.latitude;
-    const setLatitude = props.setLatitude;
-    const longitude = props.longitude;
-    const setLongitude = props.setLongitude;
     function submitAddRestaurant(e) {
         const form = e.target;
         const inputs = {
@@ -67,7 +61,7 @@ export default function Admin(props) {
                         <label>Latitude: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="latitude"
                             type="text" />
                     </div>
@@ -75,7 +69,7 @@ export default function Admin(props) {
                         <label>Longitude: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="longitude"
                             type="text" />
                     </div>
@@ -83,7 +77,7 @@ export default function Admin(props) {
                         <label>Name: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="name"
                             type="text" />
                     </div>
@@ -91,7 +85,7 @@ export default function Admin(props) {
                         <label>Address: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="address"
                             type="text" />
                     </div>
@@ -110,7 +104,7 @@ export default function Admin(props) {
                         <label>Name: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="mi_name"
                             type="text" />
                     </div>
@@ -118,7 +112,7 @@ export default function Admin(props) {
                         <label>Restaurant: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="restaurant"
                             type="number" />
                     </div>
@@ -126,7 +120,7 @@ export default function Admin(props) {
                         <label>Price: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="price"
                             type="text" />
                     </div>
@@ -134,7 +128,7 @@ export default function Admin(props) {
                         <label>Size1: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="size1"
                             type="text" />
                     </div>
@@ -142,7 +136,7 @@ export default function Admin(props) {
                         <label>Size2: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="size2"
                             type="text" />
                     </div>
@@ -150,7 +144,7 @@ export default function Admin(props) {
                         <label>Size3: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="size3"
                             type="text" />
                     </div>
@@ -158,7 +152,7 @@ export default function Admin(props) {
                         <label>Size4: </label>
                         <br />
                         <input
-                            className="form-control"
+                            className="bg-dark text-white form-control"
                             name="size4"
                             type="text" />
                     </div>
@@ -177,30 +171,30 @@ export default function Admin(props) {
                         <div className="row m-3" key={key}>
                             <h2>Update {r.name}</h2>
                             <div className="col-sm-6">
-                                <label>Lat: </label>
+                                <label>Latitude: </label>
                                 <input
-                                    className="form-control"
+                                    className="bg-dark text-white form-control"
                                     type="text"
-                                    placeholder={r.lat} />
+                                    placeholder={r.latitude} />
                             </div>
                             <div className="col-sm-6">
-                                <label>Lng: </label>
+                                <label>Longitude: </label>
                                 <input
-                                    className="form-control"
+                                    className="bg-dark text-white form-control"
                                     type="text"
-                                    placeholder={r.lng} />
+                                    placeholder={r.longitude} />
                             </div>
                             <div className="col-sm-4">
                                 <label>Name: </label>
                                 <input
-                                    className="form-control"
+                                    className="bg-dark text-white form-control"
                                     type="text"
                                     placeholder={r.name} />
                             </div>
                             <div className="col-sm-4">
                                 <label>Address: </label>
                                 <input
-                                    className="form-control"
+                                    className="bg-dark text-white form-control"
                                     type="text"
                                     placeholder={r.address} />
                             </div>
