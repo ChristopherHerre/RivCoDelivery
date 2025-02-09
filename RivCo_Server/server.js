@@ -130,7 +130,6 @@ app.post('/api/addRestaurant', async (req, res) => {
 });
 
 
-// Route to verify Google token
 app.post('/api/google-login', async (req, res) => {
     const { token } = req.body;
     try {
@@ -140,18 +139,24 @@ app.post('/api/google-login', async (req, res) => {
         });
         const payload = ticket.getPayload();
         const { sub, email, name, picture } = payload;
-        // Check if user exists, if not create them
-        const [user] = await pool.execute(
-            'INSERT INTO users (id, name, email) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, email = ?',
-            [sub, name, email, name, email]
-        );
+
+        // 🛑 DELETE OLD SESSIONS FOR THIS USER
+        await pool.execute('DELETE FROM sessions WHERE JSON_EXTRACT(data, "$.user.sub") = ?', [sub]);
+
+        // ✅ Save the new session
         req.session.user = { sub, email, name, picture };
+        req.session.save(err => {
+            if (err) console.error("Session save error:", err);
+            else console.log("Session saved successfully:", req.session);
+        });
+
         res.json({ sub, email, name, picture });
     } catch (error) {
         console.error('Error:', error);
         res.status(401).json({ error: 'Invalid token' });
     }
 });
+
 
 // Create OAuth2 client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);

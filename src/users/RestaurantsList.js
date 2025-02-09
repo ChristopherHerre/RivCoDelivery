@@ -43,7 +43,8 @@ export function DeliveryAddress(props) {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                credentials: 'include' // 🔥 ADD THIS LINE
             });
             const result = await response.json();
             if (result.success) {
