@@ -17,10 +17,15 @@ export function DeliveryAddress(props) {
         const loadAddress = async () => {
             setError(null);
             try {
-                const addr = await getFullAddress(address);
+                const addr = address != undefined ?
+                    await getFullAddress(address)
+                :
+                    undefined
                 console.log(addr);
-                setFullAddress(addr);
-                if (addr.length > 0 && !addr.includes("null")) {
+                if (addr != undefined)
+                    setFullAddress(addr);
+                if (addr != undefined &&
+                    addr.length > 0 && !addr.includes("null")) {
                      setShowGetLocation(false);
                 } else {
                      setShowGetLocation(true);
@@ -44,7 +49,7 @@ export function DeliveryAddress(props) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                credentials: 'include' // 🔥 ADD THIS LINE
+                credentials: 'include'
             });
             const result = await response.json();
             if (result.success) {
@@ -149,7 +154,7 @@ export default function RestaurantsList(props) {
                 setAddress(res.data.address);
                 setLatitude(res.data.latitude);
                 setLongitude(res.data.longitude);
-                if (res.data.address.streetNumber) {
+                if (res.data.address && res.data.address.streetNumber) {
                     setShowGetLocation(false);
                 }
             } catch (err) {
@@ -187,7 +192,7 @@ export default function RestaurantsList(props) {
         } else {
             console.log("showGetLocation is false, not fetching API key.");
         }
-    }, [showGetLocation]);
+    }, [showGetLocation, setApiKey]);
 
     useEffect(() => {
         if (apiKey) {
@@ -380,7 +385,6 @@ export default function RestaurantsList(props) {
         }
     }
     populateRestaurantData();
-
     // Sort restaurantData based on Haversine distance
     restaurantData.sort((a, b) => {
         const distanceA = haversine_dist(a.latitude, a.longitude, latitude, longitude);
