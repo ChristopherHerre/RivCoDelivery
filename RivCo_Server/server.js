@@ -14,6 +14,25 @@ const IP = '0.0.0.0';
 const PORT = 8080;
 const path = require("path");
 
+const { spawn } = require('child_process');
+
+// Start Cloud SQL Proxy
+const proxy = spawn('/home/elchristooo/cloud_sql_proxy', [
+  '-instances=mimetic-surf-124908:us-west2:mysql=tcp:3306'
+]);
+
+proxy.stdout.on('data', (data) => {
+  console.log(`Cloud SQL Proxy: ${data}`);
+});
+
+proxy.stderr.on('data', (data) => {
+  console.error(`Cloud SQL Proxy Error: ${data}`);
+});
+
+// Ensure Cloud SQL Proxy is stopped when the app exits
+process.on('exit', () => {
+  proxy.kill();
+});
 function haversine_dist(lat, lng, lat2, lng2) {
     var R = 3958.8;
     var rlat1 = lat2 * (Math.PI / 180);
@@ -30,9 +49,10 @@ app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, "build")));
 
 // Serve React's index.html for all other routes (SPA behavior)
-app.get("/", (req, res) => {
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
+
 // Set headers to avoid Cross-Origin-Opener-Policy issues
 app.use((req, res, next) => {
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp'); // COEP
@@ -238,9 +258,18 @@ app.get('/api/logout', (req, res) => {
     });
 });
 
-// Route to serve the Google Maps API key
 app.get('/api/maps-api-key', (req, res) => {
-    res.json({ apiKey: process.env.GOOGLE_MAPS_API_KEY });
+    console.log("API Key Request Received");
+
+    // Check if the API key is being loaded
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    console.log("Google Maps API Key:", apiKey); 
+
+    if (!apiKey) {
+        return res.status(500).json({ error: "API key not found" });
+    }
+
+    res.json({ apiKey });
 });
 
 // Route to fetch all restaurants
@@ -440,21 +469,36 @@ app.put('/api/user/address', async (req, res) => {
     }
 });
 
+app.get('/api/users', async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    try {
+        const query = 'SELECT id, name, email, role FROM users ORDER BY name ASC LIMIT ? OFFSET ?';
+        const [results] = await pool.execute(query, [
+            limit.toString(), 
+            offset.toString()
+        ]);
+        res.json(results);
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
 app.get('/api/user/address', async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
-
     try {
         const [results] = await pool.execute(
             'SELECT address_street_number, address_street, address_city, address_state, address_zip, address_latitude, address_longitude FROM users WHERE id = ?',
             [req.session.user.sub]
         );
-        
         if (results.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
-
         const address = {
             streetNumber: results[0].address_street_number,
             street: results[0].address_street,
@@ -462,7 +506,6 @@ app.get('/api/user/address', async (req, res) => {
             state: results[0].address_state,
             zip: results[0].address_zip
         };
-
         res.json({
             address,
             latitude: results[0].address_latitude,

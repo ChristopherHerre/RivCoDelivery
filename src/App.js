@@ -13,6 +13,7 @@ import axios from 'axios';
 import qs from 'qs';
 import UserOrders from './users/UserOrders';
 import DriverOrders from './drivers/DriverOrders';
+import Users from './users/Users';
 //import { DeliveryAddress } from './users/RestaurantsList';
 import { 
 	GoogleOAuthProvider, 
@@ -165,6 +166,10 @@ export function App() {
 					</button>
 				</Link>
 				{profile ? <div className="dropdown-menu bg-dark form-control text-white " aria-labelledby="dropdownMenuLink">
+					<Link to="/users" className="dropdown-item text-white hover-black">
+						<i className="bi bi-people"> </i>
+						User Management
+					</Link>
 					<Link to="/admin" className="dropdown-item text-white hover-black">
 						<i className="bi bi-sliders2-vertical"> </i>
 						Restaurant Control Panel
@@ -281,7 +286,12 @@ export function App() {
 									<DriverOrders />
 								}
 							/>
-							
+							<Route
+								path={"/users"}
+								element={
+									<Users />
+								}
+							/>
 							<Route
 								path={"/user-orders"}
 								element={
