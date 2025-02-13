@@ -260,15 +260,12 @@ app.get('/api/logout', (req, res) => {
 
 app.get('/api/maps-api-key', (req, res) => {
     console.log("API Key Request Received");
-
     // Check if the API key is being loaded
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     console.log("Google Maps API Key:", apiKey); 
-
-    if (!apiKey) {
+    if (!apiKey || apiKey == undefined || apiKey === undefined) {
         return res.status(500).json({ error: "API key not found" });
     }
-
     res.json({ apiKey });
 });
 
@@ -475,7 +472,7 @@ app.get('/api/users', async (req, res) => {
     const offset = (page - 1) * limit;
 
     try {
-        const query = 'SELECT id, name, email, role FROM users ORDER BY name ASC LIMIT ? OFFSET ?';
+        const query = 'SELECT * FROM users ORDER BY name ASC LIMIT ? OFFSET ?';
         const [results] = await pool.execute(query, [
             limit.toString(), 
             offset.toString()
