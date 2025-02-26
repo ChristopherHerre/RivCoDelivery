@@ -12,7 +12,7 @@ function Users() {
             setLoading(true);
             try {
                 const res = await axios.get(`${API_URL}/api/users`, {
-                    params: { page, limit: 1 },
+                    params: { page, limit: 5 },
                     withCredentials: true
                 });
                 console.log('Users:', res.data);
@@ -63,12 +63,32 @@ function Users() {
                                 <div key={user.id} className="col-md-6 col-lg-4 mb-3">
                                     <div className="card p-3 shadow-sm">
                                         <h5 className="card-title">{user.name}</h5>
-                                        <p className="card-text"><strong>Email:</strong> {user.email}</p>
-                                        <p className="card-text"><strong>Address:</strong> {user.address_street}, {user.address_city}, {user.address_state} {user.address_zip}</p>
-                                        <p className="card-text"><strong>Street Number:</strong> {user.address_street_number}</p>
-                                        <p className="card-text"><strong>Coordinates:</strong> {user.address_latitude}, {user.address_longitude}</p>
-                                        <p className="card-text"><strong>Role:</strong> <input className="bg-dark text-white" />{user.role}</p>
-                                        <p className="card-text"><strong>Created At:</strong> {new Date(user.created_at).toLocaleString()}</p>
+                                        <p className="card-text">
+                                            <strong>Email:</strong> {user.email}
+                                        </p>
+                                        <p className="card-text">
+                                            <strong>Address: </strong>
+                                            {user.address_street}, {user.address_city}, {user.address_state} {user.address_zip}
+                                        </p>
+                                        <p className="card-text">
+                                            <strong>Street Number: </strong>
+                                            {user.address_street_number}
+                                        </p>
+                                        <p className="card-text">
+                                            <strong>Coordinates: </strong>
+                                            {user.address_latitude}, {user.address_longitude}
+                                        </p>
+                                        <p className="card-text">
+                                            <strong>Role: </strong>
+                                            <input
+                                                type="number"
+                                                placeholder={user.role}
+                                                className="bg-dark text-white" />
+                                        </p>
+                                        <p className="card-text">
+                                            <strong>Created At: </strong>
+                                            {new Date(user.created_at).toLocaleString()}
+                                        </p>
                                     </div>
                                 </div>
                             ))}

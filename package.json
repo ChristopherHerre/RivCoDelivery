@@ -110,6 +110,14 @@
 
         ]
 
+    },
+
+    "devDependencies": {
+
+        "@craco/craco": "^7.1.0",
+
+        "compression-webpack-plugin": "^11.1.0"
+
     }
 
 }

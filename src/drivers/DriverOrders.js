@@ -39,7 +39,7 @@ function DriverOrders() {
                         fetchDriverOrders(attempt + 1);
                     } else {
                         console.error('Error fetching user orders:', err);
-                        window.location.href = '/404-page.html';
+                        //window.location.href = '/404-page.html';
                     }
                 } finally {
                     setLoading(false);
@@ -64,7 +64,7 @@ function DriverOrders() {
                 fetchDriverOrderItems(orderId, attempt + 1);
             } else {
                 console.error('Error fetching order items:', err);
-                window.location.href = '/404-page.html';
+                //window.location.href = '/404-page.html';
             }
         }
     };

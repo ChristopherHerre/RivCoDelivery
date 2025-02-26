@@ -40,7 +40,7 @@ export default function ShowMenuItem(props) {
                     fetchMenuItem(attempt + 1);
                 } else {
                     console.error('Error fetching menu item:', err);
-                    window.location.href = '/404-page.html';
+                    //window.location.href = '/404-page.html';
                 }
             }
         };
@@ -56,7 +56,7 @@ export default function ShowMenuItem(props) {
                     fetchMenuItemIngredients(attempt + 1);
                 } else {
                     console.error('Error fetching menu item ingredients:', err);
-                    window.location.href = '/404-page.html';
+                    //window.location.href = '/404-page.html';
                 }
             }
         };

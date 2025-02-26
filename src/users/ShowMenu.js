@@ -26,7 +26,7 @@ export default function ShowMenu(props) {
                     fetchMenu(attempt + 1);
                 } else {
                     console.error('Error fetching menu:', err);
-                    window.location.href = '/404-page.html';
+                   // window.location.href = '/404-page.html';
                 }
             }
         };

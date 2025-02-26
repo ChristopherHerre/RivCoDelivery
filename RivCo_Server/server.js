@@ -17,7 +17,7 @@ const path = require("path");
 const { spawn } = require('child_process');
 
 // Start Cloud SQL Proxy
-const proxy = spawn('/home/elchristooo/cloud_sql_proxy', [
+/*const proxy = spawn('/home/' + process.env.EMAIL + '/cloud_sql_proxy', [
   '-instances=mimetic-surf-124908:us-west2:mysql=tcp:3306'
 ]);
 
@@ -32,7 +32,8 @@ proxy.stderr.on('data', (data) => {
 // Ensure Cloud SQL Proxy is stopped when the app exits
 process.on('exit', () => {
   proxy.kill();
-});
+});*/
+
 function haversine_dist(lat, lng, lat2, lng2) {
     var R = 3958.8;
     var rlat1 = lat2 * (Math.PI / 180);
@@ -45,13 +46,12 @@ function haversine_dist(lat, lng, lat2, lng2) {
 
 app.set('trust proxy', 1);
 
-// Serve static files from the React app
+/*
 app.use(express.static(path.join(__dirname, "build")));
-
-// Serve React's index.html for all other routes (SPA behavior)
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
+*/
 
 // Set headers to avoid Cross-Origin-Opener-Policy issues
 app.use((req, res, next) => {
@@ -79,7 +79,10 @@ const pool = mysql.createPool({
 });
 
 // Set up session with MySQLStore
-const sessionStore = new MySQLStore({}, pool);
+const sessionStore = new MySQLStore({
+    clearExpired: true, // Removes expired sessions
+    checkExpirationInterval: 60 * 1000 // Checks every 15 minutes
+}, pool);
 
 app.use(session({
     secret: process.env.SESSION_SECRET, // Use environment variable for session secret
@@ -92,6 +95,14 @@ app.use(session({
         maxAge: 2 * 60 * 60 * 1000 // 2 hour
     }
 }));
+
+/*app.use((req, res, next) => {
+    if (!req.session || !req.session.user) {
+        console.warn("Session expired or missing user data.");
+        return res.status(401).json({ error: "Session expired, please log in again." });
+    }
+    next();
+});*/
 
 // Add logging to session middleware
 app.use((req, res, next) => {
@@ -272,7 +283,12 @@ app.get('/api/maps-api-key', (req, res) => {
 // Route to fetch all restaurants
 app.get('/api/restaurants/:latitude/:longitude', async (req, res) => {
     const { latitude, longitude } = req.params;
-    const query = 'SELECT * FROM restaurants LIMIT 50';
+    const query = `
+    SELECT * FROM restaurants 
+    WHERE address IS NOT NULL 
+    AND longitude IS NOT NULL 
+    AND latitude IS NOT NULL
+    LIMIT 50`;
     try {
         const [results] = await pool.execute(query);
         const restaurantsWithDistance = results.map((restaurant) => {
