@@ -180,7 +180,7 @@ export default function RestaurantsList(props) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {
                     fetchApiKey(attempt + 1);
                 } else {
-                    window.location.href = '/404-page.html';
+                    //window.location.href = '/404-page.html';
                 }
             } finally {
                 setLoadingApiKey(false);
@@ -223,7 +223,7 @@ export default function RestaurantsList(props) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {
                     fetchRestaurants(attempt + 1);
                 } else {
-                    window.location.href = '/404-page.html';
+                    //window.location.href = '/404-page.html';
                 }
             }
         };

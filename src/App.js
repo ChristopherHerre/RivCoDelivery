@@ -114,13 +114,13 @@ export function App() {
 
 	function handleLogout(e) {
 		e.preventDefault();
+		localStorage.removeItem('profile');
 		googleLogout();
 		const logout = async () => {
 			try {
 				const response = await axios.get(`${API_URL}/api/logout`,
 					{ withCredentials: true });
 				console.log(response.data.message);
-				localStorage.removeItem('profile');
 				setProfile(null);
 				window.location.href = '/';
 			} catch (err) {

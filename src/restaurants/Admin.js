@@ -40,7 +40,6 @@ export default function Admin(props) {
         };
         dbPost(e, form, inputs, "addRestaurant");
     }
-
     return (
         <div>
             <h2>Admin Panel</h2>
