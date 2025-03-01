@@ -14,10 +14,10 @@ const IP = '0.0.0.0';
 const PORT = 8080;
 const path = require("path");
 
-const { spawn } = require('child_process');
+/*const { spawn } = require('child_process');
 
 // Start Cloud SQL Proxy
-/*const proxy = spawn('/home/' + process.env.EMAIL + '/cloud_sql_proxy', [
+const proxy = spawn('/home/' + process.env.EMAIL + '/cloud_sql_proxy', [
   '-instances=mimetic-surf-124908:us-west2:mysql=tcp:3306'
 ]);
 
