@@ -175,7 +175,7 @@ app.post('/api/google-login', async (req, res) => {
             'SELECT * FROM users WHERE id = ? LIMIT 1',
             [sub]
         );
-	const role = 0;
+	    const role = 0;
         if (userResults.length === 0) {
             // If the user doesn't exist, insert them into the `users` table
             await pool.execute(
@@ -527,7 +527,7 @@ app.put('/api/user/address', async (req, res) => {
     }
 });
 
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', checkRole(2), async (req, res) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;

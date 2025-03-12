@@ -156,7 +156,7 @@ export default function RestaurantsList(props) {
                 setLatitude(res.data.latitude);
                 setLongitude(res.data.longitude);
                 if (res.data.address && res.data.address.streetNumber) {
-                    //setShowGetLocation(false);
+                    setShowGetLocation(false);
                 }
                 
             } catch (err) {
@@ -270,7 +270,7 @@ export default function RestaurantsList(props) {
             console.log('Google Maps script already loaded.');
             return Promise.resolve();
         }
-        const src = `${mapApiJs}?key=${apiKey}&libraries=places`;
+        const src = `${mapApiJs}?key=${apiKey}&libraries=places,geometry`;
         console.log('Loading script with src:', src);
         return loadAsyncScript(src);
     }
