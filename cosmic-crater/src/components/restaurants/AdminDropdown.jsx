@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { createPopper } from '@popperjs/core';
 
 const AdminDropdown = (props) => {
     const full = props.full;
@@ -32,20 +33,22 @@ const AdminDropdown = (props) => {
                     Donate
                 </button>
             </Link>
-            {profile ? <div className="dropdown-menu bg-dark form-control text-white " aria-labelledby="dropdownMenuLink">
-                <Link to="/users" className="dropdown-item text-white hover-black">
-                    <i className="bi bi-people"> </i>
-                    User Management
-                </Link>
-                <Link to="/admin" className="dropdown-item text-white hover-black">
-                    <i className="bi bi-sliders2-vertical"> </i>
-                    Restaurant Control Panel
-                </Link>
-                <Link to="/orders" className="dropdown-item text-white hover-black">
-                    <i className="bi bi-box2"> </i>
-                    Driver Orders
-                </Link>
-            </div> : ""}
+            {profile ?
+                <div className="dropdown-menu bg-dark form-control text-white " aria-labelledby="dropdownMenuLink">
+                    <Link to="/users" className="dropdown-item text-white hover-black">
+                        <i className="bi bi-people"> </i>
+                        User Management
+                    </Link>
+                    <Link to="/admin" className="dropdown-item text-white hover-black">
+                        <i className="bi bi-sliders2-vertical"> </i>
+                        Restaurant Control Panel
+                    </Link>
+                    <Link to="/orders" className="dropdown-item text-white hover-black">
+                        <i className="bi bi-box2"> </i>
+                        Driver Orders
+                    </Link>
+                </div>
+            : ""}
         </div>
     );
 };

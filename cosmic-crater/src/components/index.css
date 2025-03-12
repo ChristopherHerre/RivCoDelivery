@@ -1,57 +1,78 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&family=Work+Sans:wght@200&display=swap');
-@import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
-h1, h2, h3, h4, h5, h6, label, button, .btn, small, body, p, span, Link {
+#wr h2,
+#wr h3,
+#wr h4,
+#wr h5,
+#wr h6,
+#wr input[type="text"],
+#wr label, 
+#wr button,
+#wr .btn,
+#wr small,
+#wr p,
+#wr span,
+#wr Link {
     font-family: 'Open Sans', sans-serif;
 }
 #wr {
-    margin: 100px;
+    padding: 50px;
+    background: url('background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
-h1, h2, h3, h4, h5, h6 {
-    font-weight:400;
+#wr h1,
+#wr h2,
+#wr h3,
+#wr h4,
+#wr h5, 
+#wr h6 {
+    
+    font-weight: bold;
 }
-h5.indent {
+#wr h5.indent {
     margin: 10px;
 }
-.hover-black:hover {
+#wr .hover-black:hover {
     color: black;
 }
-ol, ol.li {
+#wr ol,
+#wr ol.li {
     margin:0;
     padding:20px;
 }
-.form-control::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+#wr .form-control::placeholder {
     color: lightgray;
-    opacity: 1; /* Firefox */
+    opacity: 1;
 }
-
-.form-control:-ms-input-placeholder { /* Internet Explorer 10-11 */
+#wr .form-control:-ms-input-placeholder {
     color: lightgray;
 }
-
-.form-control::-ms-input-placeholder { /* Microsoft Edge */
+#wr .form-control::-ms-input-placeholder {
     color: lightgray;
- }
-mark.linespacing {
+}
+#wr mark.linespacing {
     line-height: 1.5;
 }
-.currency-item {
+#wr .currency-item {
     display: grid;
-    grid-template-columns: auto auto; /* First column adjusts to content, second column is fixed */
-    gap: 1em; /* Optional spacing between columns */
+    grid-template-columns: auto auto;
+    gap: 1em;
     margin-bottom: 0.5em;
 }
-  
-.label {
-    text-align: left; /* Aligns labels to the left */
+#wr .label {
+    text-align: left;
 }
-  
-.amount {
-    text-align: right; /* Aligns currency to the right */
+#wr .amount {
+    text-align: right;
 }
-button.removebutton {
+#wr button.removebutton {
     background: none;
     color: #000;
     border: none;
@@ -60,78 +81,73 @@ button.removebutton {
     cursor: pointer;
     outline: inherit;
 }
-.input-group {
+#wr .input-group {
     text-align: center;
 }
-
-.outter {
+#wr .outter {
     max-width: 1000px;
 }
-.google-profile-icon {
-    width: 30px; /* Adjust size to your needs */
+#wr .google-profile-icon {
+    width: 30px;
     height: 30px;
-    border-radius: 50%; /* Makes the image circular */
-    object-fit: cover; /* Ensures the image scales and crops to fit the circle */
-    border: 1px solid #ccc; /* Optional: Adds a subtle border */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Adds a light shadow for depth */
-  }
-input[type=checkbox], input[type=radio]
-{
-  width:30px;
-  height:30px;
-  vertical-align: middle;
+    border-radius: 50%; 
+    object-fit: cover; 
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.middle {
+#wr input[type=checkbox], 
+#wr input[type=radio]
+{
+    width:30px;
+    height:30px;
     vertical-align: middle;
 }
-.icon-flipped {
+#wr .middle {
+    vertical-align: middle;
+}
+#wr .icon-flipped {
     transform: scaleX(-1);
     -moz-transform: scaleX(-1);
     -webkit-transform: scaleX(-1);
     -ms-transform: scaleX(-1);
 }
-.removebutton:hover {
+#wr .removebutton:hover {
     text-decoration: underline;
     text-shadow: 0.3px 0.3px;
 }
-.logofont {
+#wr .logofont {
     font-family: 'Bungee Spice', sans-serif;
     font-size:20pt;
     margin:0;
 }
-.logofont2 {
+#wr .logofont2 {
     font-family: 'Work Sans', sans-serif;
     font-size: 20pt;
     margin: 0;
 }
-.blackborder {
+#wr .blackborder {
     border: 2px solid black;
     background:#fff;
 }
-.rounded {
+#wr .rounded {
     border-radius: 10px;
 }
-.cartitem:nth-child(even) {
+#wr .cartitem:nth-child(even) {
     background-color: #f5f5f5;
     border-radius:10px;
 }
-.btn {
+#wr .btn {
     font-weight:500;
 }
-input, textarea, .qtyselectordisplay {
+#wr input,
+#wr textarea,
+#wr .qtyselectordisplay {
     font-weight: 900;
 }
-.qtyselectordisplay {
+#wr .qtyselectordisplay {
     text-align: center;
     width: 40px;
 }
-body {
-    background: lightgray;
-    margin: 0;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+#wr code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

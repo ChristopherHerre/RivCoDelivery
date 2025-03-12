@@ -19,7 +19,8 @@ slug: "software-requirements"
         margin-left: 20px;
     }
 </style>
-
+<h2>1. Web Pages</h2>
+<h3>1.1. Local Restaurant’s List page</h3>
 <h3>1.2 Restaurant Menu Page</h3>
 <section>
 <p>Shows the menu of a selected restaurant with available food items.</p>

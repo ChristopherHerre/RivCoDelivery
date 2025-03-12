@@ -7,13 +7,18 @@ const mapApiJs = 'https://maps.googleapis.com/maps/api/js';
 
 export function DeliveryAddress(props) {
     const showGetLocation = props.showGetLocation;
+    console.log("showGetLocation: " + showGetLocation);
     const setShowGetLocation = props.setShowGetLocation;
+    console.log("setShowGetLocation1: " + setShowGetLocation);
     const address = props.address;
+    console.log("address: " + address);
     const setAddress = props.setAddress;
+    console.log("setAddress: " + setAddress);
     const [fullAddress, setFullAddress] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    
     useEffect(() => {
         const loadAddress = async () => {
             setError(null);
@@ -27,20 +32,19 @@ export function DeliveryAddress(props) {
                     addr.length > 0 &&
                     !addr.includes("null"))
                 {
-                     setShowGetLocation(false);
+                    setShowGetLocation(false);
                 } else {
-                     setShowGetLocation(true);
+                    setShowGetLocation(true);
                 }
             } catch (error) {
                 console.error("Error loading address:", error);
-                setError("Unable to load address");
                 setShowGetLocation(true);
             } finally {
                 setIsLoading(false);
             }
         };
         loadAddress();
-    }, [address, fullAddress, setShowGetLocation]);
+    }, [address, setFullAddress, setShowGetLocation]);
 
     async function editAddress(e) {
         e.preventDefault();
@@ -65,16 +69,11 @@ export function DeliveryAddress(props) {
             console.error('Error updating address:', error);
         }
     }
-
     return (
         <div>
             <b>Deliver to: </b>
             {isLoading ? (
                 <Spinner />
-            ) : error ? (
-                <span className="text-danger">
-                    {error}
-                </span>
             ) : (
                 <>
                     {!showGetLocation ? (
@@ -108,7 +107,6 @@ export async function getFullAddress(address) {
             return "Error";
         }
     }
-
     const streetNumber = address.streetNumber + " ";
     const street = address.street ? address.street + ", " : "";
     const city = address.city ? address.city + ", " : "";
@@ -116,7 +114,6 @@ export async function getFullAddress(address) {
     const zip = address.zip;
     //if (streetNumber == null || street == null || city == null || state == null || zip == null)
     //    return null;
-
     return streetNumber + street + city + state + zip;
 }
 
@@ -133,6 +130,7 @@ export default function RestaurantsList(props) {
     const setDistance = props.setDistance;
     const showGetLocation = props.showGetLocation;
     const setShowGetLocation = props.setShowGetLocation;
+    console.log("setShowGetLocation2: " + setShowGetLocation);
     const [restaurants, setRestaurants] = useState([]);
     const [restaurantsCopy, setRestaurantsCopy] = useState([]);
     const searchInput = useRef(null);
@@ -153,20 +151,24 @@ export default function RestaurantsList(props) {
                 const res = await axios.get(`${API_URL}/api/user/address`, {
                     withCredentials: true
                 });
+                console.log(res.data);
                 setAddress(res.data.address);
                 setLatitude(res.data.latitude);
                 setLongitude(res.data.longitude);
                 if (res.data.address && res.data.address.streetNumber) {
-                    setShowGetLocation(false);
+                    //setShowGetLocation(false);
                 }
+                
             } catch (err) {
                 console.error('Error fetching address:', err);
             }
         };
-
         if (!showGetLocation) {
             fetchAddress();
         }
+        console.log("address: " + address);
+        console.log("latitude: " + latitude);
+        console.log("longitude: " + longitude);
     }, [showGetLocation]);
     
     useEffect(() => {
@@ -198,7 +200,6 @@ export default function RestaurantsList(props) {
 
     useEffect(() => {
         if (apiKey) {
-            console.log('API Key is set:', apiKey);
             console.log('Initializing map script...');
             initMapScript().then(() => {
                 console.log('Map script loaded, initializing autocomplete...');
@@ -214,8 +215,14 @@ export default function RestaurantsList(props) {
     useEffect(() => {
         const fetchRestaurants = async (attempt = 1) => {
             try {
+                console.log("$$$$$$$$$$$$$$$$$$$$");
+                console.log("$$$$$$$$$$$$$$$$$$$$");
+                console.log("$$$$$$$$$$$$$$$$$$$$");
+                console.log("$$$$$$$$$$$$$$$$$$$$");
+                console.log("$$$$$$$$$$$$$$$$$$$$");
                 const url = API_URL + `/api/restaurants/${latitude}/${longitude}`;
                 const res = await axios.get(url);
+                console.log("$$$: " + res.data);
                 const restaurants = res.data.map(r => r);
                 setRestaurants(restaurants);
                 setRestaurantsCopy(restaurants);
@@ -229,7 +236,8 @@ export default function RestaurantsList(props) {
                 }
             }
         };
-        if (latitude && longitude && loaded && result.length > 0) {
+        if (latitude && longitude /*&& loaded && result.length > 0*/)
+        {
             fetchRestaurants();
         }
     }, [latitude, longitude, setRestaurants]);
@@ -262,7 +270,7 @@ export default function RestaurantsList(props) {
             console.log('Google Maps script already loaded.');
             return Promise.resolve();
         }
-        const src = `${mapApiJs}?key=${apiKey}&libraries=places,geometry`;
+        const src = `${mapApiJs}?key=${apiKey}&libraries=places`;
         console.log('Loading script with src:', src);
         return loadAsyncScript(src);
     }
@@ -387,14 +395,31 @@ export default function RestaurantsList(props) {
         }
     }
     populateRestaurantData();
-    // Sort restaurantData based on Haversine distance
     restaurantData.sort((a, b) => {
-        const distanceA = haversine_dist(a.latitude, a.longitude, latitude, longitude);
-        const distanceB = haversine_dist(b.latitude, b.longitude, latitude, longitude);
+        const distanceA = haversine_dist(
+            a.latitude, 
+            a.longitude, 
+            latitude, 
+            longitude
+        );
+        const distanceB = haversine_dist(
+            b.latitude, 
+            b.longitude, 
+            latitude, 
+            longitude
+        );
         return distanceA - distanceB;
     });
 
-    function Welcome() {
+    function Welcome(props) {
+        const address = props.address;
+        console.log("Welcome address: " + address);
+        const setAddress = props.setAddress;
+        console.log("Welcome setAddress: " + setAddress);
+        const showGetLocation = props.showGetLocation;
+        console.log("Welcome showGetLocation: " + showGetLocation);
+        const setShowGetLocation = props.setShowGetLocation;
+        console.log("Welcome setShowGetLocation: " + setShowGetLocation);
         useEffect(() => {
             if (apiKey) {
                 console.log('API Key is set, initializing map script in Welcome...');
@@ -437,7 +462,12 @@ export default function RestaurantsList(props) {
     return (
         <>
             {loadingApiKey && <Spinner />}
-            <Welcome />
+            <Welcome 
+                address={address}
+                setAddress={setAddress}
+                showGetLocation={showGetLocation}
+                setShowGetLocation={setShowGetLocation}
+            />
             <br />
             {
                 !showGetLocation ?
@@ -465,7 +495,12 @@ export default function RestaurantsList(props) {
                                 {category}
                             </h5>
                             {result[category].map((data, key) => {
-                                const h = haversine_dist(data.latitude, data.longitude, latitude, longitude);
+                                const h = haversine_dist(
+                                    data.latitude, 
+                                    data.longitude, 
+                                    latitude, 
+                                    longitude
+                                );
                                 const fee = 10 + (h < 1 ? 1 : h);
                                 const maxFee = 100;
                                 function selectRestaurant(data) {

@@ -1,3 +1,5 @@
+const fs = require("fs");
+const https = require("https");
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
@@ -45,22 +47,20 @@ function haversine_dist(lat, lng, lat2, lng2) {
 }
 
 app.set('trust proxy', 1);
-
 /*
-app.use(express.static(path.join(__dirname, "build")));
+app.use(express.static(path.join(__dirname, "dist")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 */
-
 // Set headers to avoid Cross-Origin-Opener-Policy issues
 app.use((req, res, next) => {
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp'); // COEP
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');  // COOP
-    res.setHeader('Access-Control-Allow-Origin', '*'); 
+    res.setHeader('Access-Control-Allow-Origin', 'https://www.rivcodelivery.com'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+   res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies/auth headers
     next();
 });
 
@@ -160,8 +160,53 @@ app.post('/api/addRestaurant', async (req, res) => {
     }
 });
 
-
 app.post('/api/google-login', async (req, res) => {
+    const { token } = req.body;
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+        const { sub, email, name, picture } = payload;
+
+        // Check if the user already exists in the `users` table
+        const [userResults] = await pool.execute(
+            'SELECT * FROM users WHERE id = ? LIMIT 1',
+            [sub]
+        );
+	const role = 0;
+        if (userResults.length === 0) {
+            // If the user doesn't exist, insert them into the `users` table
+            await pool.execute(
+                'INSERT INTO users (id, name, email, role) VALUES (?, ?, ?, ?)',
+                [sub, name, email, role]
+            );
+        } else {
+            // If the user exists, you can optionally update their details here
+            //await pool.execute(
+              //  'UPDATE users SET name = ?, email = ?  WHERE id = ?',
+               // [name, email, picture, sub]
+            //);
+        }
+
+        // 🛑 DELETE OLD SESSIONS FOR THIS USER
+        await pool.execute('DELETE FROM sessions WHERE JSON_EXTRACT(data, "$.user.sub") = ?', [sub]);
+
+        // ✅ Save the new session
+        req.session.user = { sub, email, name, picture };
+        req.session.save(err => {
+            if (err) console.error("Session save error:", err);
+            else console.log("Session saved successfully:", req.session);
+        });
+
+        res.json({ sub, email, name, picture });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(401).json({ error: 'Invalid token' });
+    }
+});
+/*app.post('/api/google-login', async (req, res) => {
     const { token } = req.body;
     try {
         const ticket = await client.verifyIdToken({
@@ -187,7 +232,7 @@ app.post('/api/google-login', async (req, res) => {
         res.status(401).json({ error: 'Invalid token' });
     }
 });
-
+*/
 
 // Create OAuth2 client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -632,7 +677,18 @@ app.get('/api/user/details', async (req, res) => {
         res.status(500).json({ error: 'Database query failed' });
     }
 });
-
+/*
+const options = {
+  key: fs.readFileSync("server-key.pem"), // Your server's private key
+  cert: fs.readFileSync("server-cert.pem"), // Your server's certificate
+  ca: fs.readFileSync("cloudflare-ca.pem"), // Cloudflare's CA certificate
+//  requestCert: true, // Require client certificate
+  rejectUnauthorized: true, // Reject requests without valid certificate
+};
+https.createServer(options, app).listen(8080, () => {
+  console.log("Secure Node.js API running on port 443");
+});
+*/
 // Start the server
 app.listen(PORT, IP, () => {
     console.log("Server is running on " + IP + ":" + PORT);

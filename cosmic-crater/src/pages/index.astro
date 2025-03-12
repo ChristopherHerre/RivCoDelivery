@@ -1,27 +1,25 @@
 ---
+import "bootstrap/dist/css/bootstrap.min.css";
+import '../components/index.css'
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 import App from "../components/App.jsx";
-import '../components/index.css'
 import ReactDOM from 'react-dom/client';
-
 ---
-
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<BaseHead title={SITE_TITLE} description= />
 	</head>
 	<body>
 		<Header />
 		<main>
-			<h2>Introducing: </h2>
+			<h2>Introducing:</h2>
 			<h1>The solution to homelessness in Riverside County.</h1>
 		</main>
 		<App client:only />
-		
 		<Footer />
 	</body>
 </html>
