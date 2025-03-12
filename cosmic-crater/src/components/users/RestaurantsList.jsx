@@ -225,6 +225,7 @@ export default function RestaurantsList(props) {
                 console.log("$$$: " + res.data);
                 const restaurants = res.data.map(r => r);
                 setRestaurants(restaurants);
+                console.log("Restaurants: " + restaurants);
                 setRestaurantsCopy(restaurants);
                 setLoaded(true);
             } catch (error) {
@@ -487,7 +488,7 @@ export default function RestaurantsList(props) {
                     </div>
                 : ""
             }
-            {!showGetLocation && loaded && result.length > 0 ? 
+            {!showGetLocation && loaded  ? 
                 Object.keys(result).map((category, categoryIndex) => (
                     <div key={categoryIndex}>
                         <div className="row">
