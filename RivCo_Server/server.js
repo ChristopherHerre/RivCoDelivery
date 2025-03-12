@@ -81,7 +81,7 @@ const pool = mysql.createPool({
 // Set up session with MySQLStore
 const sessionStore = new MySQLStore({
     clearExpired: true, // Removes expired sessions
-    checkExpirationInterval: 60 * 1000 // Checks every 15 minutes
+    checkExpirationInterval: 60 * 1000
 }, pool);
 
 app.use(session({
@@ -463,7 +463,6 @@ app.post('/api/changeOrderOpen', checkRole(1), async (req, res) => {
     }
 });
 
-// Route to handle dbPost2 method from the client
 const orderLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 10,
