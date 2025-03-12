@@ -6,7 +6,8 @@ heroImage:  '/cbu.jpg'
 slug:  'college'
 ---
 
-<p>I graduated from Saddleback College in July 2022 and got my associate's degree in Health Information technology:</p>
+<p>I graduated from Saddleback College in May of 2022 and I received my associate's degree in Health Information technology:</p>
 <img src="/saddleback2.jpg" />
 <p>I also received my associate's degree in Health Sciences from Saddleback College:</p>
 <img src="/saddleback1.jpg" />
+<p></p>
