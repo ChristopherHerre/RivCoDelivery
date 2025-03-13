@@ -136,29 +136,96 @@ passport.use(new GoogleStrategy({
 
 app.use(express.json()); // Middleware to parse JSON requests
 
-app.post('/api/addRestaurant', async (req, res) => {
-    const { name, address, latitude, longitude } = req.body;
+app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
+    if (!req.session?.user?.sub) {
+        return res.status(401).json({ message: 'Authentication required' });
+    }
+    const { name, address, latitude, longitude, category } = req.body;
     if (!name || !address || !latitude || !longitude) {
         return res.status(400).json({ error: "All fields are required" });
     }
     try {
-        const connection = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-        });
-        const [result] = await connection.execute(
-            "INSERT INTO restaurants (name, address, latitude, longitude) VALUES (?, ?, ?, ?)",
-            [name, address, latitude, longitude]
+        const [result] = await pool.execute(
+            `INSERT INTO restaurants (name, address, latitude, longitude, category)
+             VALUES (?, ?, ?, ?, ?)
+            `,
+            [name, address, latitude, longitude, category]
         );
-        connection.end();
         res.status(201).json({ message: "Restaurant added successfully", id: result.insertId });
     } catch (error) {
         console.error("Database error:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
+app.post('/api/manageRestaurant', checkRole(2), async (req, res) => {
+    if (!req.session?.user?.sub) {
+        return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    const { name, address, latitude, longitude, category } = req.body;
+    if (!name || !address || !latitude || !longitude) {
+        return res.status(400).json({ error: "All fields are required" });
+    }
+
+    try {
+        // Check if the user already has a restaurant
+        const [[existingRestaurant]] = await pool.execute(
+            `SELECT restaurant_id FROM users WHERE id = ?`, 
+            [req.session.user.sub]
+        );
+
+        if (existingRestaurant?.restaurant_id) {
+            // Update existing restaurant
+            await pool.execute(
+                `UPDATE restaurants 
+                 SET name = ?, address = ?, latitude = ?, longitude = ?, category = ?
+                 WHERE id = ?`,
+                [name, address, latitude, longitude, category, existingRestaurant.restaurant_id]
+            );
+            return res.status(200).json({ message: "Restaurant updated successfully" });
+        } else {
+            // Insert new restaurant
+            const [result] = await pool.execute(
+                `INSERT INTO restaurants (name, address, latitude, longitude, category)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [name, address, latitude, longitude, category]
+            );
+
+            // Update users table to link the restaurant
+            await pool.execute(
+                `UPDATE users SET restaurant_id = ? WHERE id = ?`,
+                [result.insertId, req.session.user.sub]
+            );
+
+            return res.status(201).json({ message: "Restaurant added successfully", id: result.insertId });
+        }
+    } catch (error) {
+        console.error("Database error:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+app.get('/api/getUserRestaurant', checkRole(2), async (req, res) => {
+    if (!req.session?.user?.sub) {
+        return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    try {
+        const [[restaurant]] = await pool.execute(
+            `SELECT r.* FROM restaurants r 
+             JOIN users u ON u.restaurant_id = r.id 
+             WHERE u.id = ?`, 
+            [req.session.user.sub]
+        );
+
+        res.json({ restaurant: restaurant || null });
+    } catch (error) {
+        console.error("Database error:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 
 app.post('/api/google-login', async (req, res) => {
     const { token } = req.body;

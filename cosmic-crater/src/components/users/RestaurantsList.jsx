@@ -471,9 +471,9 @@ export default function RestaurantsList(props) {
             />
             <br />
             {
-                !showGetLocation ?
+                !showGetLocation && loaded ?
                     <div className="row">
-                        <div className="col-6">
+                        <div className="col-sm-12 col-md-6">
                             <input 
                                 placeholder="Search for item..." 
                                 className="form-control text-bg-dark rounded" 
