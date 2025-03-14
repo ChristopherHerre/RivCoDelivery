@@ -14,7 +14,6 @@ function UserOrders() {
         style: 'currency',
         currency: 'USD',
     });
-
     useEffect(() => {
         const fetchUserOrders = async (attempt = 1) => {
             if (googleId) {
@@ -40,14 +39,12 @@ function UserOrders() {
                         fetchUserOrders(attempt + 1);
                     } else {
                         console.error('Error fetching user orders:', err);
-                        //window.location.href = '/404-page.html';
                     }
                 } finally {
                     setLoading(false);
                 }
             }
         };
-
         fetchUserOrders();
     }, [googleId, page]);
 
@@ -65,7 +62,6 @@ function UserOrders() {
                 fetchOrderItems(orderId, attempt + 1);
             } else {
                 console.error('Error fetching order items:', err);
-                //window.location.href = '/404-page.html';
             }
         }
     };
@@ -95,7 +91,6 @@ function UserOrders() {
             </div>
         );
     }
-
     return (
         <div className="container">
             <h1>Your Orders</h1>
