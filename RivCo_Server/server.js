@@ -36,6 +36,27 @@ process.on('exit', () => {
   proxy.kill();
 });*/
 
+const checkRole = (requiredRole) => {
+    return async (req, res, next) => {
+        try {
+            if (!req.session?.user?.sub) {
+                return res.status(401).json({ message: 'Authentication required' });
+            }
+            const [results] = await pool.execute(
+                'SELECT role FROM users WHERE id = ?',
+                [req.session.user.sub]
+            );
+            if (!results.length || results[0].role < requiredRole) {
+                return res.status(403).json({ message: 'Access denied' });
+            }
+            next();
+        } catch (err) {
+            console.error('Role check error:', err);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    };
+};
+
 function haversine_dist(lat, lng, lat2, lng2) {
     var R = 3958.8;
     var rlat1 = lat2 * (Math.PI / 180);
@@ -55,12 +76,12 @@ app.get("*", (req, res) => {
 */
 // Set headers to avoid Cross-Origin-Opener-Policy issues
 app.use((req, res, next) => {
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp'); // COEP
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');  // COOP
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Access-Control-Allow-Origin', 'https://www.rivcodelivery.com'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-   res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies/auth headers
+    res.header("Access-Control-Allow-Credentials", "true");
     next();
 });
 
@@ -78,21 +99,20 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Set up session with MySQLStore
 const sessionStore = new MySQLStore({
-    clearExpired: true, // Removes expired sessions
+    clearExpired: true,
     checkExpirationInterval: 60 * 1000
 }, pool);
 
 app.use(session({
-    secret: process.env.SESSION_SECRET, // Use environment variable for session secret
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-        secure: false, // Set to true if using HTTPS
-        httpOnly: true, // Ensure the cookie is sent only over HTTP(S), not client JavaScript
-        maxAge: 2 * 60 * 60 * 1000 // 2 hour
+        secure: false,
+        httpOnly: true,
+        maxAge: 2 * 60 * 60 * 1000 
     }
 }));
 
@@ -104,18 +124,15 @@ app.use(session({
     next();
 });*/
 
-// Add logging to session middleware
 app.use((req, res, next) => {
     console.log('Session ID:', req.sessionID);
     console.log('Session:', req.session);
     next();
 });
 
-// Initialize passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Serialize user
 passport.serializeUser((user, done) => {
     done(null, user);
 });
@@ -124,17 +141,15 @@ passport.deserializeUser((user, done) => {
     done(null, user);
 });
 
-// Configure Google strategy
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID, // Use environment variable for client ID
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Use environment variable for client secret
-    callbackURL: process.env.GOOGLE_CALLBACK_URL // Use environment variable for callback URL
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL 
 }, (accessToken, refreshToken, profile, done) => {
-    // No need to fetch user's email address here, as it will be done in the token verification route
     done(null, profile);
 }));
 
-app.use(express.json()); // Middleware to parse JSON requests
+app.use(express.json());
 
 app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
@@ -162,47 +177,106 @@ app.post('/api/manageRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ message: 'Authentication required' });
     }
-
     const { name, address, latitude, longitude, category } = req.body;
     if (!name || !address || !latitude || !longitude) {
         return res.status(400).json({ error: "All fields are required" });
     }
-
+    const connection = await pool.getConnection();
     try {
-        // Check if the user already has a restaurant
-        const [[existingRestaurant]] = await pool.execute(
+        await connection.beginTransaction();
+        const [[existingRestaurant]] = await connection.execute(
             `SELECT restaurant_id FROM users WHERE id = ?`, 
             [req.session.user.sub]
         );
-
         if (existingRestaurant?.restaurant_id) {
-            // Update existing restaurant
-            await pool.execute(
+            await connection.execute(
                 `UPDATE restaurants 
                  SET name = ?, address = ?, latitude = ?, longitude = ?, category = ?
                  WHERE id = ?`,
                 [name, address, latitude, longitude, category, existingRestaurant.restaurant_id]
             );
+            await connection.commit();
             return res.status(200).json({ message: "Restaurant updated successfully" });
         } else {
-            // Insert new restaurant
-            const [result] = await pool.execute(
+            const [result] = await connection.execute(
                 `INSERT INTO restaurants (name, address, latitude, longitude, category)
                  VALUES (?, ?, ?, ?, ?)`,
                 [name, address, latitude, longitude, category]
             );
-
-            // Update users table to link the restaurant
-            await pool.execute(
+            await connection.execute(
                 `UPDATE users SET restaurant_id = ? WHERE id = ?`,
                 [result.insertId, req.session.user.sub]
             );
-
+            await connection.commit();
             return res.status(201).json({ message: "Restaurant added successfully", id: result.insertId });
         }
     } catch (error) {
+        await connection.rollback();
         console.error("Database error:", error);
         res.status(500).json({ error: "Internal server error" });
+    } finally {
+        connection.release();
+    }
+});
+
+app.post('/api/menu-items', checkRole(2), (req, res) => {
+    const { menu_item_id, ingredient_id } = req.body;
+    if (!menu_item_id || !ingredient_id) {
+      return res.status(400).json({ error: 'Menu item ID and Ingredient ID are required' });
+    }
+    const insertQuery = `
+      INSERT INTO menu_item_ingredients_map (menu_item_id, ingredient_id)
+      VALUES (?, ?);
+    `;
+    pool.query(insertQuery, [menu_item_id, ingredient_id], (err, results) => {
+      if (err) {
+        console.error('Error inserting new row:', err);
+        return res.status(500).json({ error: 'Failed to insert new row' });
+      }
+      res.status(201).json({ message: 'New row inserted successfully', id: results.insertId });
+    });
+});
+
+app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
+    const query = `SELECT * FROM menu_items;`;
+    try {
+        const [results] = await pool.query(query);
+        res.json(results);
+    } catch (err) {
+        console.error('Error executing query:', err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
+});
+
+app.get('/api/menu-ingredients/:menuItem', checkRole(2), async (req, res) => {
+    const { menuItem } = req.params;
+    const query = `SELECT * FROM menu_item_ingredients WHERE id = ?;`;
+    
+    try {
+        const [results] = await pool.query(query, [menuItem]);
+        res.json(results);
+    } catch (err) {
+        console.error('Error executing query:', err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
+});
+
+app.get('/api/menu-items', checkRole(2), async (req, res) => {
+    const query = `
+        SELECT     
+        mi.id AS menu_item_id,     
+        mi.name AS menu_item_name, 
+        miim.ingredient_id AS iid, 
+        mii.ingredients_name
+        FROM menu_item_ingredients_map miim
+        JOIN menu_items mi ON miim.menu_item_id = mi.id;
+    `;
+    try {
+        const [results] = await pool.query(query);
+        res.json(results);
+    } catch (err) {
+        console.error('Error executing query:', err);
+        return res.status(500).json({ error: 'Database query failed' });
     }
 });
 
@@ -210,7 +284,6 @@ app.get('/api/getUserRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ message: 'Authentication required' });
     }
-
     try {
         const [[restaurant]] = await pool.execute(
             `SELECT r.* FROM restaurants r 
@@ -218,14 +291,12 @@ app.get('/api/getUserRestaurant', checkRole(2), async (req, res) => {
              WHERE u.id = ?`, 
             [req.session.user.sub]
         );
-
         res.json({ restaurant: restaurant || null });
     } catch (error) {
         console.error("Database error:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
-
 
 app.post('/api/google-login', async (req, res) => {
     const { token } = req.body;
@@ -236,15 +307,12 @@ app.post('/api/google-login', async (req, res) => {
         });
         const payload = ticket.getPayload();
         const { sub, email, name, picture } = payload;
-
-        // Check if the user already exists in the `users` table
         const [userResults] = await pool.execute(
             'SELECT * FROM users WHERE id = ? LIMIT 1',
             [sub]
         );
 	    const role = 0;
         if (userResults.length === 0) {
-            // If the user doesn't exist, insert them into the `users` table
             await pool.execute(
                 'INSERT INTO users (id, name, email, role) VALUES (?, ?, ?, ?)',
                 [sub, name, email, role]
@@ -256,11 +324,7 @@ app.post('/api/google-login', async (req, res) => {
                // [name, email, picture, sub]
             //);
         }
-
-        // 🛑 DELETE OLD SESSIONS FOR THIS USER
         await pool.execute('DELETE FROM sessions WHERE JSON_EXTRACT(data, "$.user.sub") = ?', [sub]);
-
-        // ✅ Save the new session
         req.session.user = { sub, email, name, picture };
         req.session.save(err => {
             if (err) console.error("Session save error:", err);
@@ -300,36 +364,12 @@ app.post('/api/google-login', async (req, res) => {
     }
 });
 */
-
-// Create OAuth2 client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-const checkRole = (requiredRole) => {
-    return async (req, res, next) => {
-        try {
-            if (!req.session?.user?.sub) {
-                return res.status(401).json({ message: 'Authentication required' });
-            }
-            const [results] = await pool.execute(
-                'SELECT role FROM users WHERE id = ?',
-                [req.session.user.sub]
-            );
-            if (!results.length || results[0].role < requiredRole) {
-                return res.status(403).json({ message: 'Access denied' });
-            }
-            next();
-        } catch (err) {
-            console.error('Role check error:', err);
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    };
-};
 
 app.get('/api/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-// Route to retrieve session information
 app.get('/api/session', (req, res) => {
     console.log('Retrieving session...');
     console.log('Session in /api/session:', req.session);
@@ -345,7 +385,6 @@ app.get('/api/profile', (req, res) => {
     console.log('Session in /api/profile:', req.session);
     if (req.isAuthenticated()) {
         res.json({
-            //displayName: req.user.displayName,
             email: req.user.email
         });
     } else {
@@ -383,7 +422,6 @@ app.get('/api/logout', (req, res) => {
 
 app.get('/api/maps-api-key', (req, res) => {
     console.log("API Key Request Received");
-    // Check if the API key is being loaded
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     console.log("Google Maps API Key:", apiKey); 
     if (!apiKey || apiKey == undefined || apiKey === undefined) {
@@ -392,7 +430,6 @@ app.get('/api/maps-api-key', (req, res) => {
     res.json({ apiKey });
 });
 
-// Route to fetch all restaurants
 app.get('/api/restaurants/:latitude/:longitude', async (req, res) => {
     const { latitude, longitude } = req.params;
     const query = `
@@ -419,7 +456,6 @@ app.get('/api/restaurants/:latitude/:longitude', async (req, res) => {
     }
 });
 
-// Route to fetch menu items for a specific restaurant
 app.get('/api/restaurants2/:restaurantId/menu', async (req, res) => {
     const { restaurantId } = req.params;
     console.log("restaurantId: ", restaurantId);
@@ -436,7 +472,6 @@ app.get('/api/restaurants2/:restaurantId/menu', async (req, res) => {
     }
 });
 
-// Route to search for menu items
 app.get('/api/menu/item/search', async (req, res) => {
     const menuItemName = req.query.menuItemName;
     console.log(menuItemName);
@@ -513,7 +548,6 @@ app.get('/api/menu/item', async (req, res) => {
     }
 });
 
-// Route to change the 'open' column to value 1
 app.post('/api/changeOrderOpen', checkRole(1), async (req, res) => {
     const iid  = req.body[0];
     console.log("id: "+iid);
@@ -578,9 +612,7 @@ app.put('/api/user/address', async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
-
     const userId = req.session.user.sub;
-
     try {
         await pool.execute(
             'UPDATE users SET address_street_number = NULL, address_street = NULL, address_city = NULL, address_state = NULL, address_zip = NULL, address_latitude = NULL, address_longitude = NULL WHERE id = ?',
@@ -597,7 +629,6 @@ app.get('/api/users', checkRole(2), async (req, res) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
-
     try {
         const query = 'SELECT * FROM users ORDER BY name ASC LIMIT ? OFFSET ?';
         const [results] = await pool.execute(query, [
@@ -645,10 +676,8 @@ app.post('/api/user/address', async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
-
     const { address, latitude, longitude } = req.body;
     const userId = req.session.user.sub;
-
     try {
         await pool.execute(
             'UPDATE users SET address_street_number = ?, address_street = ?, address_city = ?, address_state = ?, address_zip = ?, address_latitude = ?, address_longitude = ? WHERE id = ?',
@@ -662,7 +691,6 @@ app.post('/api/user/address', async (req, res) => {
 });
 
 app.get('/api/user/orders', async (req, res) => {
-    // Check if user is authenticated via session
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -730,14 +758,14 @@ app.get('/api/user/details', async (req, res) => {
     if (!req.session.user || !req.session.user.sub) {
         return res.status(401).json({ error: 'User not authenticated' });
     }
-    const userId = req.session.user.sub; // Extract user ID from session
+    const userId = req.session.user.sub;
     try {
         const query = 'SELECT id, name, email, address FROM users WHERE id = ? LIMIT 1';
         const [results] = await pool.execute(query, [userId]);
         if (results.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.json(results[0]); // Send only the authenticated user's details
+        res.json(results[0]);
     } catch (err) {
         console.error('Error fetching user details:', err);
         res.status(500).json({ error: 'Database query failed' });
