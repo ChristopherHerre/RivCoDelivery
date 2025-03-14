@@ -78,17 +78,19 @@ export default function Admin(props) {
                 .catch(error => console.error('Error updating ingredient:', error));
         };
         return (
-            <div className="container mt-4">
-                <h3 className="text-xl font-bold mb-4">
-                    Edit Ingredients
-                </h3>
-                <div className="row fw-bold border-bottom pb-2">
-                    {['ID', 'Easy Price', 'Extra Price', 'Input Type', 'Name', 'Customize', 'Type', 'Price', 'Sort Order', 'Selected', 'Halfable', 'Actions'].map(header => (
-                        <div key={header} className="col-12 col-md-2 border p-2">
-                            {header}
-                        </div>
-                    ))}
-                </div>
+            <div className="container">
+                {ingredients.length > 0 && (
+                    <div className="row fw-bold border-bottom pb-2">
+                        <h3 className="text-xl font-bold mb-4">
+                            Edit Ingredients
+                        </h3>
+                        {['ID', 'Easy Price', 'Extra Price', 'Input Type', 'Name', 'Customize', 'Type', 'Price', 'Sort Order', 'Selected', 'Halfable', 'Actions'].map(header => (
+                            <div key={header} className="col-12 col-md-2 border p-2">
+                                {header}
+                            </div>
+                        ))}
+                    </div>
+                )}
                 {ingredients.map(ingredient => (
                     <div key={ingredient.id} className="row border-bottom py-2">
                         {Object.keys(ingredient).map(field => (
@@ -110,120 +112,81 @@ export default function Admin(props) {
         );
     }
 
-    const MenuItemsIngredientsMap = () => {
-        const [menuItems, setMenuItems] = useState([]);
-        const [menuItemId, setMenuItemId] = useState('');
-        const [ingredientId, setIngredientId] = useState('');
-    
-        // Fetch menu items data
-        useEffect(() => {
-            axios.get('/api/menu-items')
-                .then(response => {
-                    setMenuItems(response.data);
-                }).catch(error => {
-                    console.error('Error fetching menu items:', error);
-                });
-        }, []);
-
-        const handleAddRow = (e) => {
-            e.preventDefault();
-            if (!menuItemId || !ingredientId) {
-                alert('Please enter both Menu Item ID and Ingredient ID');
-                return;
-            }
-            axios.post('/api/menu-items', { menu_item_id: menuItemId, ingredient_id: ingredientId })
-                .then(response => {
-                    alert('Row added successfully');
-                    setMenuItems([...menuItems, response.data]);
-                    setMenuItemId('');
-                    setIngredientId('');
-                }).catch(error => {
-                    console.error('Error adding new row:', error);
-                    alert('Failed to add new row');
-                });
-        };
-    
-        return (
-        <div>
-            <h1>Menu Items</h1>
-            <table>
-            <thead>
-                <tr>
-                <th>Menu Item ID</th>
-                <th>Menu Item Name</th>
-                <th>Ingredient ID</th>
-                <th>Ingredient Name</th>
-                </tr>
-            </thead>
-            <tbody>
-                {menuItems?.map(item => (
-                <tr key={item.menu_item_id}>
-                    <td>{item.menu_item_id}</td>
-                    <td>{item.menu_item_name}</td>
-                    <td>{item.iid}</td>
-                    <td>{item.ingredient_name}</td>
-                </tr>
-                ))}
-            </tbody>
-            </table>
-            <h2>Add New Row</h2>
-            <form onSubmit={handleAddRow}>
-            <div>
-                <label>Menu Item ID: </label>
-                <input
-                type="number"
-                value={menuItemId}
-                onChange={(e) => setMenuItemId(e.target.value)}
-                required
-                />
-            </div>
-            <div>
-                <label>Ingredient ID: </label>
-                <input
-                type="number"
-                value={ingredientId}
-                onChange={(e) => setIngredientId(e.target.value)}
-                required
-                />
-            </div>
-            <button type="submit">Add Row</button>
-            </form>
-        </div>
-        );
-    };
-
     const Menu = () => {
         const [menuItems, setMenuItems] = useState([]);
-        const [ingredients, setIngredients] = useState([]);
         const [error, setError] = useState(null);
+
         useEffect(() => {
             fetch('/api/menu-items-list')
                 .then(res => res.json())
                 .then(data => setMenuItems(data))
-                .catch(err => setError('Failed to fetch menu items'));
-      
-            fetch('/api/menu-ingredients')
-                .then(res => res.json())
-                .then(data => setIngredients(data))
-                .catch(err => setError('Failed to fetch ingredients'));
+                .catch(() => setError('Failed to fetch menu items'));
         }, []);
+
+        const handleChange = (id, key, value) => {
+            setMenuItems(prevItems =>
+                prevItems.map(item =>
+                    item.id === id ? { ...item, [key]: value } : item
+                )
+            );
+        };
+
+        const handleSave = (id) => {
+            const updatedItem = menuItems.find(item => item.id === id);
+            fetch(`/api/update-menu-item/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedItem),
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to update");
+                    return res.json();
+                })
+                .catch(() => setError("Failed to save changes"));
+        };
+
         return (
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="row">
-                    <div className="col-md-6">
-                        {error && <p className="text-red-500">{error}</p>}
-                        {menuItems.map(item => (
-                            <div key={item.id} className="p-4 shadow-lg rounded-2xl">
-                                <h2 className="text-xl font-bold">{item.name}</h2>
-                                <p className="text-gray-600">{item.description}</p>
-                                <p className="text-green-600 font-semibold">
-                                    ${item.price}
-                                </p>
+                {error &&
+                    <p className="text-red-500">
+                        {error}
+                    </p>
+                }
+                {menuItems.map(item => (
+                    <div key={item.id} className="m-3 p-4 shadow-lg rounded-2xl">
+                        <div className="row">
+                            <div className='col-12 col-xl-3 text-center bg-secondary'>
+                                <h3>Edit Item</h3>
+                                {Object.keys(item)
+                                    .sort()
+                                    .map((key) => (
+                                        <div key={key} className="mb-2">
+                                            <label className="font-bold">{key}:</label>
+                                            <br />
+                                            <input
+                                                type="text"
+                                                value={item[key]}
+                                                onChange={(e) => handleChange(item.id, key, e.target.value)}
+                                                className="ml-2 p-1 border rounded w-full bg-dark text-white"
+                                            />
+                                        </div>
+                                    ))
+                                }
+                                <button 
+                                    onClick={() => handleSave(item.id)} 
+                                    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                            <div className='col-12 col-xl-9'>   
                                 <EditIngredients menuItem={item.id} />
                             </div>
-                        ))}
+                        </div>
                     </div>
-                </div>    
+                ))}
             </div>
         );
     };
