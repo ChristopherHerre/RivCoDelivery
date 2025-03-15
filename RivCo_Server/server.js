@@ -238,7 +238,10 @@ app.post('/api/menu-items', checkRole(2), (req, res) => {
 });
 
 app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
-    const query = `SELECT * FROM menu_items;`;
+    const query = `
+        SELECT * FROM menu_items 
+        WHERE restaurant_id = 
+        ORDER BY sort_order DESC;`;
     try {
         const [results] = await pool.query(query);
         res.json(results);

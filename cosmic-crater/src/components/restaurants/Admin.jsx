@@ -78,38 +78,45 @@ export default function Admin(props) {
                 .catch(error => console.error('Error updating ingredient:', error));
         };
         return (
-            <div className="container">
+            <div>
                 {ingredients.length > 0 && (
                     <div className="row fw-bold border-bottom pb-2">
-                        <h3 className="text-xl font-bold mb-4">
-                            Edit Ingredients
-                        </h3>
-                        {['ID', 'Easy Price', 'Extra Price', 'Input Type', 'Name', 'Customize', 'Type', 'Price', 'Sort Order', 'Selected', 'Halfable', 'Actions'].map(header => (
+                        <h3 className="text-xl font-bold mb-4">Edit Ingredients</h3>
+                        {Object.keys(ingredients[0]).filter((field) => field !== "id" && field !== "ingredient_id").map((header) => (
                             <div key={header} className="col-12 col-md-2 border p-2">
-                                {header}
+                                {header.replace(/_/g, ' ')} {/* Replaces underscores with spaces for readability */}
                             </div>
                         ))}
+                        <div className="col-12 col-md-2 border p-2">Actions</div>
                     </div>
                 )}
-                {ingredients.map(ingredient => (
-                    <div key={ingredient.id} className="row border-bottom py-2">
-                        {Object.keys(ingredient).map(field => (
-                            <div key={field} className="col-12 col-md-2 p-2">
-                                <input 
-                                    type={typeof ingredient[field] === 'number' ? 'number' : 'text'}
-                                    value={ingredient[field] || ''} 
-                                    onChange={(e) => handleChange(ingredient.id, field, e.target.value)}
-                                    className="form-control bg-dark text-white"
-                                />
-                            </div>
-                        ))}
+                {ingredients.map((ingredient) => (
+                    <div key={ingredient.iid} className="row border-bottom py-2">
+                        {Object.keys(ingredient)
+                            .filter((field) => field !== "id" && field !== "ingredient_id") // Exclude 'id' and 'ingredient_id'
+                            .map((field) => (
+                                <div key={field} className="col-12 col-md-2 p-2">
+                                    <input
+                                        type={typeof ingredient[field] === "number" ? "number" : "text"}
+                                        value={ingredient[field] || ""}
+                                        onChange={(e) => handleChange(ingredient.iid, field, e.target.value)}
+                                        className="form-control bg-dark text-white"
+                                    />
+                                </div>
+                            ))}
                         <div className="col p-2">
-                            <button onClick={() => handleSave(ingredient.id)} className="btn btn-primary">Save</button>
+                            <button
+                                onClick={() => handleSave(ingredient.iid)}
+                                className="btn btn-primary">
+                                Save
+                            </button>
                         </div>
                     </div>
                 ))}
+
             </div>
         );
+        
     }
 
     const Menu = () => {
@@ -139,25 +146,24 @@ export default function Admin(props) {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(updatedItem),
+            }).then(res => {
+                if (!res.ok) throw new Error("Failed to update");
+                return res.json();
             })
-                .then(res => {
-                    if (!res.ok) throw new Error("Failed to update");
-                    return res.json();
-                })
-                .catch(() => setError("Failed to save changes"));
+            .catch(() => setError("Failed to save changes"));
         };
 
         return (
-            <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="">
                 {error &&
                     <p className="text-red-500">
                         {error}
                     </p>
                 }
                 {menuItems.map(item => (
-                    <div key={item.id} className="m-3 p-4 shadow-lg rounded-2xl">
+                    <div key={item.id} className="p-4 shadow-lg rounded-2xl">
                         <div className="row">
-                            <div className='col-12 col-xl-3 text-center bg-secondary'>
+                            <div className='col-12 col-xl-3 bg-secondary'>
                                 <h3>Edit Item</h3>
                                 {Object.keys(item)
                                     .sort()
@@ -169,14 +175,14 @@ export default function Admin(props) {
                                                 type="text"
                                                 value={item[key]}
                                                 onChange={(e) => handleChange(item.id, key, e.target.value)}
-                                                className="ml-2 p-1 border rounded w-full bg-dark text-white"
+                                                className="ml-2 p-1 border rounded form-control bg-dark text-white"
                                             />
                                         </div>
                                     ))
                                 }
                                 <button 
                                     onClick={() => handleSave(item.id)} 
-                                    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                    className="btn btn-primary form-control"
                                 >
                                     Save
                                 </button>
@@ -217,7 +223,7 @@ export default function Admin(props) {
         <div>
             <h2>Admin Panel</h2>
             <form onSubmit={(e) => submitRestaurant(e)}>
-                <div className="row m-3">
+                <div className="row p-4 shadow-lg rounded-2xl">
                     <h3>{hasRestaurant ? "Update Restaurant" : "Add Restaurant"}</h3>
                     <div className="col-sm-4">
                         <label>Name: </label>
