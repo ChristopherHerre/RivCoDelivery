@@ -5,21 +5,11 @@ import { API_URL } from '../App';
 import Spinner from '../users/Spinner';
 
 export default function Admin(props) {
-    const [arr, setArr] = useState([]);
-    const [restaurant, setRestaurant] = useState(-1);
     const [success, setSuccess] = useState(false);
-    const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [loading2, setLoading2] = useState(false);
-    const [latitude, setLatitude] = useState(null);
-    const [longitude, setLongitude] = useState(null);
-    //const [loading, setLoading] = useState(true);
     const [hasRestaurant, setHasRestaurant] = useState(false);
     const [restaurantData, setRestaurantData] = useState(null);
-
-
-    const handleNextPage = () => setPage(prevPage => prevPage + 1);
-    const handlePreviousPage = () => setPage(prevPage => Math.max(prevPage - 1, 1));
     useEffect(() => {
         async function fetchRestaurantStatus() {
             try {
@@ -66,6 +56,9 @@ export default function Admin(props) {
         };
         return (
             <>
+                {ingredients.length <= 0 && (
+                    <p>No ingredients found.</p>)
+                } 
                 {ingredients.length > 0 && (
                     <div className="row fw-bold border-bottom pb-2">
                         <h3 className="text-xl font-bold mb-4">Edit Ingredients</h3>
@@ -80,14 +73,14 @@ export default function Admin(props) {
                     </div>
                 )}
                 {ingredients.map((ingredient) => (
-                    <div key={ingredient.iid} className="row border-bottom py-2">
+                    <div key={ingredient.iid} className="row mt-3 mb-3 border-bottom py-2">
                         {Object.keys(ingredient)
                             .filter((field) => field !== "id" && field !== "ingredient_id")
                             .map((field) => (
                                 <div key={field} className="col-12 col-md-2 p-2">
                                     <input
                                         type={typeof ingredient[field] === "number" ? "number" : "text"}
-                                        value={ingredient[field] || ""}
+                                        defaultValue={ingredient[field] ?? ""}
                                         onChange={(e) => handleChange(ingredient.iid, field, e.target.value)}
                                         className="form-control bg-dark text-white"
                                     />
@@ -106,11 +99,11 @@ export default function Admin(props) {
             </>
         );
     }
-
     
     const Menu = () => {
         const [menuItems, setMenuItems] = useState([]);
         const [error, setError] = useState(null);
+        const [success2, setSuccess2] = useState(false);
         useEffect(() => {
             fetch(`/api/menu-items-list`)
                 .then(res => res.json())
@@ -132,52 +125,68 @@ export default function Admin(props) {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(updatedItem),
-            }).then(res => {
+            })
+            .then(res => {
                 if (!res.ok) throw new Error("Failed to update");
+        
                 return res.json();
-            }).catch(() => setError("Failed to save changes"));
+            })
+            .then(() => {
+                setSuccess2(true); // Set success flag to true when the operation is successful
+            })
+            .catch(() => setError("Failed to save changes"));
         };
+        
         return (
-            <div className="">
+            <div className="row">
                 {error &&
                     <p className="text-red-500">
                         {error}
                     </p>
                 }
-                {menuItems.map(item => (
-                    <div key={item.id} className="p-4 shadow-lg rounded-2xl">
-                        <div className="row">
-                            <div className='col-12 col-xl-3 bg-secondary'>
-                                <h3>Edit Item</h3>
-                                {Object.keys(item)
-                                    .sort()
-                                    .map((key) => (
+                {menuItems
+                    //.sort((a, b) => a.sort - b.sort) // Sort by the "sort" column
+                    .map(item => (
+                        <div key={item.id} className="col-12 mt-3 shadow-lg rounded-2xl">
+                            <div className="row p-2">
+                                <div className='col-12 col-xl-3 bg-secondary'>
+                                    <h3>Edit Item</h3>
+                                    {Object.keys(item)
+                                        .sort()
+                                        .map((key) => (
                                         <div key={key} className="mb-2">
                                             <label className="font-bold">{key}:</label>
                                             <br />
                                             <input
-                                                type="text"
-                                                value={item[key]}
-                                                onChange={(e) => handleChange(item.id, key, e.target.value)}
-                                                className="ml-2 p-1 border rounded form-control bg-dark text-white"
+                                            type="text"
+                                            value={item[key]}
+                                            onChange={(e) => handleChange(item.id, key, e.target.value)}
+                                            className="ml-2 p-1 border rounded form-control bg-dark text-white"
                                             />
                                         </div>
-                                    ))
-                                }
-                                <button 
-                                    onClick={() => handleSave(item.id)} 
-                                    className="btn btn-primary form-control"
-                                >
-                                    <i class="bi bi-pencil-square"> </i>
-                                    Save
-                                </button>
-                            </div>
-                            <div className='col-12 col-xl-9'>   
-                                <EditIngredients menuItem={item.id} />
+                                        ))
+                                    }
+                                    <button 
+                                        onClick={() => handleSave(item.id)} 
+                                        className="btn btn-primary form-control mt-3 mb-3"
+                                    >
+                                        <i className="bi bi-pencil-square"> </i>
+                                        Save
+                                    </button>
+                                    {success2 ? (
+                                        <p className="text-success">
+                                            <i className="bi bi-check-circle-fill"> </i>
+                                            {"Item updated successfully."}
+                                        </p>
+                                    ) : ""}
+                                </div>
+                                <div className='col-12 col-xl-9'>   
+                                    <EditIngredients menuItem={item.id} />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                }
             </div>
         );
     };
@@ -208,8 +217,8 @@ export default function Admin(props) {
         <div>
             <h2>Admin Panel</h2>
             <form onSubmit={(e) => submitRestaurant(e)}>
-                <div className="row p-4 shadow-lg rounded-2xl">
-                    <h3>{hasRestaurant ? "Update Restaurant" : "Add Restaurant"}</h3>
+                <div className="row p-2 shadow-lg rounded-2xl">
+                    <h3>{hasRestaurant ? "Edit Restaurant" : "Add Restaurant"}</h3>
                     <div className="col-sm-4">
                         <label>Name: </label>
                         <input
@@ -273,30 +282,6 @@ export default function Admin(props) {
                 </div>
             </form>
             <Menu />
-            {loading ? (
-                <p>Loading...</p>
-            ) : (
-                arr.length > 0 ? (
-                    <div>
-                        <h3>{arr[0].mi_name}</h3>
-                        <p>Price: {arr[0].price}</p>
-                        <button
-                            className="btn btn-secondary" 
-                            onClick={handlePreviousPage} 
-                            disabled={page === 1}>
-                                Previous
-                        </button>
-                        <b> Page {page} </b>
-                        <button
-                            className="btn btn-secondary"
-                            onClick={handleNextPage}>
-                                Next
-                        </button>
-                    </div>
-                ) : (
-                    <p>No menu items found.</p>
-                )
-            )}
         </div>
     );
 }
