@@ -173,6 +173,23 @@ app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
     }
 });
 
+// Update menu item
+app.put('/api/update-menu-item/:id', (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    let updateFields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+    let values = Object.values(updates);
+    values.push(id);
+    const sql = `UPDATE menu_items SET ${updateFields} WHERE id = ?`;
+    pool.query(sql, values, (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json({ message: 'Menu item updated successfully' });
+        }
+    });
+});
+
 app.post('/api/manageRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ message: 'Authentication required' });
@@ -225,8 +242,8 @@ app.post('/api/menu-items', checkRole(2), (req, res) => {
       return res.status(400).json({ error: 'Menu item ID and Ingredient ID are required' });
     }
     const insertQuery = `
-      INSERT INTO menu_item_ingredients_map (menu_item_id, ingredient_id)
-      VALUES (?, ?);
+        INSERT INTO menu_item_ingredients_map (menu_item_id, ingredient_id)
+        VALUES (?, ?);
     `;
     pool.query(insertQuery, [menu_item_id, ingredient_id], (err, results) => {
       if (err) {
@@ -241,9 +258,7 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ error: 'Unauthorized: No user session' });
     }
-
     console.log("sub: " + req.session?.user?.sub);
-
     try {
         // Define the SQL query with a JOIN to get menu items for the user's restaurant
         const query = `
@@ -252,25 +267,19 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
             JOIN users ON users.restaurant_id = menu_items.restaurant_id
             WHERE users.id = ?;
         `;
-
         // Execute the query with the user's Google ID (sub)
         const [results] = await pool.query(query, [req.session.user.sub]);
-
         if (results.length === 0) {
             // No menu items found, return 403 error
             return res.status(403).json({ error: 'Forbidden: No menu items found for this user\'s restaurant' });
         }
-
         // Return the results
         res.json(results);
-
     } catch (err) {
         console.error('Error executing query:', err);
         res.status(500).json({ error: 'Database query failed' });
     }
 });
-
-  
 
 app.get('/api/menu-ingredients/:menuItem', checkRole(2), async (req, res) => {
     const { menuItem } = req.params;
@@ -288,12 +297,13 @@ app.get('/api/menu-ingredients/:menuItem', checkRole(2), async (req, res) => {
 app.get('/api/menu-items', checkRole(2), async (req, res) => {
     const query = `
         SELECT     
-        mi.id AS menu_item_id,     
-        mi.name AS menu_item_name, 
-        miim.ingredient_id AS iid, 
-        mii.ingredients_name
+            mi.id AS menu_item_id,     
+            mi.name AS menu_item_name, 
+            miim.ingredient_id AS iid, 
+            mii.ingredients_name
         FROM menu_item_ingredients_map miim
-        JOIN menu_items mi ON miim.menu_item_id = mi.id;
+        JOIN menu_items mi ON miim.menu_item_id = mi.id
+        ORDER BY mi.sort ASC;
     `;
     try {
         const [results] = await pool.query(query);
