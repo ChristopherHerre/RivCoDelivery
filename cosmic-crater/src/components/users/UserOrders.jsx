@@ -184,11 +184,16 @@ function UserOrders() {
                                         </thead>
                                         <tbody>
                                             {orderItems[order.id] ? orderItems[order.id].map(item => (
-                                                <tr key={item.id}>
-                                                    <td>{item.name}</td>
-                                                    <td>{item.quantity}</td>
-                                                    <td>{USDollar.format(item.price)}</td>
-                                                </tr>
+                                                <>
+                                                    <tr key={item.id}>
+                                                        <td>{item.name}</td>
+                                                        <td>{item.quantity}</td>
+                                                        <td>{USDollar.format(item.price)}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        {item.ingredients}
+                                                    </tr>
+                                                </>
                                             )) : (
                                                 <tr>
                                                     <td colSpan="3">
