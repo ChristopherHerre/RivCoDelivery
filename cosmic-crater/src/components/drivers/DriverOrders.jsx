@@ -214,11 +214,16 @@ function DriverOrders() {
                                         </thead>
                                         <tbody>
                                             {driverOrderItems[order.id] ? driverOrderItems[order.id].map(item => (
-                                                <tr key={item.id}>
-                                                    <td>{item.name}</td>
-                                                    <td>{item.quantity}</td>
-                                                    <td>{USDollar.format(item.price)}</td>
-                                                </tr>
+                                                <>
+                                                    <tr key={item.id}>
+                                                        <td>{item.name}</td>
+                                                        <td>{item.quantity}</td>
+                                                        <td>{USDollar.format(item.price)}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        {item.ingredients}
+                                                    </tr>
+                                                </>
                                             )) : (
                                                 <tr>
                                                     <td colSpan="3">
