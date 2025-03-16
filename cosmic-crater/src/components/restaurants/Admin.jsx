@@ -6,8 +6,7 @@ import Spinner from '../users/Spinner';
 
 export default function Admin(props) {
     const [arr, setArr] = useState([]);
-    const [arr2, setArr2] = useState([]);
-    const [restaurant, setRestaurant] = useState(1);
+    const [restaurant, setRestaurant] = useState(-1);
     const [success, setSuccess] = useState(false);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -18,19 +17,6 @@ export default function Admin(props) {
     const [hasRestaurant, setHasRestaurant] = useState(false);
     const [restaurantData, setRestaurantData] = useState(null);
 
-    useEffect(() => {
-        axios.get(`${API_URL}/api/restaurants/${latitude}/${longitude}`)
-            .then(res => {
-                setArr2(res.data);
-            });
-        setLoading(true);
-        axios.get(API_URL + '/api/menu', { params: { restaurant, page, limit: 1 } })
-            .then(res => {
-                setArr(res.data);
-            })
-            .catch(err => console.error("Error fetching menu items:", err))
-            .finally(() => setLoading(false));
-    }, [restaurant, page, latitude, longitude]);
 
     const handleNextPage = () => setPage(prevPage => prevPage + 1);
     const handlePreviousPage = () => setPage(prevPage => Math.max(prevPage - 1, 1));
@@ -46,7 +32,8 @@ export default function Admin(props) {
             } catch (error) {
                 console.error("Error fetching restaurant data:", error);
             } finally {
-                setLoading(false);
+                //setLoading(false);
+                setLoading(true);
             }
         }
         fetchRestaurantStatus();
@@ -78,11 +65,13 @@ export default function Admin(props) {
                 .catch(error => console.error('Error updating ingredient:', error));
         };
         return (
-            <div>
+            <>
                 {ingredients.length > 0 && (
                     <div className="row fw-bold border-bottom pb-2">
                         <h3 className="text-xl font-bold mb-4">Edit Ingredients</h3>
-                        {Object.keys(ingredients[0]).filter((field) => field !== "id" && field !== "ingredient_id").map((header) => (
+                        {Object.keys(ingredients[0])
+                            .filter((field) => field !== "id" && field !== "ingredient_id")
+                            .map((header) => (
                             <div key={header} className="col-12 col-md-2 border p-2">
                                 {header.replace(/_/g, ' ')} {/* Replaces underscores with spaces for readability */}
                             </div>
@@ -93,7 +82,7 @@ export default function Admin(props) {
                 {ingredients.map((ingredient) => (
                     <div key={ingredient.iid} className="row border-bottom py-2">
                         {Object.keys(ingredient)
-                            .filter((field) => field !== "id" && field !== "ingredient_id") // Exclude 'id' and 'ingredient_id'
+                            .filter((field) => field !== "id" && field !== "ingredient_id")
                             .map((field) => (
                                 <div key={field} className="col-12 col-md-2 p-2">
                                     <input
@@ -107,29 +96,27 @@ export default function Admin(props) {
                         <div className="col p-2">
                             <button
                                 onClick={() => handleSave(ingredient.iid)}
-                                className="btn btn-primary">
+                                className="btn btn-primary form-control">
+                                <i class="bi bi-pencil-square"> </i>
                                 Save
                             </button>
                         </div>
                     </div>
                 ))}
-
-            </div>
+            </>
         );
-        
     }
 
+    
     const Menu = () => {
         const [menuItems, setMenuItems] = useState([]);
         const [error, setError] = useState(null);
-
         useEffect(() => {
-            fetch('/api/menu-items-list')
+            fetch(`/api/menu-items-list`)
                 .then(res => res.json())
                 .then(data => setMenuItems(data))
                 .catch(() => setError('Failed to fetch menu items'));
         }, []);
-
         const handleChange = (id, key, value) => {
             setMenuItems(prevItems =>
                 prevItems.map(item =>
@@ -137,7 +124,6 @@ export default function Admin(props) {
                 )
             );
         };
-
         const handleSave = (id) => {
             const updatedItem = menuItems.find(item => item.id === id);
             fetch(`/api/update-menu-item/${id}`, {
@@ -149,10 +135,8 @@ export default function Admin(props) {
             }).then(res => {
                 if (!res.ok) throw new Error("Failed to update");
                 return res.json();
-            })
-            .catch(() => setError("Failed to save changes"));
+            }).catch(() => setError("Failed to save changes"));
         };
-
         return (
             <div className="">
                 {error &&
@@ -184,6 +168,7 @@ export default function Admin(props) {
                                     onClick={() => handleSave(item.id)} 
                                     className="btn btn-primary form-control"
                                 >
+                                    <i class="bi bi-pencil-square"> </i>
                                     Save
                                 </button>
                             </div>

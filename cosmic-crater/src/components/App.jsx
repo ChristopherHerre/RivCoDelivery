@@ -198,6 +198,7 @@ export function App() {
 								path={"/admin"}
 								element={
 									<Admin
+										profile={profile}
 										latitude={latitude}
 										setLatitude={setLatitude}
 										longitude={longitude}
