@@ -238,18 +238,39 @@ app.post('/api/menu-items', checkRole(2), (req, res) => {
 });
 
 app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
-    const query = `
-        SELECT * FROM menu_items 
-        WHERE restaurant_id = 
-        ORDER BY sort_order DESC;`;
+    if (!req.session?.user?.sub) {
+        return res.status(401).json({ error: 'Unauthorized: No user session' });
+    }
+
+    console.log("sub: " + req.session?.user?.sub);
+
     try {
-        const [results] = await pool.query(query);
+        // Define the SQL query with a JOIN to get menu items for the user's restaurant
+        const query = `
+            SELECT menu_items.*
+            FROM menu_items
+            JOIN users ON users.restaurant_id = menu_items.restaurant_id
+            WHERE users.id = ?;
+        `;
+
+        // Execute the query with the user's Google ID (sub)
+        const [results] = await pool.query(query, [req.session.user.sub]);
+
+        if (results.length === 0) {
+            // No menu items found, return 403 error
+            return res.status(403).json({ error: 'Forbidden: No menu items found for this user\'s restaurant' });
+        }
+
+        // Return the results
         res.json(results);
+
     } catch (err) {
         console.error('Error executing query:', err);
         res.status(500).json({ error: 'Database query failed' });
     }
 });
+
+  
 
 app.get('/api/menu-ingredients/:menuItem', checkRole(2), async (req, res) => {
     const { menuItem } = req.params;
@@ -442,6 +463,7 @@ app.get('/api/restaurants/:latitude/:longitude', async (req, res) => {
     AND latitude IS NOT NULL
     LIMIT 50`;
     try {
+        console.log("sub: " + !req.session?.user?.sub)
         const [results] = await pool.execute(query);
         const restaurantsWithDistance = results.map((restaurant) => {
             const distance = haversine_dist(
