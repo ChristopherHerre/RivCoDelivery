@@ -111,7 +111,7 @@ function DriverOrders() {
 	}
 
     return (
-        <div className="container">
+        <div>
             <h1>Driver Orders</h1>
             {loading ? (
                 <Spinner />

@@ -92,7 +92,7 @@ function UserOrders() {
         );
     }
     return (
-        <div className="container">
+        <div>
             <h1>Your Orders</h1>
             {loading ? (
                 <Spinner />

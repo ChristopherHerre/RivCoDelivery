@@ -29,7 +29,7 @@ function Users() {
             }
         };
         fetchUsers();
-    }, [page]);
+    }, [page, setUsers]);
 
     function Pages() {
         return (
@@ -49,37 +49,39 @@ function Users() {
             </div>
         );
     }
-    const [value, setValue] = useState(1); // Default value for the slider (Medium)
+    const [value, setValue] = useState(1);
 
-    const handleChange = (event) => {
-      setValue(event.target.value);
-    };
-  
-    const getRoleLabel = (value) => {
-      switch (value) {
-        case '0':
-          return 'Low';
-        case '1':
-          return 'Medium';
-        case '2':
-          return 'High';
-        default:
-          return 'Medium';
-      }
+    const handleChange = async (event, userId) => {
+        const newValue = event.target.value;
+        setValue(newValue);
+        setUsers(newUsers => newUsers.map(user => {
+            if (user.id === userId) {
+                return { ...user, role: newValue };
+            }
+            return user;
+        }));
+        try {
+            const response = await axios.put(`${API_URL}/api/users/${userId}/role`, { role: newValue }, {
+                withCredentials: true
+            });
+            console.log('Role updated:', response.data);
+        } catch (err) {
+            console.error('Error updating role:', err);
+        }
     };
     return (
-        <div className="container">
+        <div>
             <h1>Users List</h1>
             {loading ? (
                 <Spinner />
             ) : (
                 <>
-                    {users.length > 0 ? <Pages /> : ""}
-                    {users.length > 0 ? (
+                    {users?.length > 0 ? <Pages /> : ""}
+                    {users?.length > 0 ? (
                         <div className="row">
-                            {users.map(user => (
+                            {users?.map(user => (
                                 <div key={user.id} className="col-md-6 col-lg-4 mb-3">
-                                    <div className="card p-3 shadow-sm">
+                                    <div className="card p-3 shadow-sm bg-dark text-white">
                                         <h5 className="card-title">{user.name}</h5>
                                         <p className="card-text">
                                             <strong>Email:</strong> {user.email}
@@ -100,7 +102,9 @@ function Users() {
                                             <strong>Role: </strong>
                                             <form>
                                                 <div clasName="form-group">
-                                                    <label for="formControlRange">Example Range input</label>
+                                                    <label for="formControlRange">
+                                                        Example Range input
+                                                    </label>
                                                     <input
                                                         type="range"
                                                         className="form-range"
@@ -108,16 +112,16 @@ function Users() {
                                                         min="0"
                                                         max="2"
                                                         step="1"
-                                                        value={user.role}
-                                                        onChange={handleChange}
+                                                        defaultValue={user.role}
+                                                        onChange={(e) => handleChange(e, user.id)}
                                                     />    
                                                     <div className="d-flex justify-content-between">
                                                         <span>Basic</span>
                                                         <span>Driver</span>
                                                         <span>Restaurant</span>
                                                     </div>
-                                                    <small className="form-text text-muted">
-                                                        Current role: <strong>{user.role || getRoleLabel(user.role)}</strong>
+                                                    <small className="form-text text-white">
+                                                        Current role: <strong>{user.role}</strong>
                                                     </small>                                      
                                                 </div>
                                             </form>
@@ -133,7 +137,7 @@ function Users() {
                     ) : (
                         <p>No users found.</p>
                     )}
-                    {users.length > 0 ? <Pages /> : ""}
+                    {users?.length > 0 ? <Pages /> : ""}
                 </>
             )}
         </div>
