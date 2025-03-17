@@ -473,7 +473,7 @@ export default function RestaurantsList(props) {
             {
                 !showGetLocation && loaded ?
                     <div className="row">
-                        <div className="col-sm-12 col-md-6">
+                        <div className="col-12 col-md-6">
                             <input 
                                 placeholder="Search for item..." 
                                 className="form-control text-bg-dark rounded" 
@@ -482,7 +482,7 @@ export default function RestaurantsList(props) {
                                 type="text" 
                             />
                         </div>
-                        <div className="col-6">
+                        <div className="col-6 col-md-6">
                         
                         </div>
                     </div>

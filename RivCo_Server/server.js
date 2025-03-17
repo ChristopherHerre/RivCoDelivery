@@ -281,6 +281,25 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
     }
 });
 
+app.put('/api/users/:id/role', (req, res) => {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    const query = 'UPDATE users SET role = ? WHERE id = ?';
+    pool.query(query, [role, id], (err, result) => {
+        if (err) {
+            console.error('Error updating role:', err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ message: 'Role updated successfully' });
+    });
+});
+
 app.put('/api/menu-ingredients/:id', (req, res) => {
     const { id } = req.params;
     const updatedData = req.body;
