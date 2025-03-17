@@ -175,7 +175,7 @@ app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
 
 // Update menu item
 app.put('/api/update-menu-item/:id', (req, res) => {
-    const { id } = req.params;
+    const { id } = req.query;
     const updates = req.body;
     let updateFields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
     let values = Object.values(updates);
@@ -279,6 +279,30 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
         console.error('Error executing query:', err);
         res.status(500).json({ error: 'Database query failed' });
     }
+});
+
+app.put('/api/menu-ingredients/:id', (req, res) => {
+    const { id } = req.params;
+    const updatedData = req.body;
+    const allowedFields = [
+        'easy_price', 'extra_price', 'inputType', 'ingredients_name',
+        'customize', 'type', 'price', 'sort_order', 'selected', 'halfable'
+    ];
+    const filteredData = allowedFields.reduce((obj, key) => {
+        if (updatedData.hasOwnProperty(key)) {
+            obj[key] = updatedData[key];
+        }
+        return obj;
+    }, {});
+    console.log('Filtered Data:', filteredData);
+    const query = 'UPDATE menu_item_ingredients SET ? WHERE id = ?';
+    pool.query(query, [filteredData, id], (err, results) => {
+        if (err) {
+            console.error('Error updating ingredient:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        res.json({ message: 'Ingredient updated successfully' });
+    });
 });
 
 app.get('/api/menu-ingredients/:menuItem', checkRole(2), async (req, res) => {

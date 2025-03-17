@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import { createPopper } from '@popperjs/core';
-
+import { Link } from 'react-router-dom';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 const AdminDropdown = (props) => {
     const full = props.full;
     const profile = props.profile;
