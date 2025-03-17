@@ -61,7 +61,9 @@ export default function Admin(props) {
                 } 
                 {ingredients.length > 0 && (
                     <div className="row fw-bold border-bottom pb-2">
-                        <h3 className="text-xl font-bold mb-4">Edit Ingredients</h3>
+                        <h3 className="text-xl font-bold mb-4">
+                            Edit Ingredients
+                        </h3>
                         {Object.keys(ingredients[0])
                             .filter((field) => field !== "id" && field !== "ingredient_id")
                             .map((header) => (
@@ -73,7 +75,9 @@ export default function Admin(props) {
                     </div>
                 )}
                 {ingredients.map((ingredient) => (
-                    <div key={ingredient.iid} className="row mt-3 mb-3 border-bottom py-2">
+                    <div 
+                        key={ingredient.id} 
+                        className="row mt-3 mb-3 border-bottom py-2">
                         {Object.keys(ingredient)
                             .filter((field) => field !== "id" && field !== "ingredient_id")
                             .map((field) => (
@@ -87,10 +91,11 @@ export default function Admin(props) {
                                 </div>
                             ))}
                         <div className="col p-2">
+                            {ingredient.iid}
                             <button
-                                onClick={() => handleSave(ingredient.iid)}
+                                onClick={() => handleSave(ingredient.id)}
                                 className="btn btn-primary form-control">
-                                <i class="bi bi-pencil-square"> </i>
+                                <i class="bi bi-pencil-square"> {ingredient.id}</i>
                                 Save
                             </button>
                         </div>
