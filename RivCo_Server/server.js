@@ -174,7 +174,7 @@ app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
 });
 
 // Update menu item
-app.put('/api/update-menu-item/:id', (req, res) => {
+app.put('/api/update-menu-item/:id', checkRole(2), (req, res) => {
     const { id } = req.query;
     const updates = req.body;
     let updateFields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
@@ -265,7 +265,10 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
             SELECT menu_items.*
             FROM menu_items
             JOIN users ON users.restaurant_id = menu_items.restaurant_id
-            WHERE users.id = ?;
+            LEFT JOIN menu_item_ingredients_map ON menu_items.id = menu_item_ingredients_map.menu_item_id
+            WHERE users.id = ?
+            GROUP BY menu_items.id
+            ORDER BY COUNT(menu_item_ingredients_map.ingredient_id) DESC;
         `;
         // Execute the query with the user's Google ID (sub)
         const [results] = await pool.query(query, [req.session.user.sub]);
@@ -281,26 +284,40 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
     }
 });
 
-app.put('/api/users/:id/role', (req, res) => {
+app.put('/api/users/:id/role', checkRole(2), (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
-
     const query = 'UPDATE users SET role = ? WHERE id = ?';
     pool.query(query, [role, id], (err, result) => {
         if (err) {
             console.error('Error updating role:', err);
             return res.status(500).json({ message: 'Server error' });
         }
-
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
-
         res.json({ message: 'Role updated successfully' });
     });
 });
 
-app.put('/api/menu-ingredients/:id', (req, res) => {
+app.put('/api/users/:id/restaurant', checkRole(2), (req, res) => {
+    const { id } = req.params;
+    const { restaurant_id } = req.body;
+    const query = 'UPDATE users SET restaurant_id = ? WHERE id = ?';
+
+    pool.query(query, [restaurant_id, id], (err, result) => {
+        if (err) {
+            console.error('Error updating restaurant ID:', err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'Restaurant ID updated successfully' });
+    });
+});
+
+app.put('/api/menu-ingredients/:id', checkRole(2), (req, res) => {
     const { id } = req.params;
     const updatedData = req.body;
     const allowedFields = [

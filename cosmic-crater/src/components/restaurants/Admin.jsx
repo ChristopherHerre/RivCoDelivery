@@ -64,24 +64,32 @@ export default function Admin(props) {
                         <h3 className="text-xl font-bold mb-4">
                             Edit Ingredients
                         </h3>
-                        {Object.keys(ingredients[0])
-                            .filter((field) => field !== "id" && field !== "ingredient_id")
-                            .map((header) => (
-                            <div key={header} className="col-12 col-md-2 border p-2">
-                                {header.replace(/_/g, ' ')} {/* Replaces underscores with spaces for readability */}
-                            </div>
-                        ))}
-                        <div className="col-12 col-md-2 border p-2">Actions</div>
                     </div>
                 )}
-                {ingredients.map((ingredient) => (
-                    <div 
-                        key={ingredient.id} 
-                        className="row mt-3 mb-3 border-bottom py-2">
-                        {Object.keys(ingredient)
-                            .filter((field) => field !== "id" && field !== "ingredient_id")
-                            .map((field) => (
-                                <div key={field} className="col-12 col-md-2 p-2">
+                {ingredients.map((ingredient, index) => {
+                    const sortedFields = Object.keys(ingredient)
+                        .filter((field) => field !== "ingredient_id") // Remove unwanted field
+                        .sort((a, b) => {
+                            const order = ["id", "name", "category", "restaurant_id", "sort", "price", "price2", "price3", "price4", "size1", "size2", "size3", "size4"];
+                            const indexA = order.indexOf(a);
+                            const indexB = order.indexOf(b);
+                        
+                            // Handle fields not in the order array by placing them at the end
+                            if (indexA === -1 && indexB === -1) return a.localeCompare(b); // Sort alphabetically if both are not found
+                            if (indexA === -1) return 1;  // Place `a` after if not found
+                            if (indexB === -1) return -1; // Place `b` after if not found
+                        
+                            return indexA - indexB;
+                        });
+                        
+
+                    return (
+                        <div 
+                            key={ingredient.id} 
+                            className={`row mt-3 mb-3 border-bottom py-2 ${index % 2 === 0 ?  'bg-white' : 'bg-secondary-subtle'}`}>
+                            {sortedFields.map((field) => (
+                                <div key={field} className="col-12 col-md-3 p-2">
+                                    <b>{field}</b>
                                     <input
                                         type={typeof ingredient[field] === "number" ? "number" : "text"}
                                         defaultValue={ingredient[field] ?? ""}
@@ -90,17 +98,20 @@ export default function Admin(props) {
                                     />
                                 </div>
                             ))}
-                        <div className="col p-2">
-                            {ingredient.iid}
-                            <button
-                                onClick={() => handleSave(ingredient.id)}
-                                className="btn btn-primary form-control">
-                                <i class="bi bi-pencil-square"> {ingredient.id}</i>
-                                Save
-                            </button>
+                            <div className="col p-2">
+                                <button
+                                    onClick={() => handleSave(ingredient.id)}
+                                    className="btn btn-primary form-control">
+                                    <i className="bi bi-pencil-square"> </i>
+                                    Save
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })
+            }
+
+
             </>
         );
     }
@@ -154,7 +165,7 @@ export default function Admin(props) {
                     .map(item => (
                         <div key={item.id} className="col-12 mt-3 shadow-lg rounded-2xl">
                             <div className="row p-2">
-                                <div className='col-12 col-xl-3 bg-secondary'>
+                                <div className='col-12 col-xl-3 bg-primary-subtle'>
                                     <h3>Edit Item</h3>
                                     {Object.keys(item)
                                         .sort()
@@ -163,10 +174,10 @@ export default function Admin(props) {
                                             <label className="font-bold">{key}:</label>
                                             <br />
                                             <input
-                                            type="text"
-                                            value={item[key]}
-                                            onChange={(e) => handleChange(item.id, key, e.target.value)}
-                                            className="ml-2 p-1 border rounded form-control bg-dark text-white"
+                                                type="text"
+                                                value={item[key]}
+                                                onChange={(e) => handleChange(item.id, key, e.target.value)}
+                                                className="ml-2 p-1 border rounded form-control bg-dark text-white"
                                             />
                                         </div>
                                         ))
