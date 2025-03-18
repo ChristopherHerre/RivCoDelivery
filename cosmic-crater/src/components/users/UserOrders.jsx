@@ -191,7 +191,7 @@ function UserOrders() {
                                                         <td>{USDollar.format(item.price)}</td>
                                                     </tr>
                                                     <tr>
-                                                        {item.ingredients}
+                                                        <td>{item.ingredients}</td>
                                                     </tr>
                                                 </>
                                             )) : (

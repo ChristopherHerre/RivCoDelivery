@@ -69,6 +69,23 @@ function Users() {
             console.error('Error updating role:', err);
         }
     };
+    const handleRestaurantIdChange = async (event, userId) => {
+        const newValue = event.target.value;
+        setUsers(newUsers => newUsers.map(user => {
+            if (user.id === userId) {
+                return { ...user, restaurant_id: newValue };
+            }
+            return user;
+        }));
+        try {
+            const response = await axios.put(`${API_URL}/api/users/${userId}/restaurant`, { restaurant_id: newValue }, {
+                withCredentials: true
+            });
+            console.log('Restaurant ID updated:', response.data);
+        } catch (err) {
+            console.error('Error updating restaurant ID:', err);
+        }
+    };
     return (
         <div>
             <h1>Users List</h1>
@@ -87,24 +104,25 @@ function Users() {
                                             <strong>Email:</strong> {user.email}
                                         </p>
                                         <p className="card-text">
-                                            <strong>Street Number: </strong>
-                                            {user.address_street_number}
-                                        </p>
-                                        <p className="card-text">
                                             <strong>Address: </strong>
-                                            {user.address_street}, {user.address_city}, {user.address_state} {user.address_zip}
+                                            <span>{user.address_street_number} </span>
+                                            <span>{user.address_street}, </span>
+                                            <span>{user.address_city}, </span>
+                                            <span>{user.address_state} </span>
+                                            <span>{user.address_zip}</span>
                                         </p>
                                         <p className="card-text">
-                                            <strong>Coordinates: </strong>
-                                            {user.address_latitude}, {user.address_longitude}
+                                            <strong>Latitude: </strong>
+                                            {user.address_latitude}
+                                        </p>
+                                        <p className="card-text">
+                                            <strong>Longitude: </strong>
+                                            {user.address_longitude}
                                         </p>
                                         <p className="card-text">
                                             <strong>Role: </strong>
                                             <form>
                                                 <div clasName="form-group">
-                                                    <label for="formControlRange">
-                                                        Example Range input
-                                                    </label>
                                                     <input
                                                         type="range"
                                                         className="form-range"
@@ -126,6 +144,16 @@ function Users() {
                                                 </div>
                                             </form>
                                         </p>
+                                        <p className="card-text">
+                                            <strong>Restauraunt ID: </strong>
+                                            <input 
+                                                type="number"
+                                                className="bg-dark text-white form-control"
+                                                defaultValue={user.restaurant_id} 
+                                                onChange={(e) => handleRestaurantIdChange(e, user.id)} 
+                                            />
+                                        </p>
+
                                         <p className="card-text">
                                             <strong>Created At: </strong>
                                             {new Date(user.created_at).toLocaleString()}
