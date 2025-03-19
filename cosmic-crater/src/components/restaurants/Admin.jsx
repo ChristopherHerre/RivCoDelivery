@@ -81,35 +81,33 @@ export default function Admin(props) {
                         
                             return indexA - indexB;
                         });
-                        
-
-                    return (
-                        <div 
-                            key={ingredient.id} 
-                            className={`row mt-3 mb-3 border-bottom py-2 ${index % 2 === 0 ?  'bg-white' : 'bg-secondary-subtle'}`}>
-                            {sortedFields.map((field) => (
-                                <div key={field} className="col-12 col-md-3 p-2">
-                                    <b>{field}</b>
-                                    <input
-                                        type={typeof ingredient[field] === "number" ? "number" : "text"}
-                                        defaultValue={ingredient[field] ?? ""}
-                                        onChange={(e) => handleChange(ingredient.iid, field, e.target.value)}
-                                        className="form-control bg-dark text-white"
-                                    />
+                        return (
+                            <div 
+                                key={ingredient.id} 
+                                className={`row mt-3 mb-3 border-bottom py-2 ${index % 2 === 0 ?  'bg-white' : 'bg-secondary-subtle'}`}>
+                                {sortedFields.map((field) => (
+                                    <div key={field} className="col-12 col-md-3 p-2">
+                                        <b>{field}:</b>
+                                        <input
+                                            type={typeof ingredient[field] === "number" ? "number" : "text"}
+                                            defaultValue={ingredient[field] ?? ""}
+                                            onChange={(e) => handleChange(ingredient.iid, field, e.target.value)}
+                                            className="form-control bg-dark text-white"
+                                        />
+                                    </div>
+                                ))}
+                                <div className="col p-2">
+                                    <button
+                                        onClick={() => handleSave(ingredient.id)}
+                                        className="btn btn-primary form-control">
+                                        <i className="bi bi-pencil-square"> </i>
+                                        Save
+                                    </button>
                                 </div>
-                            ))}
-                            <div className="col p-2">
-                                <button
-                                    onClick={() => handleSave(ingredient.id)}
-                                    className="btn btn-primary form-control">
-                                    <i className="bi bi-pencil-square"> </i>
-                                    Save
-                                </button>
                             </div>
-                        </div>
-                    );
-                })
-            }
+                        );
+                    })
+                }
 
 
             </>
@@ -171,7 +169,7 @@ export default function Admin(props) {
                                         .sort()
                                         .map((key) => (
                                         <div key={key} className="mb-2">
-                                            <label className="font-bold">{key}:</label>
+                                            <b>{key}:</b>
                                             <br />
                                             <input
                                                 type="text"
@@ -183,7 +181,7 @@ export default function Admin(props) {
                                         ))
                                     }
                                     <button 
-                                        onClick={() => handleSave(item.id)} 
+                                        onClick={(e) => handleSave(item.id)} 
                                         className="btn btn-primary form-control mt-3 mb-3"
                                     >
                                         <i className="bi bi-pencil-square"> </i>
@@ -203,6 +201,7 @@ export default function Admin(props) {
                         </div>
                     ))
                 }
+                
             </div>
         );
     };
@@ -236,7 +235,7 @@ export default function Admin(props) {
                 <div className="row p-2 shadow-lg rounded-2xl">
                     <h3>{hasRestaurant ? "Edit Restaurant" : "Add Restaurant"}</h3>
                     <div className="col-sm-4">
-                        <label>Name: </label>
+                        <b>Name: </b>
                         <input
                             className="bg-dark text-white form-control"
                             name="name"
@@ -245,7 +244,7 @@ export default function Admin(props) {
                         />
                     </div>
                     <div className="col-sm-4">
-                        <label>Address: </label>
+                        <b>Address: </b>
                         <input
                             className="bg-dark text-white form-control"
                             name="address"
@@ -254,7 +253,7 @@ export default function Admin(props) {
                         />
                     </div>
                     <div className="col-sm-4">
-                        <label>Category: </label>
+                        <b>Category: </b>
                         <input
                             className="bg-dark text-white form-control"
                             name="category"
@@ -263,7 +262,7 @@ export default function Admin(props) {
                         />
                     </div>
                     <div className="col-sm-4">
-                        <label>Latitude: </label>
+                        <b>Latitude: </b>
                         <input
                             className="bg-dark text-white form-control"
                             name="latitude"
@@ -272,7 +271,7 @@ export default function Admin(props) {
                         />
                     </div>
                     <div className="col-sm-4">
-                        <label>Longitude: </label>
+                        <b>Longitude: </b>
                         <input
                             className="bg-dark text-white form-control"
                             name="longitude"
