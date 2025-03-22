@@ -68,8 +68,8 @@ function Resume() {
                             <h4>Saddleback College</h4>
                             <small>Graduated May 2022</small>
                             <ol>
-                                <li>Assciate of Science, Health Information Technology</li>
-                                <li>Assciate of Science, Health Science</li>
+                                <li>Associate of Science, Health Information Technology</li>
+                                <li>Associate of Science, Health Science</li>
                             </ol>
                         </li>
                     </ul>

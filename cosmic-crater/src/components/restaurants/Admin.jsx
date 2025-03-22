@@ -37,20 +37,16 @@ export default function Admin(props) {
                 .then(response => setIngredients(response.data))
                 .catch(error => console.error('Error fetching ingredients:', error));
         }, []);
-        const handleChange = (id, field, value) => {
-            const parsedValue =
-                field === 'id' || field === 'inputType' || field === 'halfable' || field === 'customize' || field === 'sort_order' || field === 'selected'
-                    ? parseInt(value, 10) || 0
-                    : field === 'easy_price' || field === 'extra_price' || field === 'price'
-                    ? parseFloat(value) || 0.0
-                    : value;
-            setIngredients(prev => prev.map(ing => 
-                ing.id === id ? { ...ing, [field]: parsedValue } : ing
-            ));
+        const handleChange = (id, key, value) => {
+            setIngredients(prevItems =>
+                prevItems.map(item =>
+                    item.id === id ? { ...item, [key]: value } : item
+                )
+            );
         };
         const handleSave = (id) => {
             const updatedIngredient = ingredients.find(ing => ing.id === id);
-            axios.put(API_URL + `/api/menu-ingredients/${id}`, updatedIngredient)
+            axios.put(`/api/menu-ingredients/${id}`, updatedIngredient)
                 .then(() => alert('Updated successfully'))
                 .catch(error => console.error('Error updating ingredient:', error));
         };
@@ -68,7 +64,8 @@ export default function Admin(props) {
                 )}
                 {ingredients.map((ingredient, index) => {
                     const sortedFields = Object.keys(ingredient)
-                        .filter((field) => field !== "ingredient_id") // Remove unwanted field
+                        .filter((field) => field !== "ingredient_id" && field !== "menu_item_id")
+                // Remove unwanted field
                         .sort((a, b) => {
                             const order = ["id", "name", "category", "restaurant_id", "sort", "price", "price2", "price3", "price4", "size1", "size2", "size3", "size4"];
                             const indexA = order.indexOf(a);
@@ -91,7 +88,7 @@ export default function Admin(props) {
                                         <input
                                             type={typeof ingredient[field] === "number" ? "number" : "text"}
                                             defaultValue={ingredient[field] ?? ""}
-                                            onChange={(e) => handleChange(ingredient.iid, field, e.target.value)}
+                                            onChange={(e) => handleChange(ingredient.id, field, e.target.value)}
                                             className="form-control bg-dark text-white"
                                         />
                                     </div>
@@ -118,12 +115,14 @@ export default function Admin(props) {
         const [menuItems, setMenuItems] = useState([]);
         const [error, setError] = useState(null);
         const [success2, setSuccess2] = useState(false);
+    
         useEffect(() => {
             fetch(`/api/menu-items-list`)
                 .then(res => res.json())
                 .then(data => setMenuItems(data))
                 .catch(() => setError('Failed to fetch menu items'));
         }, []);
+    
         const handleChange = (id, key, value) => {
             setMenuItems(prevItems =>
                 prevItems.map(item =>
@@ -131,7 +130,10 @@ export default function Admin(props) {
                 )
             );
         };
+    
         const handleSave = (id) => {
+            setSuccess2(false); // Reset success flag
+            setError(null); // Reset error flag
             const updatedItem = menuItems.find(item => item.id === id);
             fetch(`/api/update-menu-item/${id}`, {
                 method: "PUT",
@@ -142,69 +144,54 @@ export default function Admin(props) {
             })
             .then(res => {
                 if (!res.ok) throw new Error("Failed to update");
-        
                 return res.json();
             })
-            .then(() => {
-                setSuccess2(true); // Set success flag to true when the operation is successful
-            })
+            .then(() => setSuccess2(true))
             .catch(() => setError("Failed to save changes"));
         };
-        
+    
         return (
             <div className="row">
-                {error &&
-                    <p className="text-red-500">
-                        {error}
-                    </p>
-                }
-                {menuItems
-                    //.sort((a, b) => a.sort - b.sort) // Sort by the "sort" column
-                    .map(item => (
-                        <div key={item.id} className="col-12 mt-3 shadow-lg rounded-2xl">
-                            <div className="row p-2">
-                                <div className='col-12 col-xl-3 bg-primary-subtle'>
-                                    <h3>Edit Item</h3>
-                                    {Object.keys(item)
-                                        .sort()
-                                        .map((key) => (
-                                        <div key={key} className="mb-2">
-                                            <b>{key}:</b>
-                                            <br />
-                                            <input
-                                                type="text"
-                                                value={item[key]}
-                                                onChange={(e) => handleChange(item.id, key, e.target.value)}
-                                                className="ml-2 p-1 border rounded form-control bg-dark text-white"
-                                            />
-                                        </div>
-                                        ))
-                                    }
-                                    <button 
-                                        onClick={(e) => handleSave(item.id)} 
-                                        className="btn btn-primary form-control mt-3 mb-3"
-                                    >
-                                        <i className="bi bi-pencil-square"> </i>
-                                        Save
-                                    </button>
-                                    {success2 ? (
-                                        <p className="text-success">
-                                            <i className="bi bi-check-circle-fill"> </i>
-                                            {"Item updated successfully."}
-                                        </p>
-                                    ) : ""}
-                                </div>
-                                <div className='col-12 col-xl-9'>   
-                                    <EditIngredients menuItem={item.id} />
-                                </div>
+                {error && <p className="text-red-500">{error}</p>}
+                {menuItems.map(item => (
+                    <div key={item.id} className="col-12 mt-3 shadow-lg rounded-2xl">
+                        <div className="row p-2">
+                            <div className='col-12 col-xl-3 bg-primary-subtle'>
+                                <h3>Edit Item</h3>
+                                {Object.keys(item).sort().map((key) => (
+                                    <div key={key} className="mb-2">
+                                        <b>{key}:</b>
+                                        <br />
+                                        <input
+                                            type="text"
+                                            value={item[key]}
+                                            onChange={(e) => handleChange(item.id, key, e.target.value)}
+                                            className="ml-2 p-1 border rounded form-control bg-dark text-white"
+                                        />
+                                    </div>
+                                ))}
+                                <button 
+                                    onClick={() => handleSave(item.id)} 
+                                    className="btn btn-primary form-control mt-3 mb-3"
+                                >
+                                    <i className="bi bi-pencil-square"></i> Save
+                                </button>
+                                {success2 && (
+                                    <p className="text-success">
+                                        <i className="bi bi-check-circle-fill"></i> Item updated successfully.
+                                    </p>
+                                )}
+                            </div>
+                            <div className='col-12 col-xl-9'>
+                                <EditIngredients menuItem={item.id} />
                             </div>
                         </div>
-                    ))
-                }
-                
+                    </div>
+                ))}
             </div>
         );
     };
+    
     
     function submitRestaurant(e) {
         e.preventDefault();
