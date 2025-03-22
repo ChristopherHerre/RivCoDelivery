@@ -175,7 +175,7 @@ app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
 
 // Update menu item
 app.put('/api/update-menu-item/:id', checkRole(2), (req, res) => {
-    const { id } = req.query;
+    const { id } = req.params;
     const updates = req.body;
     let updateFields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
     let values = Object.values(updates);
@@ -189,6 +189,7 @@ app.put('/api/update-menu-item/:id', checkRole(2), (req, res) => {
         }
     });
 });
+
 
 app.post('/api/manageRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
@@ -317,22 +318,33 @@ app.put('/api/users/:id/restaurant', checkRole(2), (req, res) => {
     });
 });
 
+
 app.put('/api/menu-ingredients/:id', checkRole(2), (req, res) => {
     const { id } = req.params;
     const updatedData = req.body;
-    const allowedFields = [
-        'easy_price', 'extra_price', 'inputType', 'ingredients_name',
-        'customize', 'type', 'price', 'sort_order', 'selected', 'halfable'
+    console.log(updatedData);
+
+    const query = `
+        UPDATE menu_item_ingredients 
+        SET easy_price = ?, extra_price = ?, inputType = ?, ingredients_name = ?, 
+            customize = ?, type = ?, price = ?, sort_order = ?, selected = ?, halfable = ? 
+        WHERE id = ?
+    `;
+    const values = [
+        updatedData.easy_price,
+        updatedData.extra_price,
+        updatedData.inputType,
+        updatedData.ingredients_name,
+        updatedData.customize,
+        updatedData.type,
+        updatedData.price,
+        updatedData.sort_order,
+        updatedData.selected,
+        updatedData.halfable,
+        id
     ];
-    const filteredData = allowedFields.reduce((obj, key) => {
-        if (updatedData.hasOwnProperty(key)) {
-            obj[key] = updatedData[key];
-        }
-        return obj;
-    }, {});
-    console.log('Filtered Data:', filteredData);
-    const query = 'UPDATE menu_item_ingredients SET ? WHERE id = ?';
-    pool.query(query, [filteredData, id], (err, results) => {
+
+    pool.query(query, values, (err, results) => {
         if (err) {
             console.error('Error updating ingredient:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -340,6 +352,7 @@ app.put('/api/menu-ingredients/:id', checkRole(2), (req, res) => {
         res.json({ message: 'Ingredient updated successfully' });
     });
 });
+
 
 app.get('/api/menu-ingredients/:menuItem', checkRole(2), async (req, res) => {
     const { menuItem } = req.params;
