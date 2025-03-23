@@ -132,6 +132,7 @@ export default function Admin(props) {
         };
     
         const handleSave = (id) => {
+            console.log("saving menu item");
             setSuccess2(false); // Reset success flag
             setError(null); // Reset error flag
             const updatedItem = menuItems.find(item => item.id === id);
