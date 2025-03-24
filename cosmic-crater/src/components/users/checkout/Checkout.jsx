@@ -158,7 +158,7 @@ export default function Checkout(props) {
 				},
 				withCredentials: true
 			});
-			console.log("Order response:", response.data);
+			console.log("Order response:", response.data + " " + response.status);
 			if (response.status === 201) {
 				setCart([]);
 				navigate("/success");

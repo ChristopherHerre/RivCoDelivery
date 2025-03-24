@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Success(props) {
+function Success() {
     const navigate = useNavigate();
     const homeButton = (e) => {
         e.preventDefault();
         navigate("/");
     }
+    useEffect(() => {
+        console.log("#### Success useEffect ####");
+    }
+    , []);
     return (
         <div className="text-center">
             <h1 className="text-success">
@@ -25,3 +29,4 @@ export default function Success(props) {
         </div>
     );
 }
+export default Success;
