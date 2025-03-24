@@ -174,21 +174,41 @@ app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
 });
 
 // Update menu item
+// Update menu item
 app.put('/api/update-menu-item/:id', checkRole(2), (req, res) => {
     const { id } = req.params;
     const updates = req.body;
-    let updateFields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
-    let values = Object.values(updates);
-    values.push(id);
+
+    // Check if updates are provided
+    if (!updates || Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No update data provided" });
+    }
+
+    // Construct the query and values
+    const updateFields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+    const values = [...Object.values(updates), id];  // Spread operator to combine values
+
     const sql = `UPDATE menu_items SET ${updateFields} WHERE id = ?`;
+
+    // Log for debugging
+    console.log("Executing SQL Query:", sql);
+    console.log("With Values:", values);
+
     pool.query(sql, values, (err, result) => {
         if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json({ message: 'Menu item updated successfully' });
+            console.error("SQL Error:", err);
+            return res.status(500).json({ error: "Database error: " + err.message });
         }
+
+        // Check if the update was successful
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Menu item not found" });
+        }
+
+        res.json({ message: 'Menu item updated successfully' });
     });
 });
+
 
 
 app.post('/api/manageRestaurant', checkRole(2), async (req, res) => {
