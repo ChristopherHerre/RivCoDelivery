@@ -151,6 +151,51 @@ passport.use(new GoogleStrategy({
 
 app.use(express.json());
 
+// Add new ingredient
+app.post('/api/menu-item-ingredients', async (req, res) => {
+    try {
+        const {
+            easy_price, extra_price, inputType, ingredients_name,
+            customize, type, price, sort_order, selected, halfable
+        } = req.body;
+
+        const query = `
+            INSERT INTO menu_item_ingredients (
+                easy_price, 
+                extra_price, 
+                inputType, 
+                ingredients_name, 
+                customize, 
+                type, 
+                price, 
+                sort_order,
+                selected,
+                halfable
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            easy_price || null,
+            extra_price || null,
+            inputType || 0,
+            ingredients_name,
+            customize || 0,
+            type,
+            price || 0,
+            sort_order || 0,
+            selected || 0,
+            halfable || 0
+        ];
+
+        await pool.query(query, values);
+        res.status(201).json({ message: "Ingredient added successfully!" });
+    } catch (error) {
+        console.error("Error adding ingredient:", error);
+        res.status(500).json({ error: "Failed to add ingredient." });
+    }
+});
+
 app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ message: 'Authentication required' });
