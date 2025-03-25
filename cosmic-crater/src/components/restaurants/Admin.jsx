@@ -29,7 +29,8 @@ export default function Admin(props) {
         fetchRestaurantStatus();
     }, []);
 
-    function AddIngredient() {
+    function AddIngredient(props) {
+        const menu_item_id = props.menuItem;
         const [formData, setFormData] = useState({
           easy_price: '',
           extra_price: '',
@@ -54,8 +55,15 @@ export default function Admin(props) {
       
         const handleSubmit = (e) => {
             e.preventDefault();
+        
+            const formDataWithMenuItem = {
+                ...formData,
+                menu_item_id: menu_item_id, // Assuming menu_item_id is passed as a prop
+            };
+        
             axios.post(`${API_URL}/api/menu-item-ingredients`, 
-                qs.stringify(formData), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+                qs.stringify(formDataWithMenuItem), 
+                { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
             )
             .then(response => {
                 setSuccess('Ingredient added successfully!');
@@ -79,35 +87,35 @@ export default function Admin(props) {
                 console.error(err);
             });
         };
-      
+        
         return (
             <div className="rounded bg-dark text-white">
                 <h3 className="text-white">Add New Ingredient</h3>
                 { success && <p className="text-success">{success}</p> }
                 { error && <p className="text-danger">{error}</p> }
-                
                 <form onSubmit={handleSubmit}>
-                <div className="row">
-                    {Object.keys(formData).map((key) => (
-                    <div className="col-12 col-md-3" key={key}>
-                        <strong>{key}:</strong>
-                        <input 
-                        type={key.includes('price') || key === 'sort_order' || key === 'inputType' ? 'number' : 'text'}
-                        name={key} 
-                        value={formData[key]} 
-                        onChange={handleChange}
-                        className="form-control bg-dark text-white" 
-                        />
+                    <div className="row">
+                        {Object.keys(formData).map((key) => (
+                            <div className="col-12 col-md-3" key={key}>
+                                <strong>{key}:</strong>
+                                <input 
+                                    type={key.includes('price') || key === 'sort_order' || key === 'inputType' ? 'number' : 'text'}
+                                    name={key} 
+                                    value={formData[key]} 
+                                    onChange={handleChange}
+                                    className="form-control bg-dark text-white" 
+                                />
+                            </div>
+                        ))}
                     </div>
-                    ))}
-                </div>
-                <button type="submit" className="btn btn-primary mt-3">
-                    Add Ingredient
-                </button>
+                    <button type="submit" className="btn btn-primary mt-3">
+                        Add Ingredient
+                    </button>
                 </form>
+                <strong>menu_item_id: {menu_item_id}</strong>
             </div>
         );
-      }
+    }
 
     function EditIngredients(props) {
         const [ingredients, setIngredients] = useState([]);
@@ -182,7 +190,7 @@ export default function Admin(props) {
                         );
                     })
                 }
-                <div className="row bg-dark text-white"><AddIngredient /></div>
+                <div className="row bg-dark text-white"><AddIngredient menuItem={menuItem} /></div>
             </>
         );
     }

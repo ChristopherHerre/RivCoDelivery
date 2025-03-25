@@ -151,15 +151,20 @@ passport.use(new GoogleStrategy({
 
 app.use(express.json());
 
+
 // Add new ingredient
 app.post('/api/menu-item-ingredients', async (req, res) => {
+    const connection = await pool.getConnection(); // Get a connection from the pool
     try {
+        await connection.beginTransaction(); // Start transaction
+
         const {
             easy_price, extra_price, inputType, ingredients_name,
-            customize, type, price, sort_order, selected, halfable
+            customize, type, price, sort_order, selected, halfable, menu_item_id
         } = req.body;
 
-        const query = `
+        // Insert ingredient into the main table
+        const query1 = `
             INSERT INTO menu_item_ingredients (
                 easy_price, 
                 extra_price, 
@@ -175,7 +180,7 @@ app.post('/api/menu-item-ingredients', async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        const values = [
+        const values1 = [
             easy_price || null,
             extra_price || null,
             inputType || 0,
@@ -188,13 +193,33 @@ app.post('/api/menu-item-ingredients', async (req, res) => {
             halfable || 0
         ];
 
-        await pool.query(query, values);
+        const [result] = await connection.query(query1, values1);
+        const ingredient_id = result.insertId; // Get the inserted ingredient's ID
+
+        console.log("Ingredient ID:", ingredient_id);
+        console.log("Menu Item ID:", menu_item_id);
+
+        // Insert into mapping table if menu_item_id is provided
+        if (menu_item_id) {
+            const query2 = `
+                INSERT INTO menu_item_ingredients_map (menu_item_id, ingredient_id)
+                VALUES (?, ?)
+            `;
+            await connection.query(query2, [menu_item_id, ingredient_id]);
+        }
+
+        await connection.commit(); // Commit transaction
         res.status(201).json({ message: "Ingredient added successfully!" });
     } catch (error) {
+        await connection.rollback(); // Rollback transaction on error
         console.error("Error adding ingredient:", error);
         res.status(500).json({ error: "Failed to add ingredient." });
+    } finally {
+        connection.release(); // Release connection back to the pool
     }
 });
+
+
 
 app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
