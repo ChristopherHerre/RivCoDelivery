@@ -13,7 +13,7 @@ function Users() {
             setLoading(true);
             try {
                 const res = await axios.get(`${API_URL}/api/users`, {
-                    params: { page, limit: 5 },
+                    params: { page, limit: 6 },
                     withCredentials: true
                 });
                 console.log('Users:', res.data);
