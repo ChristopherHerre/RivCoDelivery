@@ -91,7 +91,7 @@ export default function Admin(props) {
                                         />
                                     </div>
                                 ))}
-                                <div className="col p-2">
+                                <div className="col-12 col-md-3">
                                     <button
                                         onClick={() => handleSave(ingredient.id)}
                                         className="btn btn-primary form-control">
@@ -203,28 +203,37 @@ export default function Admin(props) {
         );
     };
     
-    function submitRestaurant(e) {
+    async function submitRestaurant(e) {
         e.preventDefault();
         setLoading2(true);
         const form = e.target;
         const inputs = {
-            name: form.elements['name'].value,
-            category: form.elements['category'].value,
-            address: form.elements['address'].value,
-            latitude: form.elements['latitude'].value,
-            longitude: form.elements['longitude'].value,
+          name: form.elements['name'].value,
+          category: form.elements['category'].value,
+          address: form.elements['address'].value,
+          latitude: form.elements['latitude'].value,
+          longitude: form.elements['longitude'].value,
         };
+      
         try {
-            dbPost(e, form, inputs, "manageRestaurant");
+            const response = await dbPost(e, form, inputs, "manageRestaurant");
+            if (response.status >= 200 && response.status < 300) {
+            setSuccess(true);
             setTimeout(() => {
-                setLoading2(false);
-                setSuccess(true);
-            }, 1000);
+                setSuccess(false);
+            }, 2000);
+            } else {
+                console.error("Server returned an error:", response.statusText);
+                setSuccess(false);
+            }
         } catch (err) {
             console.error("Error submitting restaurant:", err);
             setSuccess(false);
+        } finally {
+            setLoading2(false);
         }
     }
+      
     return (
         <div>
             <h2>Admin Panel</h2>
@@ -281,7 +290,7 @@ export default function Admin(props) {
                         <input
                             className="form-control btn btn-primary"
                             type="submit"
-                            value={hasRestaurant ? "Update" : "Add"}
+                            value={hasRestaurant ? "Save" : "Add"}
                         />
                         {loading2 ? <Spinner /> : ""}
                     </div>
@@ -309,7 +318,7 @@ export function dbPost(e, form, inputs, route) {
         data: qs.stringify(inputs),
         url,
     };
-    axios(options);
+    return axios(options);
 }
 
 export function dbPost2(e, inputs, route) {
