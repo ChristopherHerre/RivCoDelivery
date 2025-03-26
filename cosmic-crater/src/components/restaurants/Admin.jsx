@@ -31,6 +31,7 @@ export default function Admin(props) {
 
     function AddIngredient(props) {
         const menu_item_id = props.menuItem;
+        const setIngredients = props.setIngredients;
         const [formData, setFormData] = useState({
           easy_price: '',
           extra_price: '',
@@ -45,22 +46,18 @@ export default function Admin(props) {
         });
         const [success, setSuccess] = useState('');
         const [error, setError] = useState('');
-      
         const handleChange = (e) => {
             const { name, value } = e.target;
             setFormData(prev => ({
                 ...prev, [name]: value
             }));
         };
-      
         const handleSubmit = (e) => {
             e.preventDefault();
-        
             const formDataWithMenuItem = {
                 ...formData,
-                menu_item_id: menu_item_id, // Assuming menu_item_id is passed as a prop
+                menu_item_id: menu_item_id,
             };
-        
             axios.post(`${API_URL}/api/menu-item-ingredients`, 
                 qs.stringify(formDataWithMenuItem), 
                 { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
@@ -80,6 +77,7 @@ export default function Admin(props) {
                     selected: '',
                     halfable: ''
                 });
+                setIngredients(prevIngredients => [...prevIngredients, response.data.ingredient]);
             })
             .catch(err => {
                 setError('Failed to add ingredient');
@@ -87,11 +85,15 @@ export default function Admin(props) {
                 console.error(err);
             });
         };
-        
         return (
             <div className="rounded bg-dark text-white">
                 <h3 className="text-white">Add New Ingredient</h3>
-                { success && <p className="text-success">{success}</p> }
+                {success &&
+                    <p className="text-success">
+                        <i className="bi bi-check-circle-fill"> </i>
+                        {success}
+                    </p>
+                }
                 { error && <p className="text-danger">{error}</p> }
                 <form onSubmit={handleSubmit}>
                     <div className="row">
@@ -107,12 +109,15 @@ export default function Admin(props) {
                                 />
                             </div>
                         ))}
+                        <div className='col-12 col-md-3'>
+                            <br />
+                            <button type="submit" className="btn btn-primary form-control">
+                                <i class="bi bi-plus-lg"> </i>
+                                Add Ingredient
+                            </button>
+                        </div>
                     </div>
-                    <button type="submit" className="btn btn-primary mt-3">
-                        Add Ingredient
-                    </button>
                 </form>
-                <strong>menu_item_id: {menu_item_id}</strong>
             </div>
         );
     }
@@ -138,59 +143,72 @@ export default function Admin(props) {
                 .then(() => alert('Updated successfully'))
                 .catch(error => console.error('Error updating ingredient:', error));
         };
+        const handleDelete = (id) => {
+            if (window.confirm("Are you sure you want to delete this ingredient?")) {
+                axios.delete(`/api/menu-item-ingredients/${id}`)
+                    .then(() => {
+                        setIngredients(prevItems => prevItems.filter(item => item.id !== id));
+                        alert("Ingredient deleted successfully");
+                    })
+                    .catch(error => console.error("Error deleting ingredient:", error));
+            }
+        };
         return (
             <>
-                {ingredients.length <= 0 && 
-                    (<p>No ingredients found.</p>)
-                } 
+                {ingredients.length <= 0 && (<p>No ingredients found.</p>)}
                 {ingredients.length > 0 && (
-                    <div className="row fw-bold border-bottom pb-2">
-                        <h3 className="text-xl font-bold mb-4">
-                            Edit Ingredients
-                        </h3>
+                    <div className="row fw-bold">
+                        <h3 className="text-xl font-bold">Edit Ingredients</h3>
                     </div>
                 )}
                 {ingredients.map((ingredient, index) => {
                     const sortedFields = Object.keys(ingredient)
-                        .filter((field) => field !== "ingredient_id" && field !== "menu_item_id")
+                        .filter((field) => field !== "ingredient_id" && field !== "menu_item_id" && field !== "id")
                         .sort((a, b) => {
-                            const order = ["id", "type", "ingredients_name", "price", "easy_price", "extra_price", "customize", "halfable", "selected", "sort_order",];
+                            const order = ["id", "type", "ingredients_name", "price", "easy_price", "extra_price", "customize", "halfable", "selected", "sort_order"];
                             const indexA = order.indexOf(a);
                             const indexB = order.indexOf(b);
-                            if (indexA === -1 && indexB === -1)
-                                return a > b ? 1 : -1;
+                            if (indexA === -1 && indexB === -1) return a > b ? 1 : -1;
                             if (indexA === -1) return 1;
                             if (indexB === -1) return -1;
                             return indexA - indexB;
                         });
-                        return (
-                            <div 
-                                key={ingredient.id} 
-                                className={`row pb-4 ${index % 2 === 0 ? 'bg-white' : 'bg-secondary-subtle'}`}>
-                                {sortedFields.map((field) => (
-                                    <div key={field} className="col-12 col-md-3">
-                                        <b>{field}:</b>
-                                        <input
-                                            type={typeof ingredient[field] === "number" ? "number" : "text"}
-                                            defaultValue={ingredient[field] ?? ""}
-                                            onChange={(e) => handleChange(ingredient.id, field, e.target.value)}
-                                            className="form-control bg-dark text-white"
-                                        />
-                                    </div>
-                                ))}
-                                <div className="col-12 col-md-3">
-                                    <button
-                                        onClick={() => handleSave(ingredient.id)}
-                                        className="btn btn-primary form-control">
-                                        <i className="bi bi-pencil-square"> </i>
-                                        Save
-                                    </button>
+                    return (
+                        <div key={ingredient.id} className={`row pb-4 ${index % 2 === 0 ? 'bg-white' : 'bg-secondary-subtle'}`}>
+                            {sortedFields.map((field) => (
+                                <div key={field} className="col-12 col-md-3">
+                                    <b>{field}:</b>
+                                    <input
+                                        type={typeof ingredient[field] === "number" ? "number" : "text"}
+                                        defaultValue={ingredient[field] ?? ""}
+                                        onChange={(e) => handleChange(ingredient.id, field, e.target.value)}
+                                        className="form-control bg-dark text-white"
+                                    />
                                 </div>
+                            ))}
+                            <div className="col-12 col-md-3">
+                                <br />
+                                <button onClick={() => handleSave(ingredient.id)} className="btn btn-primary form-control">
+                                    <i className="bi bi-pencil-square"> </i>Save
+                                </button>
                             </div>
-                        );
-                    })
-                }
-                <div className="row bg-dark text-white"><AddIngredient menuItem={menuItem} /></div>
+                            <div className="col-12 col-md-3">
+                                <br />
+                                <button onClick={() => handleDelete(ingredient.id)} className="btn btn-danger form-control">
+                                    <i className="bi bi-trash"> </i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+                <div className="row bg-dark text-white">
+                    <div className="col-12">
+                        <AddIngredient
+                            menuItem={menuItem}
+                            setIngredients={setIngredients}
+                        />
+                    </div>
+                </div>
             </>
         );
     }
