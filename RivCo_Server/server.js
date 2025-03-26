@@ -151,12 +151,36 @@ passport.use(new GoogleStrategy({
 
 app.use(express.json());
 
-
-// Add new ingredient
-app.post('/api/menu-item-ingredients', async (req, res) => {
+app.delete('/api/menu-item-ingredients/:ingredient_id', async (req, res) => {
     const connection = await pool.getConnection(); // Get a connection from the pool
     try {
         await connection.beginTransaction(); // Start transaction
+        const { ingredient_id } = req.params;
+        // First, delete the mapping entry if it exists
+        const query1 = `DELETE FROM menu_item_ingredients_map WHERE ingredient_id = ?`;
+        await connection.query(query1, [ingredient_id]);
+        // Then, delete the ingredient itself
+        const query2 = `DELETE FROM menu_item_ingredients WHERE id = ?`;
+        const [result] = await connection.query(query2, [ingredient_id]);
+        if (result.affectedRows === 0) {
+            throw new Error("Ingredient not found");
+        }
+        await connection.commit(); // Commit transaction
+        res.status(200).json({ message: "Ingredient deleted successfully!" });
+    } catch (error) {
+        await connection.rollback(); // Rollback transaction on error
+        console.error("Error deleting ingredient:", error);
+        res.status(500).json({ error: "Failed to delete ingredient." });
+    } finally {
+        connection.release(); // Release connection back to the pool
+    }
+});
+
+// Add new ingredient
+app.post('/api/menu-item-ingredients', async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
 
         const {
             easy_price, extra_price, inputType, ingredients_name,
@@ -194,10 +218,7 @@ app.post('/api/menu-item-ingredients', async (req, res) => {
         ];
 
         const [result] = await connection.query(query1, values1);
-        const ingredient_id = result.insertId; // Get the inserted ingredient's ID
-
-        console.log("Ingredient ID:", ingredient_id);
-        console.log("Menu Item ID:", menu_item_id);
+        const ingredient_id = result.insertId; // Retrieve the inserted ingredient's ID
 
         // Insert into mapping table if menu_item_id is provided
         if (menu_item_id) {
@@ -208,16 +229,35 @@ app.post('/api/menu-item-ingredients', async (req, res) => {
             await connection.query(query2, [menu_item_id, ingredient_id]);
         }
 
-        await connection.commit(); // Commit transaction
-        res.status(201).json({ message: "Ingredient added successfully!" });
+        await connection.commit();
+
+        // Return the newly created ingredient details in the response
+        res.status(201).json({ 
+            message: "Ingredient added successfully!",
+            ingredient: {
+                id: ingredient_id,
+                easy_price,
+                extra_price,
+                inputType,
+                ingredients_name,
+                customize,
+                type,
+                price,
+                sort_order,
+                selected,
+                halfable,
+                menu_item_id: menu_item_id || null
+            }
+        });
     } catch (error) {
-        await connection.rollback(); // Rollback transaction on error
+        await connection.rollback();
         console.error("Error adding ingredient:", error);
         res.status(500).json({ error: "Failed to add ingredient." });
     } finally {
-        connection.release(); // Release connection back to the pool
+        connection.release();
     }
 });
+
 
 
 
