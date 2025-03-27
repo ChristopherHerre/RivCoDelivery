@@ -152,27 +152,48 @@ passport.use(new GoogleStrategy({
 app.use(express.json());
 
 app.delete('/api/menu-item-ingredients/:ingredient_id', async (req, res) => {
-    const connection = await pool.getConnection(); // Get a connection from the pool
+    const connection = await pool.getConnection();
     try {
-        await connection.beginTransaction(); // Start transaction
+        await connection.beginTransaction();
         const { ingredient_id } = req.params;
-        // First, delete the mapping entry if it exists
         const query1 = `DELETE FROM menu_item_ingredients_map WHERE ingredient_id = ?`;
         await connection.query(query1, [ingredient_id]);
-        // Then, delete the ingredient itself
         const query2 = `DELETE FROM menu_item_ingredients WHERE id = ?`;
         const [result] = await connection.query(query2, [ingredient_id]);
         if (result.affectedRows === 0) {
             throw new Error("Ingredient not found");
         }
-        await connection.commit(); // Commit transaction
+        await connection.commit();
         res.status(200).json({ message: "Ingredient deleted successfully!" });
     } catch (error) {
-        await connection.rollback(); // Rollback transaction on error
+        await connection.rollback();
         console.error("Error deleting ingredient:", error);
         res.status(500).json({ error: "Failed to delete ingredient." });
     } finally {
-        connection.release(); // Release connection back to the pool
+        connection.release();
+    }
+});
+
+app.delete('/api/menu-items/:id', async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        const { id } = req.params;
+        const deleteMappings = `DELETE FROM menu_item_ingredients_map WHERE menu_item_id = ?`;
+        await connection.query(deleteMappings, [id]);
+        const deleteItem = `DELETE FROM menu_items WHERE id = ?`;
+        const [result] = await connection.query(deleteItem, [id]);
+        if (result.affectedRows === 0) {
+            throw new Error("Menu item not found");
+        }
+        await connection.commit();
+        res.status(200).json({ message: "Menu item deleted successfully!" });
+    } catch (error) {
+        await connection.rollback();
+        console.error("Error deleting menu item:", error);
+        res.status(500).json({ error: "Failed to delete menu item." });
+    } finally {
+        connection.release();
     }
 });
 
@@ -284,42 +305,28 @@ app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
 });
 
 // Update menu item
-// Update menu item
 app.put('/api/update-menu-item/:id', checkRole(2), (req, res) => {
     const { id } = req.params;
     const updates = req.body;
-
-    // Check if updates are provided
     if (!updates || Object.keys(updates).length === 0) {
         return res.status(400).json({ error: "No update data provided" });
     }
-
-    // Construct the query and values
     const updateFields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
     const values = [...Object.values(updates), id];  // Spread operator to combine values
-
     const sql = `UPDATE menu_items SET ${updateFields} WHERE id = ?`;
-
-    // Log for debugging
     console.log("Executing SQL Query:", sql);
     console.log("With Values:", values);
-
     pool.query(sql, values, (err, result) => {
         if (err) {
             console.error("SQL Error:", err);
             return res.status(500).json({ error: "Database error: " + err.message });
         }
-
-        // Check if the update was successful
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Menu item not found" });
         }
-
         res.json({ message: 'Menu item updated successfully' });
     });
 });
-
-
 
 app.post('/api/manageRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
