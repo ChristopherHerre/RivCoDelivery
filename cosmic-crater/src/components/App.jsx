@@ -8,7 +8,6 @@ import ShowMenuItem from './users/menu/MenuItem';
 import RestaurantsList from './users/RestaurantsList';
 import Cart from './users/Cart';
 import Admin from './restaurants/Admin';
-import Admin2 from './restaurants/Admin2';
 import Checkout from './users/checkout/Checkout';
 import Success from './users/checkout/Success';
 import Failure from './users/checkout/Failure';
@@ -37,7 +36,7 @@ export function App() {
 	const [menuItem, setMenuItem] = useState(-1);
 	const [showGetLocation, setShowGetLocation] = useState(true);
 	const [address, setAddress] = useState("");
-	const [debug, setDebug] = useState(true);
+	const [debug, setDebug] = useState(false);
 	const [distance, setDistance] = useState(0);
 	const [latitude, setLatitude] = useState(null);
 	const [longitude, setLongitude] = useState(null);
@@ -233,12 +232,6 @@ export function App() {
 										setLatitude={setLatitude}
 										longitude={longitude}
 										setLongitude={setLongitude} />
-								}
-							/>
-							<Route
-								path={"/admin2"}
-								element={
-									<Admin2 />
 								}
 							/>
 							<Route
