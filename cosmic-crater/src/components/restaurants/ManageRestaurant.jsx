@@ -43,10 +43,10 @@ function ManageRestaurant(props) {
         try {
             const response = await dbPost(e, form, inputs, "manageRestaurant");
             if (response.status >= 200 && response.status < 300) {
-            setSuccess(true);
-            setTimeout(() => {
-                setSuccess(false);
-            }, 2000);
+                setSuccess(true);
+                setTimeout(() => {
+                    setSuccess(false);
+                }, 2000);
             } else {
                 console.error("Server returned an error:", response.statusText);
                 setSuccess(false);

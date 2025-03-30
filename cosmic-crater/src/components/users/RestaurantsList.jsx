@@ -178,7 +178,6 @@ export default function RestaurantsList(props) {
             try {
                 const res = await axios.get(API_URL + '/api/maps-api-key');
                 setApiKey(res.data.apiKey);
-                console.log('Fetched API Key:', res.data.apiKey);
             } catch (error) {
                 console.error('Error fetching API key:', error);
                 if (attempt < MAX_RETRY_ATTEMPTS) {
@@ -215,11 +214,6 @@ export default function RestaurantsList(props) {
     useEffect(() => {
         const fetchRestaurants = async (attempt = 1) => {
             try {
-                console.log("$$$$$$$$$$$$$$$$$$$$");
-                console.log("$$$$$$$$$$$$$$$$$$$$");
-                console.log("$$$$$$$$$$$$$$$$$$$$");
-                console.log("$$$$$$$$$$$$$$$$$$$$");
-                console.log("$$$$$$$$$$$$$$$$$$$$");
                 const url = API_URL + `/api/restaurants/${latitude}/${longitude}`;
                 const res = await axios.get(url);
                 console.log("$$$: " + res.data);
