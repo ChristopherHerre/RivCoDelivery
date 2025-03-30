@@ -1,33 +1,41 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { dbPost } from './Admin';
 import Spinner from '../users/Spinner';
+import axios from 'axios';
+import { API_URL } from '../App';
 
 function EditItem(props) {
     const item = props.item;
+    const [success2, setSuccess2] = useState(false);
     const menuItems = props.menuItems;
     const setMenuItems = props.setMenuItems;
-    const [success2, setSuccess2] = useState(false);
-    const [loadingMenu, setLoadingMenu] = useState(false);
-    const handleSave = (id) => {
+    const handleSave = async (e, id) => {
+        e.preventDefault();
         console.log("saving menu item");
-        setSuccess2(false);
-        setLoadingMenu(true);
         const updatedItem = menuItems.find(item => item.id === id);
-        fetch(`/api/update-menu-item/${id}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(updatedItem),
-        })
-        .then(res => {
-            if (!res.ok) throw new Error("Failed to update");
-            return res.json();
-        })
-        .then(() => {
-            setSuccess2(true);
-        })
-        //.catch(() => setError("Failed to save changes"))
-        .finally(() => setLoadingMenu(false));
+        
+        try {
+            const response = await axios.post(`/api/update-menu-item/${id}`, updatedItem, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            
+            console.log("response.status: " + response.status);
+            if (response.status >= 200 && response.status < 300) {
+                setSuccess2(true);
+                setTimeout(() => {
+                    setSuccess2(false);
+                }, 2000);
+                console.log("Menu item updated successfully:", response.data);
+            } else {
+                console.error("Server returned an error:", response.statusText);
+                setSuccess2(false);
+            }
+        } catch (err) {
+            console.error("Error updating menu item:", err);
+            setSuccess2(false);
+        }
     };
     const handleDeleteMenuItem = (id) => {
         if (window.confirm("Are you sure you want to delete this menu item?")) {
@@ -52,7 +60,7 @@ function EditItem(props) {
             )
         );
     }, []);
-    return (loadingMenu ? <Spinner /> :
+    return (
         <>
             <h3>Edit Item</h3>
             {Object.keys(item).filter((key) => key !== "id" && key !== "restaurant_id").sort().map((key) => (
@@ -68,17 +76,17 @@ function EditItem(props) {
                 </div>
             ))}
             <button 
-                onClick={() => handleSave(item.id)} 
+                onClick={(e) => handleSave(e, item.id)} 
                 className="btn btn-primary form-control mt-3 mb-3"
             >
                 <i className="bi bi-pencil-square"></i> Save
             </button>
-            {success2 && (
+            {success2 ? (
                 <p className="text-success">
                     <i className="bi bi-check-circle-fill"> </i>
                     Item updated successfully.
-                </p>
-            )}
+                </p>) : ""
+            }
 
             <button 
                 onClick={() => handleDeleteMenuItem(item.id)} 
