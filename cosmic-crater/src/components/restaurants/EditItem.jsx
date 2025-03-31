@@ -13,14 +13,12 @@ function EditItem(props) {
         e.preventDefault();
         console.log("saving menu item");
         const updatedItem = menuItems.find(item => item.id === id);
-        
         try {
             const response = await axios.post(`/api/update-menu-item/${id}`, updatedItem, {
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
-            
             console.log("response.status: " + response.status);
             if (response.status >= 200 && response.status < 300) {
                 setSuccess2(true);
@@ -68,7 +66,7 @@ function EditItem(props) {
                     <b>{key}:</b>
                     <br />
                     <input
-                        type="text"
+                        type={typeof item[key] === "number" ? "number" : "text"}
                         defaultValue={item[key]}
                         onChange={(e) => handleChange(item.id, key, e.target.value)}
                         className="ml-2 p-1 border rounded form-control bg-dark text-white"

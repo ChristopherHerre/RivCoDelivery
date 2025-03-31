@@ -8,7 +8,6 @@ function ManageRestaurant(props) {
     const loading2 = props.loading2;
     const setLoading = props.setLoading;
     const success = props.success;
-    //const restaurantData = props.restaurantData;
     const [hasRestaurant, setHasRestaurant] = useState(false);
     const [restaurantData, setRestaurantData] = useState(null);
     useEffect(() => {
@@ -23,7 +22,6 @@ function ManageRestaurant(props) {
             } catch (error) {
                 console.error("Error fetching restaurant data:", error);
             } finally {
-                //setLoading(false);
                 setLoading(true);
             }
         }
