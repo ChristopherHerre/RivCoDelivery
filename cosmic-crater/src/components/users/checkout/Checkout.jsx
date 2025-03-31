@@ -30,8 +30,8 @@ export default function Checkout(props) {
 	const [loading, setLoading] = useState(false);
 	const navigate = useNavigate();
 	useEffect(() => {
-		if (cart.length < 1)
-			navigate("/");
+		//if (cart.length < 1)
+		//	navigate("/");
 		let newSubtotal = calcSubtotal(cart, setSubtotal);
 		setSubtotal(newSubtotal);
 	}, [cart]);
@@ -160,8 +160,8 @@ export default function Checkout(props) {
 			});
 			console.log("Order response:", response.data + " " + response.status);
 			if (response.status === 201) {
-				setCart([]);
 				navigate("/success");
+				setCart([]);
 			} else {
 				navigate("/failure");
 			}
