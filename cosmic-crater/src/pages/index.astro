@@ -12,12 +12,14 @@ import { createPopper } from "@popperjs/core";
 <!doctype html>
 <html lang="en">
 	<head>
+		<meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+
 		<BaseHead title={SITE_TITLE} description= />
 	</head>
 	<body>
 		<Header />
 		<App client:only />
-		
+
 		<Footer />
 	</body>
 </html>

@@ -41,11 +41,14 @@ function Resume() {
                     </div>
                 </div>
                 <div className="col-12 col-md-8">
+                    <h4>RivCoDelivery</h4>
                     <ul>
-                        <li>
-                            <h4>RivCoDelivery</h4>
-                            <p>A local spin-off of an Uber Eats clone that uses Google APIs to collect basic user information to provide delivery services to users.</p>
-                        </li>
+                        <li>Developed a full-stack order processing system using React and Node.js, integrating Google People API for authentication and Google Places API for location services.</li>
+                        <li>Implemented precise financial calculations for subtotal, tax, and delivery fees by leveraging Currency.js, ensuring accurate pricing across the platform.</li>
+                        <li>Designed and built an admin control panel that enabled restaurant partners to add, update, and manage menu items and ingredients, enhancing operational efficiency.</li>
+                        <li>Designed and implemented a robust MySQL relational database for menu, ingredient, and order management, leveraging junction tables to efficiently handle many-to-many relationships, thereby enhancing data integrity and optimizing query performance.</li>
+                        <li>Engineered RESTful APIs to seamlessly connect front-end and back-end systems, delivering a responsive and intuitive user experience.</li>
+                        <li>Utilized modern JavaScript frameworks and tools to develop a scalable and maintainable full-stack application in an agile development environment.</li>
                     </ul>
                 </div>
             </div>

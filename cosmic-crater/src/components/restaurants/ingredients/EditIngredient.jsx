@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { API_URL } from '../App';
-import Spinner from '../users/Spinner';
+import { API_URL } from '../../App';
+import Spinner from '../../users/Spinner';
 import AddIngredient from './AddIngredient';
 import Ingredient from './Ingredient';
 
@@ -15,10 +15,13 @@ const EditIngredients = React.memo(function EditIngredients(props) {
     }, []);
     return (
         <>
-            {ingredients.length <= 0 && (<p>No ingredients found.</p>)}
+            {ingredients.length <= 0 &&
+                (<p>No ingredients found.</p>)}
             {ingredients.length > 0 && (
                 <div className="row fw-bold">
-                    <h3 className="text-xl font-bold">Edit Ingredients</h3>
+                    <h3 className="text-xl font-bold">
+                        Edit Ingredients
+                    </h3>
                 </div>
             )}
             {ingredients.map((ingredient, index) => {
@@ -28,7 +31,8 @@ const EditIngredients = React.memo(function EditIngredients(props) {
                         const order = ["id", "type", "ingredients_name", "price", "easy_price", "extra_price", "customize", "halfable", "selected", "sort_order"];
                         const indexA = order.indexOf(a);
                         const indexB = order.indexOf(b);
-                        if (indexA === -1 && indexB === -1) return a > b ? 1 : -1;
+                        if (indexA === -1 && indexB === -1)
+                            return a > b ? 1 : -1;
                         if (indexA === -1) return 1;
                         if (indexB === -1) return -1;
                         return indexA - indexB;
