@@ -3,7 +3,7 @@ import axios from 'axios';
 import qs from 'qs';
 import { API_URL } from '../App';
 import ManageRestaurant from './ManageRestaurant';
-import ManageMenuItem from './ManageMenuItem';
+import ManageMenuItem from './menu_items/ManageMenuItem';
 
 export default function Admin(props) {
     const [success, setSuccess] = useState(false);

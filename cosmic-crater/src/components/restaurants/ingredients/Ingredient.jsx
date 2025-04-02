@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import Spinner from '../users/Spinner';
+import Spinner from '../../users/Spinner';
 
 function Ingredient(props) {
     const index = props.index;

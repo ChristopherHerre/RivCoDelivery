@@ -1,6 +1,6 @@
 import React from 'react';
-import Spinner from '../users/Spinner';
-import EditIngredients from './EditIngredient';
+import Spinner from '../../users/Spinner';
+import EditIngredients from '../ingredients/EditIngredient';
 import EditItem from './EditItem';
 
 function ManageMenuItem(props) {
