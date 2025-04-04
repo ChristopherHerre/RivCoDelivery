@@ -26,7 +26,6 @@ export default function ShowMenuItem(props) {
     const [customs, setCustoms] = useState([]);
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
-
     useEffect(() => {
         const fetchMenuItem = async (attempt = 1) => {
             if (props.menuItem < 0) navigate("/");
@@ -34,7 +33,8 @@ export default function ShowMenuItem(props) {
             try {
                 const res = await axios.get(API_URL + '/api/menu/item', { params: { menuItem: props.menuItem } });
                 setItemConfig(res.data);
-                if (res.data[0] != undefined) setPrice(res.data[0].price);
+                if (res.data[0] != undefined)
+                    setPrice(res.data[0].price);
                 setLoading(false);
             } catch (err) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {

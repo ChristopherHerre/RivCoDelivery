@@ -6,8 +6,9 @@ function ManageRestaurant(props) {
     const setSuccess = props.setSuccess;
     const setLoading2 = props.setLoading2;
     const loading2 = props.loading2;
-    const setLoading = props.setLoading;
+    //const setLoading = props.setLoading;
     const success = props.success;
+    const [loading, setLoading] = useState(true);
     const [hasRestaurant, setHasRestaurant] = useState(false);
     const [restaurantData, setRestaurantData] = useState(null);
     useEffect(() => {
@@ -22,7 +23,7 @@ function ManageRestaurant(props) {
             } catch (error) {
                 console.error("Error fetching restaurant data:", error);
             } finally {
-                setLoading(true);
+                setLoading(false);
             }
         }
         fetchRestaurantStatus();
@@ -56,7 +57,7 @@ function ManageRestaurant(props) {
             setLoading2(false);
         }
     }
-    return (<form onSubmit={(e) => submitRestaurant(e)}>
+    return (loading ? <Spinner /> : <form onSubmit={(e) => submitRestaurant(e)}>
         <div className="row p-2 shadow-lg rounded-2xl">
             <h3>{hasRestaurant ? "Edit Restaurant" : "Add Restaurant"}</h3>
             <div className="col-sm-4">
@@ -106,13 +107,19 @@ function ManageRestaurant(props) {
             </div>
             <div className="col-sm-4">
                 <br />
-                <input
-                    className="form-control btn btn-primary"
-                    type="submit"
-                    value={hasRestaurant ? "Save" : "Add"}
-                />
-                {loading2 ? <Spinner /> : ""}
+                <button type="submit" className="form-control btn btn-primary">
+                    {hasRestaurant ? (
+                        <>
+                            <i className="bi bi-pencil-square me-2"></i> Save
+                        </>
+                    ) : (
+                        <>
+                            <i className="bi bi-plus me-2"></i> Add
+                        </>
+                    )}
+                </button>
             </div>
+            {loading2 ? <Spinner /> : ""}
             {success ? (
                 <p className="text-success">
                     <i className="bi bi-check-circle-fill"> </i>
