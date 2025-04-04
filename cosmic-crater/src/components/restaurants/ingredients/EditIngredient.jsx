@@ -1,16 +1,17 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { API_URL } from '../../App';
 import Spinner from '../../users/Spinner';
 import AddIngredient from './AddIngredient';
 import Ingredient from './Ingredient';
 
 const EditIngredients = React.memo(function EditIngredients(props) {
     const menuItem = props.menuItem;
+    const [loading, setLoading] = useState(true);
     const [ingredients, setIngredients] = useState([]);
     useEffect(() => {
         axios.get(`/api/menu/item/ingredients?menuItem=${menuItem}`)
             .then(response => setIngredients(response.data))
+            .then(() => setLoading(false))
             .catch(error => console.error('Error fetching ingredients:', error));
     }, []);
     return (
@@ -24,7 +25,7 @@ const EditIngredients = React.memo(function EditIngredients(props) {
                     </h3>
                 </div>
             )}
-            {ingredients.map((ingredient, index) => {
+            {loading ? <Spinner /> : ingredients.map((ingredient, index) => {
                 const sortedFields = Object.keys(ingredient)
                     .filter((field) => field !== "ingredient_id" && field !== "menu_item_id" && field !== "id")
                     .sort((a, b) => {
@@ -37,7 +38,7 @@ const EditIngredients = React.memo(function EditIngredients(props) {
                         if (indexB === -1) return -1;
                         return indexA - indexB;
                     });
-                    console.log("sortedFields: "+sortedFields);
+                    console.log("sortedFields: " + sortedFields);
                 return (
                     <Ingredient 
                         sortedFields={sortedFields} 
@@ -48,7 +49,6 @@ const EditIngredients = React.memo(function EditIngredients(props) {
                     />
                 );
             })}
-            
             <div className="row bg-dark text-white">
                 <div className="col-12">
                     <AddIngredient

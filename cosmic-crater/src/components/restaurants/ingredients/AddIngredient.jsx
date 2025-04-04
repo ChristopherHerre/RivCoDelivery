@@ -7,6 +7,7 @@ import Spinner from '../../users/Spinner';
 function AddIngredient(props) {
     const menu_item_id = props.menuItem;
     const setIngredients = props.setIngredients;
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
       easy_price: '',
       extra_price: '',
@@ -19,7 +20,7 @@ function AddIngredient(props) {
       selected: '',
       halfable: ''
     });
-    const [success, setSuccess] = useState('');
+    const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -29,6 +30,7 @@ function AddIngredient(props) {
     };
     const handleSubmit = (e) => {
         e.preventDefault();
+        setLoading(true);
         const formDataWithMenuItem = {
             ...formData,
             menu_item_id: menu_item_id,
@@ -38,7 +40,10 @@ function AddIngredient(props) {
             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         )
         .then(response => {
-            setSuccess('Ingredient added successfully!');
+            setSuccess(true);
+            setTimeout(() => {
+                setSuccess(false)
+            }, 2000)
             setError('');
             setFormData({
                 easy_price: '',
@@ -53,10 +58,11 @@ function AddIngredient(props) {
                 halfable: ''
             });
             setIngredients(prevIngredients => [...prevIngredients, response.data.ingredient]);
+            setLoading(false);
         })
         .catch(err => {
             setError('Failed to add ingredient');
-            setSuccess('');
+            setSuccess(false);
             console.error(err);
         });
     };
@@ -66,11 +72,11 @@ function AddIngredient(props) {
             {success &&
                 <p className="text-success">
                     <i className="bi bi-check-circle-fill"> </i>
-                    {success}
+                    Ingredient added successfully!
                 </p>
             }
             { error && <p className="text-danger">{error}</p> }
-            <form onSubmit={handleSubmit}>
+            {loading ? <Spinner /> : <form onSubmit={handleSubmit}>
                 <div className="row">
                     {Object.keys(formData).sort((a, b) => {
                         const order = ["id", "type", "ingredients_name", "price", "easy_price", "extra_price", "customize", "halfable", "selected", "sort_order"];
@@ -99,8 +105,9 @@ function AddIngredient(props) {
                             Add Ingredient
                         </button>
                     </div>
+                    <br />
                 </div>
-            </form>
+            </form>}
         </div>
     );
 }
