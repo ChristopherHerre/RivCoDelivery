@@ -432,6 +432,62 @@ app.post('/api/menu-items', checkRole(2), (req, res) => {
     });
 });
 
+app.post('/api/add-menu-item', checkRole(2), async (req, res) => {
+    if (!req.session?.user?.sub) {
+        return res.status(401).json({ message: 'Authentication required' });
+    }
+    const { 
+        name, category, price, 
+        size1, size2, size3, size4,
+        price2, price3, price4, sort 
+    } = req.body;
+    if (!name || !category || !price) {
+        return res.status(400).json({ error: "Name, category, and base price are required" });
+    }
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        // Get user's restaurant_id
+        const [[user]] = await connection.execute(
+            'SELECT restaurant_id FROM users WHERE id = ?', 
+            [req.session.user.sub]
+        );
+        if (!user?.restaurant_id) {
+            throw new Error("User has no associated restaurant");
+        }
+        // Insert menu item
+        const [result] = await connection.execute(
+            `INSERT INTO menu_items 
+                (restaurant_id, name, price, size1, size2, size3, size4,
+                 price2, price3, price4, category, sort)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                user.restaurant_id, name, parseFloat(price), 
+                size1 || null,
+                size2 || null,
+                size3 || null,
+                size4 || null,
+                price2 ? parseFloat(price2) : null,
+                price3 ? parseFloat(price3) : null,
+                price4 ? parseFloat(price4) : null,
+                category, sort || 2
+            ]
+        );
+        await connection.commit();
+        res.status(201).json({ 
+            message: "Menu item added successfully",
+            id: result.insertId,
+            data: result
+        });
+    } catch (error) {
+        await connection.rollback();
+        console.error("Database error:", error);
+        res.status(500).json({ error: error.message || "Internal server error" });
+    } finally {
+        connection.release();
+    }
+});
+
 app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ error: 'Unauthorized: No user session' });

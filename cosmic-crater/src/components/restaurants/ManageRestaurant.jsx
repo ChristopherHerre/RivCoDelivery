@@ -6,7 +6,6 @@ function ManageRestaurant(props) {
     const setSuccess = props.setSuccess;
     const setLoading2 = props.setLoading2;
     const loading2 = props.loading2;
-    //const setLoading = props.setLoading;
     const success = props.success;
     const [loading, setLoading] = useState(true);
     const [hasRestaurant, setHasRestaurant] = useState(false);

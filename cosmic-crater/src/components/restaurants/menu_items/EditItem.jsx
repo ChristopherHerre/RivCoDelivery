@@ -6,12 +6,14 @@ import { API_URL } from '../../App';
 
 function EditItem(props) {
     const item = props.item;
-    const [loading, setLoading] = useState(true);
     const [success2, setSuccess2] = useState(false);
     const menuItems = props.menuItems;
     const setMenuItems = props.setMenuItems;
+    const loading3 = props.loading3;
+    const setLoading3 = props.setLoading3;
     const handleSave = async (e, id) => {
         e.preventDefault();
+        setLoading3(true);
         console.log("saving menu item");
         const updatedItem = menuItems.find(item => item.id === id);
         try {
@@ -34,8 +36,6 @@ function EditItem(props) {
         } catch (err) {
             console.error("Error updating menu item:", err);
             setSuccess2(false);
-        } finally {
-            setLoading(false);
         }
     };
     const handleDeleteMenuItem = (id) => {
@@ -61,7 +61,7 @@ function EditItem(props) {
             )
         );
     }, []);
-    return (loading ? <Spinner /> :
+    return (loading3 ? <Spinner /> :
         <>
             <h3>Edit Item</h3>
             {Object.keys(item).filter((key) => key !== "id" && key !== "restaurant_id").sort().map((key) => (

@@ -4,30 +4,50 @@ import qs from 'qs';
 import { API_URL } from '../App';
 import ManageRestaurant from './ManageRestaurant';
 import ManageMenuItem from './menu_items/ManageMenuItem';
+import AddMenuItem from './AddMenuItem';
 
 export default function Admin(props) {
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loading2, setLoading2] = useState(false);
     const Menu = () => {
+        const [loading3, setLoading3] = useState(true);
         const [menuItems, setMenuItems] = useState([]);
         useEffect(() => {
             fetch(`/api/menu-items-list`)
                 .then(res => res.json())
-                .then(data => setMenuItems(data))
+                .then(data => {
+                    setMenuItems(data);
+                    setLoading3(false);
+                })
                 .catch(() => setError('Failed to fetch menu items'));
         }, []);
         return (
-            <div className="row">
-                {menuItems.map(item => (
-                    <ManageMenuItem 
-                        key={item.id} 
-                        item={item}
-                        menuItems={menuItems}
-                        setMenuItems={setMenuItems}
-                    />
-                ))}
-            </div>
+            <>
+                <div className="row">
+                    <div className="col-12">
+                        <AddMenuItem 
+                            setMenuItems={setMenuItems}
+                            //setSuccess={setSuccess}
+                            //setLoading={setLoading}
+                            //loading={loading}
+                            //success={success}
+                        />
+                    </div>
+                </div>
+                <div className="row">
+                    {Array.isArray(menuItems) && menuItems?.map(item => (
+                        <ManageMenuItem 
+                            key={item.id} 
+                            item={item}
+                            menuItems={menuItems}
+                            setMenuItems={setMenuItems}
+                            loading3={loading3}
+                            setLoading3={setLoading3}
+                        />
+                    ))}
+                </div>
+            </>
         );
     };
     return (

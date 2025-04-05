@@ -7,6 +7,8 @@ function ManageMenuItem(props) {
     const item = props.item;
     const menuItems = props.menuItems;
     const setMenuItems = props.setMenuItems;
+    const loading3 = props.loading3;
+    const setLoading3 = props.setLoading3;
     return (
         <div key={item.id} className="col-12 mt-3 shadow-lg rounded-2">
             <div className="row p-2">
@@ -16,6 +18,8 @@ function ManageMenuItem(props) {
                         item={item}
                         menuItems={menuItems}
                         setMenuItems={setMenuItems}
+                        loading3={loading3}
+                        setLoading3={setLoading3}
                     /> 
                 </div>
                 <div className='col-12 col-xl-9'>
