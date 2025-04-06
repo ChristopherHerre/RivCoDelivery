@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { API_URL, MAX_RETRY_ATTEMPTS } from '../App';
+import { MAX_RETRY_ATTEMPTS } from '../App';
 import Spinner from './Spinner';
 
 function UserOrders() {
@@ -19,7 +19,7 @@ function UserOrders() {
             if (googleId) {
                 setLoading(true);
                 try {
-                    const res = await axios.get(API_URL + '/api/user/orders', {
+                    const res = await axios.get('/api/user/orders', {
                         headers: {
                             Authorization: `Bearer ${googleId}`
                         },
@@ -50,7 +50,7 @@ function UserOrders() {
 
     const fetchOrderItems = async (orderId, attempt = 1) => {
         try {
-            const res = await axios.get(API_URL + '/api/order_items', {
+            const res = await axios.get('/api/order_items', {
                 params: { oid: orderId }
             });
             setOrderItems(prevState => ({

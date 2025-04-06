@@ -225,7 +225,7 @@ export function App() {
 
 export function dbPost2(e, inputs, route) {
 	if (e != null) e.preventDefault(e);
-	const url = API_URL + "/api/" + route;
+	const url = "/api/" + route;
 	const options = {
 		method: 'POST',
 		headers: {
@@ -246,7 +246,7 @@ export function dbPost2(e, inputs, route) {
 
 export function dbGet(e, inputs, route) {
 	if (e != null) e.preventDefault(e);
-	const url = API_URL + "/api/" + route;
+	const url = "/api/" + route;
 	const options = {
 		method: 'GET',
 		headers: {

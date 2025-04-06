@@ -1,7 +1,6 @@
 ﻿import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import qs from 'qs';
-import { API_URL } from '../App';
 import ManageRestaurant from './ManageRestaurant';
 import MenuItemWithIngredients from './menu_items/MenuItemWithIngredients';
 import AddMenuItem from './menu_items/AddMenuItem';
@@ -63,7 +62,7 @@ export default function Admin(props) {
 
 export function dbPost(e, form, inputs, route) {
     e.preventDefault();
-    const url = API_URL + "/api/" + route;
+    const url = "/api/" + route;
     const options = {
         method: 'POST',
         headers: {
