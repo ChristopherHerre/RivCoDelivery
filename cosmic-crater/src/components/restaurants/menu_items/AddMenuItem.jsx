@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import Spinner from '../users/Spinner';
-import { dbPost } from './Admin';
+import Spinner from '../../users/Spinner';
+import { dbPost } from '../Admin';
 
 function AddMenuItem(props) {
     const setMenuItems = props.setMenuItems;
     const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -30,7 +31,7 @@ function AddMenuItem(props) {
             const response = await dbPost(e, e.target, inputs, "add-menu-item");
             if (response.status >= 200 && response.status < 300) {
                 setSuccess(true);
-                setMenuItems(prevMenuItems => [...prevMenuItems, ...formData]);
+                setMenuItems(prevMenuItems => [...prevMenuItems, formData]);
                 setFormData({
                     name: '',
                     category: '',
@@ -48,6 +49,10 @@ function AddMenuItem(props) {
             }
         } catch (err) {
             console.error("Error submitting menu item:", err);
+            setError(err.message);
+            setTimeout(() => {
+                setError("");
+            }, 2000);
         } finally {
             setLoading(false);
         }
@@ -141,7 +146,14 @@ function AddMenuItem(props) {
             {loading ? <Spinner /> : ""}
             {success && (
                 <p className="text-success mt-2">
-                    <i className="bi bi-check-circle-fill"></i> Menu item added successfully!
+                    <i className="bi bi-check-circle-fill"> </i>
+                    Menu item added successfully!
+                </p>
+            )}
+            {error && (
+                <p className="text-danger mt-2">
+                    <i class="bi bi-exclamation-triangle"> </i>
+                    {error.length > 0 ? error : ""}
                 </p>
             )}
         </form>

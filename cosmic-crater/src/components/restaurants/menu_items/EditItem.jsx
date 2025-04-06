@@ -7,6 +7,7 @@ import { API_URL } from '../../App';
 function EditItem(props) {
     const item = props.item;
     const [success2, setSuccess2] = useState(false);
+    const [error, setError] = useState("");
     const menuItems = props.menuItems;
     const setMenuItems = props.setMenuItems;
     const loading3 = props.loading3;
@@ -36,6 +37,12 @@ function EditItem(props) {
         } catch (err) {
             console.error("Error updating menu item:", err);
             setSuccess2(false);
+            setError(err.message);
+            setTimeout(() => {
+                setError("");
+            }, 2000);
+        } finally {
+            setLoading3(false);
         }
     };
     const handleDeleteMenuItem = (id) => {
@@ -88,7 +95,12 @@ function EditItem(props) {
                     Item updated successfully.
                 </p>) : ""
             }
-
+            {error && (
+                <p className="text-danger mt-2">
+                    <i class="bi bi-exclamation-triangle"> </i>
+                    {error.length > 0 ? error : ""}
+                </p>
+            )}
             <button 
                 onClick={() => handleDeleteMenuItem(item.id)} 
                 className="btn btn-danger form-control mt-3 mb-3"

@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import qs from 'qs';
-import { API_URL } from '../../App';
-import Spinner from '../../users/Spinner';
+import { API_URL } from '../../../App';
+import Spinner from '../../../users/Spinner';
 
 function AddIngredient(props) {
     const menu_item_id = props.menuItem;

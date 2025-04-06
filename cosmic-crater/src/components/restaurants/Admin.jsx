@@ -3,8 +3,8 @@ import axios from 'axios';
 import qs from 'qs';
 import { API_URL } from '../App';
 import ManageRestaurant from './ManageRestaurant';
-import ManageMenuItem from './menu_items/ManageMenuItem';
-import AddMenuItem from './AddMenuItem';
+import MenuItemWithIngredients from './menu_items/MenuItemWithIngredients';
+import AddMenuItem from './menu_items/AddMenuItem';
 
 export default function Admin(props) {
     const [success, setSuccess] = useState(false);
@@ -28,16 +28,12 @@ export default function Admin(props) {
                     <div className="col-12">
                         <AddMenuItem 
                             setMenuItems={setMenuItems}
-                            //setSuccess={setSuccess}
-                            //setLoading={setLoading}
-                            //loading={loading}
-                            //success={success}
                         />
                     </div>
                 </div>
                 <div className="row">
                     {Array.isArray(menuItems) && menuItems?.map(item => (
-                        <ManageMenuItem 
+                        <MenuItemWithIngredients 
                             key={item.id} 
                             item={item}
                             menuItems={menuItems}
