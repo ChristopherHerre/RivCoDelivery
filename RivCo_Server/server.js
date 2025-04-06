@@ -78,7 +78,7 @@ app.get("*", (req, res) => {
 app.use((req, res, next) => {
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    res.setHeader('Access-Control-Allow-Origin', 'https://www.rivcodelivery.com'); 
+    res.setHeader('Access-Control-Allow-Origin', 'https://rivcodelivery.com'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header("Access-Control-Allow-Credentials", "true");
@@ -144,7 +144,11 @@ passport.deserializeUser((user, done) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL 
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    passReqToCallback: true,
+    scope: ['profile', 'email'],
+    accessType: 'offline',
+    prompt: 'consent'
 }, (accessToken, refreshToken, profile, done) => {
     done(null, profile);
 }));
