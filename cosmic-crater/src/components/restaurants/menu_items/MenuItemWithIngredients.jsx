@@ -1,18 +1,17 @@
 import React from 'react';
-import Spinner from '../../users/Spinner';
-import EditIngredients from '../ingredients/EditIngredient';
+import EditIngredients from './ingredients/EditIngredient';
 import EditItem from './EditItem';
 
-function ManageMenuItem(props) {
+function MenuItemWithIngredients(props) {
     const item = props.item;
     const menuItems = props.menuItems;
     const setMenuItems = props.setMenuItems;
     const loading3 = props.loading3;
     const setLoading3 = props.setLoading3;
     return (
-        <div key={item.id} className="col-12 mt-3 shadow-lg rounded-2">
+        <div key={item.id} className="col-12 mt-3 shadow-lg">
             <div className="row p-2">
-                <div className='col-12 col-xl-3 bg-primary-subtle rounded-1'>
+                <div className='col-12 col-xl-3 bg-primary-subtle rounded-4'>
                     <EditItem
                         key={item.id}
                         item={item}
@@ -29,4 +28,4 @@ function ManageMenuItem(props) {
         </div>
     );
 }
-export default ManageMenuItem;
+export default MenuItemWithIngredients;

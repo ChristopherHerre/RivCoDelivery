@@ -432,6 +432,7 @@ app.post('/api/menu-items', checkRole(2), (req, res) => {
     });
 });
 
+
 app.post('/api/add-menu-item', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ message: 'Authentication required' });
