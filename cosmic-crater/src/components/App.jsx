@@ -23,7 +23,7 @@ import Navbar from './users/Navbar';
 export const API_URL = false ?
 	"http://localhost:8080"
 :
-	"https://www.rivcodelivery.com";
+	"https://rivcodelivery.com";
 export const MAX_RETRY_ATTEMPTS = 3;
 
 export function App() {
