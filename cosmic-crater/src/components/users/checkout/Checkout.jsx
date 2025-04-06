@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import currency from 'currency.js';
 import { CartItemDetails, calcSubtotal, Subtotal, Ingredients } from '../Cart';
-import { roundedToFixed, API_URL } from '../../App';
+import { roundedToFixed } from '../../App';
 import { DeliveryAddress, getStreetOnly } from '../RestaurantsList';
 import axios from 'axios';
 import Spinner from '../Spinner';
@@ -152,7 +152,7 @@ export default function Checkout(props) {
 		}
 		console.log("Placing order...");
 		try {
-			const response = await axios.post(API_URL + '/api/co', [userInputData, cartClone], {
+			const response = await axios.post('/api/co', [userInputData, cartClone], {
 				headers: {
 					Authorization: `Bearer ${googleId}`
 				},

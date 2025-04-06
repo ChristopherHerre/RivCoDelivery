@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { API_URL, MAX_RETRY_ATTEMPTS } from '../App';
+import { MAX_RETRY_ATTEMPTS } from '../App';
 import Spinner from './Spinner';
 import axios from 'axios';
 
@@ -12,7 +12,7 @@ function Users() {
         const fetchUsers = async (attempt = 1) => {
             setLoading(true);
             try {
-                const res = await axios.get(`${API_URL}/api/users`, {
+                const res = await axios.get(`/api/users`, {
                     params: { page, limit: 6 },
                     withCredentials: true
                 });
@@ -60,7 +60,7 @@ function Users() {
             return user;
         }));
         try {
-            const response = await axios.put(`${API_URL}/api/users/${userId}/restaurant`, { restaurant_id: newValue }, {
+            const response = await axios.put(`/api/users/${userId}/restaurant`, { restaurant_id: newValue }, {
                 withCredentials: true
             });
             console.log('Restaurant ID updated:', response.data);
@@ -81,7 +81,7 @@ function Users() {
             }));
             setLoading(true);
             try {
-                const response = await axios.put(`${API_URL}/api/users/${userId}/role`, { role: newValue }, {
+                const response = await axios.put(`/api/users/${userId}/role`, { role: newValue }, {
                     withCredentials: true
                 }).then(() => {
                     setLoading(false);

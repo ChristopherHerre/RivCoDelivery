@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { dbPost } from '../Admin';
 import Spinner from '../../users/Spinner';
 import axios from 'axios';
-import { API_URL } from '../../App';
 
 function EditItem(props) {
     const item = props.item;

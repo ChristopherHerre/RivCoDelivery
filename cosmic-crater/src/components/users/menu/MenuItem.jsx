@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios';
 import QuantitySelector from '../QuantitySelector';
 import currency from 'currency.js';
-import { API_URL, MAX_RETRY_ATTEMPTS } from '../../App';
+import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../Spinner';
 
 export default function ShowMenuItem(props) {
@@ -31,7 +31,7 @@ export default function ShowMenuItem(props) {
             if (props.menuItem < 0) navigate("/");
             console.log("menuItem: " + props.menuItem);
             try {
-                const res = await axios.get(API_URL + '/api/menu/item', { params: { menuItem: props.menuItem } });
+                const res = await axios.get('/api/menu/item', { params: { menuItem: props.menuItem } });
                 setItemConfig(res.data);
                 if (res.data[0] != undefined)
                     setPrice(res.data[0].price);
@@ -48,7 +48,7 @@ export default function ShowMenuItem(props) {
 
         const fetchMenuItemIngredients = async (attempt = 1) => {
             try {
-                const res = await axios.get(API_URL + '/api/menu/item/ingredients', { params: { menuItem: props.menuItem } });
+                const res = await axios.get('/api/menu/item/ingredients', { params: { menuItem: props.menuItem } });
                 setItemIngredients(res.data);
                 const initialEnabled = res.data.map(ingredient => ingredient.selected || false);
                 setEnabled(initialEnabled);

@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import qs from 'qs';
-import { API_URL } from '../../../App';
 import Spinner from '../../../users/Spinner';
 
 function AddIngredient(props) {
@@ -35,7 +34,7 @@ function AddIngredient(props) {
             ...formData,
             menu_item_id: menu_item_id,
         };
-        axios.post(`${API_URL}/api/menu-item-ingredients`, 
+        axios.post(`/api/menu-item-ingredients`, 
             qs.stringify(formDataWithMenuItem), 
             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         )

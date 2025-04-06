@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { API_URL, MAX_RETRY_ATTEMPTS } from '../../App';
+import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../Spinner';
 
 export default function Menu(props) {
@@ -18,7 +18,7 @@ export default function Menu(props) {
         const fetchMenu = async (attempt = 1) => {
             if (props.restaurant < 0) navigate("/");
             try {
-                const res = await axios.get(API_URL + `/api/restaurants2/${restaurant}/menu`);
+                const res = await axios.get(`/api/restaurants2/${restaurant}/menu`);
                 console.log(res.data);
                 setMenu(res.data);
                 setLoaded(true);

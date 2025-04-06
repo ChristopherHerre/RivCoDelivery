@@ -2,7 +2,7 @@ import {
 	GoogleOAuthProvider, 
 	GoogleLogin, 
 	googleLogout } from '@react-oauth/google';
-import { API_URL, MAX_RETRY_ATTEMPTS } from '../App';
+import { MAX_RETRY_ATTEMPTS } from '../App';
 import Badge from './Badge';
 import Logo from './Logo';
 import Spinner from './Spinner';
@@ -37,7 +37,7 @@ function Navbar(props) {
 		console.log('Login Successful', response);
 		const login = async (attempt = 1) => {
 			try {
-				const res = await axios.post(API_URL + '/api/google-login', {
+				const res = await axios.post('/api/google-login', {
 					token: response.credential
 				}, { withCredentials: true });		
 				console.log('Backend response:', res.data);
@@ -73,7 +73,7 @@ function Navbar(props) {
 		googleLogout();
 		const logout = async () => {
 			try {
-				const response = await axios.get(`${API_URL}/api/logout`,
+				const response = await axios.get(`/api/logout`,
 					{ withCredentials: true });
 				console.log(response.data.message);
 				setProfile(null);
