@@ -18,12 +18,12 @@ export default function RestaurantsList(props) {
     const setDistance = props.setDistance;
     const showGetLocation = props.showGetLocation;
     const setShowGetLocation = props.setShowGetLocation;
-    const [restaurants, setRestaurants] = useState([]);
-    const [restaurantsCopy, setRestaurantsCopy] = useState([]);
     const latitude = props.latitude;
     const setLatitude = props.setLatitude;
     const longitude = props.longitude;
     const setLongitude = props.setLongitude;
+    const [restaurants, setRestaurants] = useState([]);
+    const [restaurantsCopy, setRestaurantsCopy] = useState([]);
     const [itemConfig, setItemConfig] = useState([]);
     const [query, setQuery] = useState("");
     const result = Object.groupBy(restaurants, r => r.category);
@@ -144,55 +144,56 @@ export default function RestaurantsList(props) {
                     </div>
                 : ""
             }
+            
             {!showGetLocation && loaded  ? 
                 Object.keys(result).map((category, categoryIndex) => (
-                    <div key={categoryIndex}>
-                        <div className="row">
-                            <h5 className="indent">
+                    <div className="row" key={categoryIndex}>
+                        <div className="col-12">
+                            <h5>
                                 {category}
                             </h5>
-                            {result[category].map((data, key) => {
-                                const h = haversine_dist(
-                                    data.latitude, 
-                                    data.longitude, 
-                                    latitude, 
-                                    longitude
-                                );
-                                const fee = 10 + (h < 1 ? 1 : h);
-                                const maxFee = 100;
-                                function selectRestaurant(data) {
-                                    setRestaurantName(data.name);
-                                    setRestaurant(data.id);
-                                    setRestaurantAddress(data.address);
-                                    setDeliveryFee(fee);
-                                    setDistance(h);
-                                }
-                                return (
-                                    <div className="col-md-6" key={key}>
-                                        <Link to={"/menu"}>
-                                            <button
-                                                className="btn btn-primary m-1 w-100"
-                                                onClick={(e) => selectRestaurant(data)}>
-                                                <b>{data.name} </b>
-                                                <small>
-                                                    ({fee > maxFee ? "--" 
-                                                        : USDollar.format(roundedToFixed(fee, 2))}
-                                                        <span> Delivery Fee</span>)
-                                                </small>
-                                                 <div>
-                                                    <span>{data.address} - </span>
-                                                    <small>
-                                                        <span>
-                                                            {h < 100 ? roundedToFixed(h, 1) : "--"}
-                                                        </span> Miles
-                                                    </small>
-                                                </div>
-                                            </button>
-                                        </Link>
-                                    </div>
-                                );
-                            })}
                         </div>
+                        {result[category].map((data, key) => {
+                            const h = haversine_dist(
+                                data.latitude, 
+                                data.longitude, 
+                                latitude, 
+                                longitude
+                            );
+                            const fee = 10 + (h < 1 ? 1 : h);
+                            const maxFee = 100;
+                            function selectRestaurant(data) {
+                                setRestaurantName(data.name);
+                                setRestaurant(data.id);
+                                setRestaurantAddress(data.address);
+                                setDeliveryFee(fee);
+                                setDistance(h);
+                            }
+                            return (
+                                <div className="col-md-6" key={key}>
+                                    <Link to={"/menu"}>
+                                        <button
+                                            className="btn btn-primary m-1 w-100"
+                                            onClick={(e) => selectRestaurant(data)}>
+                                            <b>{data.name} </b>
+                                            <small>
+                                                ({fee > maxFee ? "--" 
+                                                    : USDollar.format(roundedToFixed(fee, 2))}
+                                                    <span> Delivery Fee</span>)
+                                            </small>
+                                                <div>
+                                                <span>{data.address} - </span>
+                                                <small>
+                                                    <span>
+                                                        {h < 100 ? roundedToFixed(h, 1) : "--"}
+                                                    </span> Miles
+                                                </small>
+                                            </div>
+                                        </button>
+                                    </Link>
+                                </div>
+                            );
+                        })}
                     </div>
                 ))
                 :
