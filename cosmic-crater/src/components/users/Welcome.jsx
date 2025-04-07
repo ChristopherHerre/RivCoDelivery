@@ -34,7 +34,6 @@ function Welcome(props) {
                         console.error('Error loading map script in Welcome:', error);
                     });
                 });
-                
             } catch (error) {
                 console.error('Error fetching API key:', error);
                 if (attempt < MAX_RETRY_ATTEMPTS) {

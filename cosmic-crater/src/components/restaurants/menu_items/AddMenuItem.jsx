@@ -4,6 +4,7 @@ import { dbPost } from '../Admin';
 
 function AddMenuItem(props) {
     const setMenuItems = props.setMenuItems;
+    const setLoading3 = props.setLoading3;
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -31,7 +32,8 @@ function AddMenuItem(props) {
             const response = await dbPost(e, e.target, inputs, "add-menu-item");
             if (response.status >= 200 && response.status < 300) {
                 setSuccess(true);
-                setMenuItems(prevMenuItems => [...prevMenuItems, formData]);
+                setLoading3(true);
+                //setMenuItems(prevMenuItems => [...prevMenuItems, formData]);
                 setFormData({
                     name: '',
                     category: '',

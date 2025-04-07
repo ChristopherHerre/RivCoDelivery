@@ -16,26 +16,6 @@ const IP = '0.0.0.0';
 const PORT = 8080;
 const path = require("path");
 
-/*const { spawn } = require('child_process');
-
-// Start Cloud SQL Proxy
-const proxy = spawn('/home/' + process.env.EMAIL + '/cloud_sql_proxy', [
-  '-instances=mimetic-surf-124908:us-west2:mysql=tcp:3306'
-]);
-
-proxy.stdout.on('data', (data) => {
-  console.log(`Cloud SQL Proxy: ${data}`);
-});
-
-proxy.stderr.on('data', (data) => {
-  console.error(`Cloud SQL Proxy Error: ${data}`);
-});
-
-// Ensure Cloud SQL Proxy is stopped when the app exits
-process.on('exit', () => {
-  proxy.kill();
-});*/
-
 const checkRole = (requiredRole) => {
     return async (req, res, next) => {
         try {
@@ -68,13 +48,6 @@ function haversine_dist(lat, lng, lat2, lng2) {
 }
 
 app.set('trust proxy', 1);
-/*
-app.use(express.static(path.join(__dirname, "dist")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
-});
-*/
-// Set headers to avoid Cross-Origin-Opener-Policy issues
 app.use((req, res, next) => {
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
@@ -155,7 +128,7 @@ passport.use(new GoogleStrategy({
 
 app.use(express.json());
 
-app.delete('/api/menu-item-ingredients/:ingredient_id', async (req, res) => {
+app.delete('/api/menu-item-ingredients/:ingredient_id', checkRole(2), async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
@@ -178,7 +151,7 @@ app.delete('/api/menu-item-ingredients/:ingredient_id', async (req, res) => {
     }
 });
 
-app.delete('/api/menu-items/:id', async (req, res) => {
+app.delete('/api/menu-items/:id', checkRole(2), async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
@@ -202,17 +175,14 @@ app.delete('/api/menu-items/:id', async (req, res) => {
 });
 
 // Add new ingredient
-app.post('/api/menu-item-ingredients', async (req, res) => {
+app.post('/api/menu-item-ingredients', checkRole(2), async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-
         const {
             easy_price, extra_price, inputType, ingredients_name,
             customize, type, price, sort_order, selected, halfable, menu_item_id
         } = req.body;
-
-        // Insert ingredient into the main table
         const query1 = `
             INSERT INTO menu_item_ingredients (
                 easy_price, 
@@ -228,7 +198,6 @@ app.post('/api/menu-item-ingredients', async (req, res) => {
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
-
         const values1 = [
             easy_price || null,
             extra_price || null,
@@ -241,11 +210,8 @@ app.post('/api/menu-item-ingredients', async (req, res) => {
             selected || 0,
             halfable || 0
         ];
-
         const [result] = await connection.query(query1, values1);
         const ingredient_id = result.insertId; // Retrieve the inserted ingredient's ID
-
-        // Insert into mapping table if menu_item_id is provided
         if (menu_item_id) {
             const query2 = `
                 INSERT INTO menu_item_ingredients_map (menu_item_id, ingredient_id)
@@ -253,10 +219,7 @@ app.post('/api/menu-item-ingredients', async (req, res) => {
             `;
             await connection.query(query2, [menu_item_id, ingredient_id]);
         }
-
         await connection.commit();
-
-        // Return the newly created ingredient details in the response
         res.status(201).json({ 
             message: "Ingredient added successfully!",
             ingredient: {
@@ -282,9 +245,6 @@ app.post('/api/menu-item-ingredients', async (req, res) => {
         connection.release();
     }
 });
-
-
-
 
 app.post('/api/addRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
@@ -341,24 +301,20 @@ app.put('/api/menu-ingredients/:id', checkRole(2), async (req, res) => {
         return res.status(500).json({ error: 'Database error' });
     }
 });
-// Update menu item using async/await pattern
+
 app.post('/api/update-menu-item/:id', checkRole(2), async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
-
     if (!updates || Object.keys(updates).length === 0) {
         return res.status(400).json({ error: "No update data provided" });
     }
-
     const updateFields = Object.keys(updates)
         .map(key => `${key} = ?`)
         .join(', ');
     const values = [...Object.values(updates), id];
     const sql = `UPDATE menu_items SET ${updateFields} WHERE id = ?`;
-
     console.log("Executing SQL Query:", sql);
     console.log("With Values:", values);
-
     try {
         const result = await pool.query(sql, values);
         if (result.affectedRows === 0) {
@@ -370,7 +326,6 @@ app.post('/api/update-menu-item/:id', checkRole(2), async (req, res) => {
         return res.status(500).json({ error: "Database error: " + err.message });
     }
 });
-
 
 app.post('/api/manageRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
@@ -436,7 +391,6 @@ app.post('/api/menu-items', checkRole(2), (req, res) => {
     });
 });
 
-
 app.post('/api/add-menu-item', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ message: 'Authentication required' });
@@ -452,7 +406,6 @@ app.post('/api/add-menu-item', checkRole(2), async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-        // Get user's restaurant_id
         const [[user]] = await connection.execute(
             'SELECT restaurant_id FROM users WHERE id = ?', 
             [req.session.user.sub]
@@ -460,7 +413,6 @@ app.post('/api/add-menu-item', checkRole(2), async (req, res) => {
         if (!user?.restaurant_id) {
             throw new Error("User has no associated restaurant");
         }
-        // Insert menu item
         const [result] = await connection.execute(
             `INSERT INTO menu_items 
                 (restaurant_id, name, price, size1, size2, size3, size4,
@@ -499,7 +451,6 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
     }
     console.log("sub: " + req.session?.user?.sub);
     try {
-        // Define the SQL query with a JOIN to get menu items for the user's restaurant
         const query = `
             SELECT menu_items.*
             FROM menu_items
@@ -509,13 +460,10 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
             GROUP BY menu_items.id
             ORDER BY COUNT(menu_item_ingredients_map.ingredient_id) DESC;
         `;
-        // Execute the query with the user's Google ID (sub)
         const [results] = await pool.query(query, [req.session.user.sub]);
         if (results.length === 0) {
-            // No menu items found, return 403 error
             return res.status(403).json({ error: 'Forbidden: No menu items found for this user\'s restaurant' });
         }
-        // Return the results
         res.json(results);
     } catch (err) {
         console.error('Error executing query:', err);
@@ -598,13 +546,62 @@ app.get('/api/getUserRestaurant', checkRole(2), async (req, res) => {
         const [[restaurant]] = await pool.execute(
             `SELECT r.* FROM restaurants r 
              JOIN users u ON u.restaurant_id = r.id 
-             WHERE u.id = ?`, 
-            [req.session.user.sub]
+             WHERE u.id = ?`, [req.session.user.sub]
         );
         res.json({ restaurant: restaurant || null });
     } catch (error) {
         console.error("Database error:", error);
         res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+app.get('/api/users', checkRole(2), async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+    try {
+        const query = 'SELECT * FROM users ORDER BY name ASC LIMIT ? OFFSET ?';
+        const [results] = await pool.execute(query, [
+            limit.toString(), 
+            offset.toString()
+        ]);
+        res.json(results);
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
+app.post('/api/changeOrderOpen', checkRole(1), async (req, res) => {
+    const iid  = req.body[0];
+    console.log("id: "+iid);
+    if (!iid) {
+        return res.status(400).json({ error: 'Order ID is required' });
+    }
+    const query = 'UPDATE orders SET open = 1 WHERE id = ? LIMIT 1';
+    try {
+        await pool.execute(query, [iid]);
+        res.status(200).json({ message: 'Order status updated successfully' });
+    } catch (err) {
+        console.error('Error executing query:', err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
+});
+
+app.get('/api/orders', checkRole(1), async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+    try {
+        const query = `SELECT * FROM orders WHERE open = '0' ORDER BY date DESC LIMIT ? OFFSET ?`;
+        const [results] = await pool.execute(query, [
+            limit.toString(), 
+            offset.toString()
+        ]);
+        res.json(results);
+    } catch (err) {
+        console.error('Error fetching orders:', err);
+        res.status(500).json({ error: 'Failed to fetch orders' });
     }
 });
 
@@ -618,8 +615,7 @@ app.post('/api/google-login', async (req, res) => {
         const payload = ticket.getPayload();
         const { sub, email, name, picture } = payload;
         const [userResults] = await pool.execute(
-            'SELECT * FROM users WHERE id = ? LIMIT 1',
-            [sub]
+            'SELECT * FROM users WHERE id = ? LIMIT 1', [sub]
         );
 	    const role = 0;
         if (userResults.length === 0) {
@@ -640,40 +636,13 @@ app.post('/api/google-login', async (req, res) => {
             if (err) console.error("Session save error:", err);
             else console.log("Session saved successfully:", req.session);
         });
-
         res.json({ sub, email, name, picture });
     } catch (error) {
         console.error('Error:', error);
         res.status(401).json({ error: 'Invalid token' });
     }
 });
-/*app.post('/api/google-login', async (req, res) => {
-    const { token } = req.body;
-    try {
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
-        const payload = ticket.getPayload();
-        const { sub, email, name, picture } = payload;
 
-        // 🛑 DELETE OLD SESSIONS FOR THIS USER
-        await pool.execute('DELETE FROM sessions WHERE JSON_EXTRACT(data, "$.user.sub") = ?', [sub]);
-
-        // ✅ Save the new session
-        req.session.user = { sub, email, name, picture };
-        req.session.save(err => {
-            if (err) console.error("Session save error:", err);
-            else console.log("Session saved successfully:", req.session);
-        });
-
-        res.json({ sub, email, name, picture });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(401).json({ error: 'Invalid token' });
-    }
-});
-*/
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 app.get('/api/health', (req, res) => {
@@ -743,13 +712,13 @@ app.get('/api/maps-api-key', (req, res) => {
 app.get('/api/restaurants/:latitude/:longitude', async (req, res) => {
     const { latitude, longitude } = req.params;
     const query = `
-    SELECT * FROM restaurants 
-    WHERE address IS NOT NULL 
-    AND longitude IS NOT NULL 
-    AND latitude IS NOT NULL
-    LIMIT 50`;
+        SELECT * FROM restaurants 
+        WHERE address IS NOT NULL 
+        AND longitude IS NOT NULL 
+        AND latitude IS NOT NULL
+        LIMIT 50`
+    ;
     try {
-        console.log("sub: " + !req.session?.user?.sub)
         const [results] = await pool.execute(query);
         const restaurantsWithDistance = results.map((restaurant) => {
             const distance = haversine_dist(
@@ -859,22 +828,6 @@ app.get('/api/menu/item', async (req, res) => {
     }
 });
 
-app.post('/api/changeOrderOpen', checkRole(1), async (req, res) => {
-    const iid  = req.body[0];
-    console.log("id: "+iid);
-    if (!iid) {
-        return res.status(400).json({ error: 'Order ID is required' });
-    }
-    const query = 'UPDATE orders SET open = 1 WHERE id = ? LIMIT 1';
-    try {
-        await pool.execute(query, [iid]);
-        res.status(200).json({ message: 'Order status updated successfully' });
-    } catch (err) {
-        console.error('Error executing query:', err);
-        res.status(500).json({ error: 'Database query failed' });
-    }
-});
-
 const orderLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 10,
@@ -926,30 +879,20 @@ app.put('/api/user/address', async (req, res) => {
     const userId = req.session.user.sub;
     try {
         await pool.execute(
-            'UPDATE users SET address_street_number = NULL, address_street = NULL, address_city = NULL, address_state = NULL, address_zip = NULL, address_latitude = NULL, address_longitude = NULL WHERE id = ?',
-            [userId]
+            `UPDATE users SET
+                address_street_number = NULL,
+                address_street = NULL,
+                address_city = NULL,
+                address_state = NULL,
+                address_zip = NULL,
+                address_latitude = NULL,
+                address_longitude = NULL
+            WHERE id = ?`, [userId]
         );
         res.json({ success: true });
     } catch (err) {
         console.error('Error updating address:', err);
         res.status(500).json({ error: 'Failed to update address' });
-    }
-});
-
-app.get('/api/users', checkRole(2), async (req, res) => {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
-    const offset = (page - 1) * limit;
-    try {
-        const query = 'SELECT * FROM users ORDER BY name ASC LIMIT ? OFFSET ?';
-        const [results] = await pool.execute(query, [
-            limit.toString(), 
-            offset.toString()
-        ]);
-        res.json(results);
-    } catch (err) {
-        console.error('Error fetching users:', err);
-        res.status(500).json({ error: 'Failed to fetch users' });
     }
 });
 
@@ -959,8 +902,16 @@ app.get('/api/user/address', async (req, res) => {
     }
     try {
         const [results] = await pool.execute(
-            'SELECT address_street_number, address_street, address_city, address_state, address_zip, address_latitude, address_longitude FROM users WHERE id = ?',
-            [req.session.user.sub]
+            `SELECT
+                address_street_number,
+                address_street,
+                address_city,
+                address_state,
+                address_zip,
+                address_latitude,
+                address_longitude
+            FROM users 
+            WHERE id = ?`, [req.session.user.sub]
         );
         if (results.length === 0) {
             return res.status(404).json({ error: 'User not found' });
@@ -1012,23 +963,6 @@ app.get('/api/user/orders', async (req, res) => {
         const query = 'SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC LIMIT ? OFFSET ?';
         const [results] = await pool.execute(query, [
             req.session.user.sub,
-            limit.toString(), 
-            offset.toString()
-        ]);
-        res.json(results);
-    } catch (err) {
-        console.error('Error fetching orders:', err);
-        res.status(500).json({ error: 'Failed to fetch orders' });
-    }
-});
-
-app.get('/api/orders', checkRole(1), async (req, res) => {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
-    const offset = (page - 1) * limit;
-    try {
-        const query = `SELECT * FROM orders WHERE open = '0' ORDER BY date DESC LIMIT ? OFFSET ?`;
-        const [results] = await pool.execute(query, [
             limit.toString(), 
             offset.toString()
         ]);

@@ -20,12 +20,13 @@ export default function Admin(props) {
                     setLoading3(false);
                 })
                 .catch(() => setError('Failed to fetch menu items'));
-        }, []);
+        }, [loading3]);
         return (
             <>
                 <div className="row">
                     <div className="col-12">
-                        <AddMenuItem 
+                        <AddMenuItem
+                            setLoading3={setLoading3}
                             setMenuItems={setMenuItems}
                         />
                     </div>

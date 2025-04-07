@@ -7,6 +7,7 @@ function EditItem(props) {
     const item = props.item;
     const [success2, setSuccess2] = useState(false);
     const [error, setError] = useState("");
+    const [error2, setError2] = useState("");
     const menuItems = props.menuItems;
     const setMenuItems = props.setMenuItems;
     const loading3 = props.loading3;
@@ -57,7 +58,13 @@ function EditItem(props) {
                 setMenuItems(prevItems => prevItems.filter(item => item.id !== id));
                 alert("Menu item deleted successfully");
             })
-            .catch(err => console.error("Error deleting menu item:", err));
+            .catch(err => {
+                console.error("Error deleting menu item:", err);
+                setError2(err.message);
+                setTimeout(() => {
+                    setError2("");
+                }, 2000);
+            });
         }
     };
     const handleChange = useCallback((id, key, value) => {
@@ -107,6 +114,12 @@ function EditItem(props) {
                 <i className="bi bi-trash"> </i>
                 Delete
             </button>
+            {error2 && (
+                <p className="text-danger mt-2">
+                    <i class="bi bi-exclamation-triangle"> </i>
+                    {error2.length > 0 ? error2 : ""}
+                </p>
+            )}
         </>
     );
 }

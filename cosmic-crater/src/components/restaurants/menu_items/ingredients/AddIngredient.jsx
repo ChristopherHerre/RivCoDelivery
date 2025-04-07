@@ -60,21 +60,17 @@ function AddIngredient(props) {
             setLoading(false);
         })
         .catch(err => {
-            setError('Failed to add ingredient');
+            setError(err.message);
+            setTimeout(() => {
+                setError("");
+            }, 2000)
             setSuccess(false);
             console.error(err);
         });
     };
     return (
-        <div className="rounded-2 bg-dark text-white">
+        <div className="rounded-2 bg-dark text-white p-2">
             <h3 className="text-white">Add New Ingredient</h3>
-            {success &&
-                <p className="text-success">
-                    <i className="bi bi-check-circle-fill"> </i>
-                    Ingredient added successfully!
-                </p>
-            }
-            { error && <p className="text-danger">{error}</p> }
             {loading ? <Spinner /> : <form onSubmit={handleSubmit}>
                 <div className="row">
                     {Object.keys(formData).sort((a, b) => {
@@ -107,6 +103,18 @@ function AddIngredient(props) {
                     <br />
                 </div>
             </form>}
+            {success &&
+                <p className="text-success">
+                    <i className="bi bi-check-circle-fill"> </i>
+                    Ingredient added successfully!
+                </p>
+            }
+            {error && (
+                <p className="text-danger mt-2">
+                    <i class="bi bi-exclamation-triangle"> </i>
+                    {error.length > 0 ? error : ""}
+                </p>
+            )}
         </div>
     );
 }
