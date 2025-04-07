@@ -90,6 +90,7 @@ function AddIngredient(props) {
                                 value={formData[key]} 
                                 onChange={handleChange}
                                 className="form-control bg-dark text-white" 
+                                
                             />
                         </div>
                     ))}

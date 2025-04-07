@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import DeliveryAddress from './DeliveryAddress';
+import DeliveryAddress from '../address/DeliveryAddress';
 
 function Logo(props) {
     const profile = props.profile;
