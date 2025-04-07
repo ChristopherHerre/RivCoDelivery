@@ -149,7 +149,7 @@ export default function RestaurantsList(props) {
                 Object.keys(result).map((category, categoryIndex) => (
                     <div className="row" key={categoryIndex}>
                         <div className="col-12">
-                            <h5>
+                            <h5 className="indent">
                                 {category}
                             </h5>
                         </div>
@@ -195,11 +195,7 @@ export default function RestaurantsList(props) {
                             );
                         })}
                     </div>
-                ))
-                :
-                (!showGetLocation ? 
-                    <Spinner />
-                : "")
+                )) : (!showGetLocation ?  <Spinner /> : "")
             }
         </>
     );

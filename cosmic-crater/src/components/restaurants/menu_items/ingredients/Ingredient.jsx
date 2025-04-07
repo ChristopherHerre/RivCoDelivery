@@ -79,8 +79,6 @@ function Ingredient(props) {
                 <button onClick={() => handleSave(ingredient.id)} className="btn btn-primary form-control">
                     <i className="bi bi-pencil-square"> </i>Save
                 </button>
-            </div>
-            <div className="col-12">
                 {success ? (
                     <p className="text-success">
                         <i className="bi bi-check-circle-fill"> </i>
