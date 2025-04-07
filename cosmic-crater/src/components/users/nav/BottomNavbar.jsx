@@ -1,4 +1,4 @@
-import AdminDropdown from '../restaurants/AdminDropdown';
+import AdminDropdown from '../../restaurants/AdminDropdown';
 
 function BottomNavbar(props) {
     const profile = props.profile;

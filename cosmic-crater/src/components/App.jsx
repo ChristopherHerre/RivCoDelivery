@@ -6,7 +6,7 @@ import {
 import Menu from './users/menu/Menu';
 import ShowMenuItem from './users/menu/MenuItem';
 import RestaurantsList from './users/RestaurantsList';
-import Cart from './users/Cart';
+import Cart from './users/cart/Cart';
 import Admin from './restaurants/Admin';
 import Checkout from './users/checkout/Checkout';
 import Success from './users/checkout/Success';
@@ -17,8 +17,8 @@ import UserOrders from './users/UserOrders';
 import DriverOrders from './drivers/DriverOrders';
 import Users from './users/Users';
 import Donate from './users/Donate';
-import BottomNavbar from './users/BottomNavbar';
-import Navbar from './users/Navbar';
+import BottomNavbar from './users/nav/BottomNavbar';
+import Navbar from './users/nav/Navbar';
 
 export const API_URL = false ?
 	"http://localhost:8080"

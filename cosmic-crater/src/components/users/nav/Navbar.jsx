@@ -2,10 +2,10 @@ import {
 	GoogleOAuthProvider, 
 	GoogleLogin, 
 	googleLogout } from '@react-oauth/google';
-import { MAX_RETRY_ATTEMPTS } from '../App';
-import Badge from './Badge';
+import { MAX_RETRY_ATTEMPTS } from '../../App';
+import Badge from '../cart/Badge';
 import Logo from './Logo';
-import Spinner from './Spinner';
+import Spinner from '../Spinner';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
