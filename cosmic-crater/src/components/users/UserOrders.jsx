@@ -54,8 +54,7 @@ function UserOrders() {
                 params: { oid: orderId }
             });
             setOrderItems(prevState => ({
-                ...prevState,
-                [orderId]: res.data
+                ...prevState, [orderId]: res.data
             }));
         } catch (err) {
             if (attempt < MAX_RETRY_ATTEMPTS) {

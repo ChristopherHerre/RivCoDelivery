@@ -239,24 +239,24 @@ export function OrderReview(props) {
 				<Subtotal
 					USDollar={USDollar}
 					subtotal={subtotal} />
-				<h3 className="currency-item">
+				<h4 className="currency-item">
 					<span className="label">Service Fee:</span>
 					<b className="amount">
 						{USDollar.format(roundedToFixed(deliveryFee, 2))}
 					</b>
-				</h3>
-				<h3 className="currency-item">
+				</h4>
+				<h4 className="currency-item">
 					<span className="label">Tax:</span>
 					<b className="amount">
 						{USDollar.format(roundedToFixed(tax, 2))}
 					</b>
-				</h3>
-				<h3 className="currency-item">
+				</h4>
+				<h4 className="currency-item">
 					<span className="label">Total:</span>
 					<b className="amount">
 						{USDollar.format(total)}
 					</b>
-				</h3>
+				</h4>
 				<button className="btn btn-primary form-control">
 					Place order
 				</button>
@@ -374,7 +374,7 @@ export function DeliveryInstructions(props) {
 	return (
 		<div className="col-md-12">
 			<div className="text-bg-dark p-3 m-1 rounded">
-				<h4>Delivery Instructions:</h4>
+				<h4 className="text-white">Delivery Instructions:</h4>
 				<textarea
 					onChange={(e) => setTextAreaValue(e.target.value)}
 					rows="2" 

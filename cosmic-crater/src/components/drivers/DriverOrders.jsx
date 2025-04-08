@@ -40,7 +40,6 @@ function DriverOrders() {
                         fetchDriverOrders(attempt + 1);
                     } else {
                         console.error('Error fetching user orders:', err);
-                        //window.location.href = '/404-page.html';
                     }
                 } finally {
                     setLoading(false);
@@ -201,7 +200,7 @@ function DriverOrders() {
                                             <option value="open">Open</option>
                                             <option value="closed">Closed</option>
                                         </select>
-                                    </div>`
+                                    </div>
                                 </div>
                                 <div className="col-lg-6">
                                     <table className="table table-striped">

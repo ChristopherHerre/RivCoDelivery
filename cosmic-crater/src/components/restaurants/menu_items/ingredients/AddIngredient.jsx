@@ -21,6 +21,7 @@ function AddIngredient(props) {
     });
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -56,7 +57,8 @@ function AddIngredient(props) {
                 selected: '',
                 halfable: ''
             });
-            setIngredients(prevIngredients => [...prevIngredients, response.data.ingredient]);
+            setIngredients([]);
+            //setIngredients(prevIngredients => [...prevIngredients, response.data.ingredient]);
             setLoading(false);
         })
         .catch(err => {
@@ -90,7 +92,7 @@ function AddIngredient(props) {
                                 value={formData[key]} 
                                 onChange={handleChange}
                                 className="form-control bg-dark text-white" 
-                                
+
                             />
                         </div>
                     ))}

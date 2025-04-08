@@ -204,11 +204,11 @@ export function Subtotal(props) {
     const subtotal = props.subtotal;
     const USDollar = props.USDollar;
     return (
-        <h3 className="currency-item">
+        <h4 className="currency-item">
             <span>Subtotal: </span>
             <b className="amount text-success">
                 {USDollar.format(subtotal)}
             </b>
-        </h3>
+        </h4>
     );
 }
