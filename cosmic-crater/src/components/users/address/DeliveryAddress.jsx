@@ -5,7 +5,7 @@ import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../Spinner';
 
 export async function getFullAddress(address) {
-    if (address === undefined) {
+    if (!address || !address.streetNumber || !address.zip) {
         try {
             const response = await axios.get(`/api/user/full-address`, {
                 withCredentials: true
@@ -21,8 +21,6 @@ export async function getFullAddress(address) {
     const city = address.city ? address.city + ", " : "";
     const state = address.state ? address.state + " " : "";
     const zip = address.zip;
-    //if (streetNumber == null || street == null || city == null || state == null || zip == null)
-    //    return null;
     return streetNumber + street + city + state + zip;
 }
 

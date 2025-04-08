@@ -85,6 +85,7 @@ function AddMenuItem(props) {
             <div className="col-12 col-md-3">
                 <b>Sort:</b>
                 <input
+                    type="number"
                     className="form-control bg-dark text-white"
                     name="sort"
                     value={formData.sort}
