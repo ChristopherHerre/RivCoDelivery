@@ -60,7 +60,7 @@ function AddMenuItem(props) {
         }
     }
     return (
-        <form onSubmit={submitMenuItem} className="row p-2 shadow-lg rounded-2xl bg-dark text-white mt-3">
+        <form onSubmit={submitMenuItem} className="row shadow-lg rounded-2xl bg-dark text-white mt-3 p-2">
             <h3 className="text-white">Add New Menu Item</h3>
             <div className="col-12 col-md-3">
                 <b>Name:</b>

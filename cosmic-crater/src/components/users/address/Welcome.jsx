@@ -1,7 +1,6 @@
 import DeliveryAddress from './DeliveryAddress';
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../Spinner';
 

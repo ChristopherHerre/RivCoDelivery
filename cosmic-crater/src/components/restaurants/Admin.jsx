@@ -14,12 +14,12 @@ export default function Admin(props) {
         const [menuItems, setMenuItems] = useState([]);
         useEffect(() => {
             fetch(`/api/menu-items-list`)
-                .then(res => res.json())
-                .then(data => {
-                    setMenuItems(data);
-                    setLoading3(false);
-                })
-                .catch(() => setError('Failed to fetch menu items'));
+            .then(res => res.json())
+            .then(data => {
+                setMenuItems(data);
+                setLoading3(false);
+            })
+            .catch(() => setError('Failed to fetch menu items'));
         }, [loading3]);
         return (
             <>
@@ -47,7 +47,7 @@ export default function Admin(props) {
         );
     };
     return (
-        <div>
+        <div className="m-1">
             <h2>Admin Panel</h2>
             <ManageRestaurant 
                 setLoading={setLoading}

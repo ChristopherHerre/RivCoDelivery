@@ -504,6 +504,19 @@ app.put('/api/users/:id/restaurant', checkRole(2), (req, res) => {
     });
 });
 
+// Route to fetch all sponsors
+app.get('/api/sponsors', async (req, res) => {
+    const query = 'SELECT business_name, phone_number, website_url, description FROM sponsors;';
+    
+    try {
+      const [results] = await pool.query(query);
+      res.json(results);
+    } catch (err) {
+      console.error('Error executing query:', err);
+      res.status(500).json({ error: 'Database query failed' });
+    }
+  });
+  
 
 app.get('/api/menu-ingredients/:menuItem', checkRole(2), async (req, res) => {
     const { menuItem } = req.params;
@@ -699,7 +712,7 @@ app.get('/api/logout', (req, res) => {
     });
 });
 
-app.get('/api/maps-api-key', (req, res) => {
+app.get('/api/maps-api-key', checkRole(0), (req, res) => {
     console.log("API Key Request Received");
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     console.log("Google Maps API Key:", apiKey); 
@@ -709,7 +722,7 @@ app.get('/api/maps-api-key', (req, res) => {
     res.json({ apiKey });
 });
 
-app.get('/api/restaurants/:latitude/:longitude', async (req, res) => {
+app.get('/api/restaurants/:latitude/:longitude', checkRole(0), async (req, res) => {
     const { latitude, longitude } = req.params;
     const query = `
         SELECT * FROM restaurants 
@@ -736,7 +749,7 @@ app.get('/api/restaurants/:latitude/:longitude', async (req, res) => {
     }
 });
 
-app.get('/api/restaurants2/:restaurantId/menu', async (req, res) => {
+app.get('/api/restaurants2/:restaurantId/menu', checkRole(0), async (req, res) => {
     const { restaurantId } = req.params;
     console.log("restaurantId: ", restaurantId);
     if (!restaurantId) {
@@ -752,7 +765,7 @@ app.get('/api/restaurants2/:restaurantId/menu', async (req, res) => {
     }
 });
 
-app.get('/api/menu/item/search', async (req, res) => {
+app.get('/api/menu/item/search', checkRole(0), async (req, res) => {
     const menuItemName = req.query.menuItemName;
     console.log(menuItemName);
     const query = 'SELECT * FROM menu_items WHERE name LIKE ? LIMIT 50';
@@ -767,7 +780,7 @@ app.get('/api/menu/item/search', async (req, res) => {
     }
 });
 
-app.get('/api/menu/item/ingredients', async (req, res) => {
+app.get('/api/menu/item/ingredients', checkRole(0), async (req, res) => {
     const { menuItem } = req.query;
     if (!menuItem) {
         return res.status(400).json({ error: 'Menu item ID is required' });
@@ -786,7 +799,7 @@ app.get('/api/menu/item/ingredients', async (req, res) => {
     }
 });
 
-app.get('/api/order_items', async (req, res) => {
+app.get('/api/order_items', checkRole(0), async (req, res) => {
     const query = 'SELECT * FROM order_items Where order_id = ? LIMIT 50';
     const { oid } = req.query;
     try {
@@ -798,7 +811,7 @@ app.get('/api/order_items', async (req, res) => {
     }
 });
 
-app.get('/api/restaurants/:restaurant', async (req, res) => {
+app.get('/api/restaurants/:restaurant', checkRole(0), async (req, res) => {
     const { restaurant } = req.params;
     const query = 'SELECT * FROM restaurants WHERE id = ? LIMIT 1';
     try {
@@ -813,7 +826,7 @@ app.get('/api/restaurants/:restaurant', async (req, res) => {
     }
 });
 
-app.get('/api/menu/item', async (req, res) => {
+app.get('/api/menu/item', checkRole(0), async (req, res) => {
     const { menuItem } = req.query;
     if (!menuItem) {
         return res.status(400).json({ error: 'Menu item ID is required' });
@@ -834,7 +847,7 @@ const orderLimiter = rateLimit({
     message: { error: 'Too many orders, please try again in an hour' }
 });
   
-app.post('/api/co', async (req, res) => {
+app.post('/api/co', checkRole(0), async (req, res) => {
     console.log("Placing order...");
     console.log(req.body);
     const userInputData = req.body[0];
@@ -872,7 +885,7 @@ app.post('/api/co', async (req, res) => {
     }
 });
 
-app.put('/api/user/address', async (req, res) => {
+app.put('/api/user/address', checkRole(0), async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -896,7 +909,7 @@ app.put('/api/user/address', async (req, res) => {
     }
 });
 
-app.get('/api/user/address', async (req, res) => {
+app.get('/api/user/address', checkRole(0), async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -934,7 +947,7 @@ app.get('/api/user/address', async (req, res) => {
     }
 });
 
-app.post('/api/user/address', async (req, res) => {
+app.post('/api/user/address', checkRole(0), async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -952,7 +965,7 @@ app.post('/api/user/address', async (req, res) => {
     }
 });
 
-app.get('/api/user/orders', async (req, res) => {
+app.get('/api/user/orders', checkRole(0), async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -973,7 +986,7 @@ app.get('/api/user/orders', async (req, res) => {
     }
 });
 
-app.get('/api/user/full-address', async (req, res) => {
+app.get('/api/user/full-address', checkRole(0), async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -999,7 +1012,7 @@ app.get('/api/user/full-address', async (req, res) => {
     }
 });
 
-app.get('/api/user/details', async (req, res) => {
+app.get('/api/user/details', checkRole(0), async (req, res) => {
     if (!req.session.user || !req.session.user.sub) {
         return res.status(401).json({ error: 'User not authenticated' });
     }

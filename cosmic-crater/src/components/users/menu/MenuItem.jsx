@@ -6,7 +6,7 @@ import currency from 'currency.js';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../Spinner';
 
-export default function ShowMenuItem(props) {
+export default function MenuItem(props) {
     const USDollar = props.USDollar;
     const restaurantName = props.restaurantName;
     const debug = props.debug;

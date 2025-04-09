@@ -4,7 +4,7 @@ import {
 	Routes, 
 	Route } from 'react-router-dom';
 import Menu from './users/menu/Menu';
-import ShowMenuItem from './users/menu/MenuItem';
+import MenuItem from './users/menu/MenuItem';
 import RestaurantsList from './users/RestaurantsList';
 import Cart from './users/cart/Cart';
 import Admin from './restaurants/Admin';
@@ -16,9 +16,11 @@ import qs from 'qs';
 import UserOrders from './users/UserOrders';
 import DriverOrders from './drivers/DriverOrders';
 import Users from './users/Users';
-import Donate from './users/Donate';
+import Donate from './users/nav/Donate';
 import BottomNavbar from './users/nav/BottomNavbar';
 import Navbar from './users/nav/Navbar';
+import BlackjackGame from './users/arcade/Blackjack';
+import MastermindGame from './users/arcade/Mastermind';
 
 export const API_URL = false ?
 	"http://localhost:8080"
@@ -79,7 +81,7 @@ export function App() {
 						setShowGetLocation={setShowGetLocation}
 						cartAmount={cartAmount}
 					/>
-					<div id="white-area" className="mx-auto p-3 blackborder">
+					<div id="white-area" className="mx-auto blackborder">
 						<Routes>
 							<Route
 								path='*'
@@ -149,7 +151,7 @@ export function App() {
 							<Route
 								path={"/menu/item"}
 								element={
-									<ShowMenuItem
+									<MenuItem
 										USDollar={USDollar}
 										cartAmount={cartAmount}
 										setCartAmount={setCartAmount}
@@ -209,6 +211,18 @@ export function App() {
 								path={"/donate"}
 								element={
 									<Donate />
+								}
+							/>
+							<Route
+								path={"/blackjack"}
+								element={
+									<BlackjackGame />
+								}
+							/>
+							<Route
+								path={"/mastermind"}
+								element={
+									<MastermindGame />
 								}
 							/>
 						</Routes>

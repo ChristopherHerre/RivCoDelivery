@@ -8,9 +8,6 @@ export default function Cart(props) {
     const setCart = props.setCart;
     const [subtotal, setSubtotal] = useState(0.00);
     const USDollar = props.USDollar;
-    const address = props.address;
-    const showGetLocation = props.showGetLocation;
-	const setShowGetLocation = props.setShowGetLocation;
     useEffect(() => {
         let newSubtotal = calcSubtotal(cart, setSubtotal);
         setSubtotal(newSubtotal);

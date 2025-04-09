@@ -10,8 +10,8 @@ function MenuItemWithIngredients(props) {
     const setLoading3 = props.setLoading3;
     return (
         <div key={item.id} className="col-12 mt-3 shadow-lg">
-            <div className="row p-2">
-                <div className='col-12 col-xl-3 bg-primary-subtle rounded-4'>
+            <div className="row">
+                <div className='col-12 col-xl-3 bg-primary-subtle'>
                     <EditItem
                         key={item.id}
                         item={item}

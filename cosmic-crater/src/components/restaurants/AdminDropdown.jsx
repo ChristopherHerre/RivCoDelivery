@@ -6,34 +6,71 @@ const AdminDropdown = (props) => {
     const profile = props.profile;
     return (
         <div className="dropdown">
-            {profile ? <a
-                className={full ?
-                    "btn btn-secondary mt-1 dropdown-toggle form-control"
-                    :
-                    "btn btn-secondary mt-1 dropdown-toggle"
-                }
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                role="button"
-                id="dropdownMenuLink"
-                data-bs-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
-            >
-                <i className="bi bi-briefcase"> </i>
-                Admin
-            </a> : ""}
+            {profile ? (
+                <a
+                    className={
+                        full
+                            ? "btn btn-secondary mt-1 dropdown-toggle form-control"
+                            : "btn btn-secondary mt-1 dropdown-toggle"
+                    }
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    role="button"
+                    id="dropdownMenuLink"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <i className="bi bi-briefcase"> </i>
+                    Admin
+                </a>
+            ) : ""}
+            <div className="dropdown d-inline">
+                <a
+                    className={
+                        full
+                            ? "btn btn-secondary mt-1 mr-1 dropdown-toggle form-control"
+                            : "btn btn-secondary mt-1 mr-1 dropdown-toggle"
+                    }
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    role="button"
+                    id="gamesDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <i className="bi bi-controller"> </i>
+                    Games
+                </a>
+                <div className="dropdown-menu bg-dark text-white" aria-labelledby="gamesDropdown">
+                    <Link to="/blackjack" className="dropdown-item text-white hover-black">
+                    <i class="bi bi-suit-spade-fill"> </i>
+                        Blackjack
+                    </Link>
+                    <Link to="/mastermind" className="dropdown-item text-white hover-black">
+                        <i className="bi bi-question"> </i>
+                        Mastermind
+                    </Link>
+                </div>
+            </div>
             <Link to="/donate">
-                <button className={full ?
-                        "btn btn-secondary mt-1 mr-1 form-control" 
-                        : 
-                        "btn btn-secondary mt-1 mr-1 "}>
+                <button
+                    className={
+                        full
+                            ? "btn btn-secondary mt-1 mr-1 form-control"
+                            : "btn btn-secondary mt-1 mr-1"
+                    }
+                >
                     <i className="bi bi-credit-card-fill"> </i>
                     Donate
                 </button>
             </Link>
-            {profile ?
-                <div className="dropdown-menu bg-dark form-control text-white " aria-labelledby="dropdownMenuLink">
+            {profile ? (
+                <div
+                    className="dropdown-menu bg-dark form-control text-white"
+                    aria-labelledby="dropdownMenuLink"
+                >
                     <Link to="/users" className="dropdown-item text-white hover-black">
                         <i className="bi bi-people"> </i>
                         User Management
@@ -47,8 +84,9 @@ const AdminDropdown = (props) => {
                         Driver Orders
                     </Link>
                 </div>
-            : ""}
+            ) : ""}
         </div>
     );
 };
+
 export default AdminDropdown;
