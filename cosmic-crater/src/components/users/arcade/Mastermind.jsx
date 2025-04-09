@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sponsors from './Sponsors';
+import Spinner from '../Spinner';
 
 const PEG_TYPES = 6;       // Numbers: 0 - 5
 const SOLUTION_PEGS = 4;   // 4 peg solution
@@ -139,7 +140,7 @@ function MastermindGame() {
 
   return (
     <div className="row">
-      <div className="col-12 col-md-8">
+      <div className="col-12 col-md-8 text-center">
         <div className="p-1 mt-4">
           <h1 className="mb-3">Mastermind Game</h1>
           <p>
@@ -152,7 +153,7 @@ function MastermindGame() {
             <div className="d-flex">
               {progress.map((peg, index) => (
                 <div key={index} className="border rounded p-2 mx-1" style={{ width: '4rem', textAlign: 'center' }}>
-                  {peg}
+                  <b>{peg}</b>
                 </div>
               ))}
             </div>
@@ -192,7 +193,7 @@ function MastermindGame() {
                   />
                 ))}
               </div>
-              <button className="btn btn-success mt-2" onClick={submitGuess}>
+              <button className="btn btn-primary mt-2" onClick={submitGuess}>
                 Submit Guess
               </button>
             </div>

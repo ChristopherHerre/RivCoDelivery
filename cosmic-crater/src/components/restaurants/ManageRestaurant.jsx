@@ -132,11 +132,13 @@ function ManageRestaurant(props) {
                     <button type="submit" className="form-control btn btn-primary">
                         {hasRestaurant ? (
                             <>
-                                <i className="bi bi-pencil-square me-2"></i> Save
+                                <i className="bi bi-pencil-square me-2"> </i>
+                                Save
                             </>
                         ) : (
                             <>
-                                <i className="bi bi-plus me-2"></i> Add
+                                <i className="bi bi-plus me-2"> </i>
+                                Add Restaurants
                             </>
                         )}
                     </button>
