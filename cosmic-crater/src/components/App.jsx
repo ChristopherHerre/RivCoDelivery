@@ -21,6 +21,8 @@ import BottomNavbar from './users/nav/BottomNavbar';
 import Navbar from './users/nav/Navbar';
 import BlackjackGame from './users/arcade/Blackjack';
 import MastermindGame from './users/arcade/Mastermind';
+import HangmanGame from './users/arcade/Hangman';
+import BlackjackGame2 from './users/arcade/Blackjack';
 
 export const API_URL = false ?
 	"http://localhost:8080"
@@ -219,10 +221,17 @@ export function App() {
 									<BlackjackGame />
 								}
 							/>
+							
 							<Route
 								path={"/mastermind"}
 								element={
 									<MastermindGame />
+								}
+							/>
+							<Route
+								path={"/hangman"}
+								element={
+									<HangmanGame />
 								}
 							/>
 						</Routes>

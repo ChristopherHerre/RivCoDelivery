@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-
+import Spinner from '../Spinner';
 function Sponsors() {
   const [sponsors, setSponsors] = useState([]);
   const [shuffledSponsors, setShuffledSponsors] = useState([]);
   const [currentSponsorIndex, setCurrentSponsorIndex] = useState(0);
-
+  const [loading, setLoading] = useState(true);
   // Shuffle function (Fisher-Yates)
   const shuffleArray = (array) => {
     const newArray = [...array];
@@ -26,6 +26,8 @@ function Sponsors() {
         setCurrentSponsorIndex(0);
       } catch (error) {
         console.error('Error fetching sponsors:', error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchSponsors();
@@ -46,20 +48,20 @@ function Sponsors() {
         }
         return nextIndex;
       });
-    }, 30000);
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [shuffledSponsors]);
 
   if (shuffledSponsors.length === 0) {
-    return <div className="bg-dark text-white">Loading sponsors...</div>;
+    return <Spinner />;
   }
 
   const currentSponsor = shuffledSponsors[currentSponsorIndex];
 
-  return (
+  return (loading ? <Spinner /> :
     <div className="bg-dark text-white p-3">
-      <p>This game is sponsored by local businesses in Riverside County:</p>
+      <small>This game is sponsored by local businesses in Riverside County:</small>
       <h4 className="text-white">{currentSponsor.business_name}</h4>
       <small>{currentSponsor.phone_number}</small>
       <p>{currentSponsor.description}</p>
