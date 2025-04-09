@@ -33,7 +33,6 @@ function DeliveryAddress(props) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
-    
     useEffect(() => {
         const loadAddress = async () => {
             setError(null);
@@ -85,7 +84,7 @@ function DeliveryAddress(props) {
         }
     }
     return (
-        <div>
+        <small>
             <b>Deliver to: </b>
             {isLoading ? (
                 <Spinner />
@@ -106,7 +105,7 @@ function DeliveryAddress(props) {
                     </b>
                 </>
             )}
-        </div>
+        </small>
     );
 }
 export default DeliveryAddress;

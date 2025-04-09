@@ -78,17 +78,12 @@ export default function RestaurantsList(props) {
             val = null;
         }
         axios.get('/api/menu/item/search', { params: { menuItemName: val } })
-            .then(res => {
-                setItemConfig(res.data);
-                setRestaurants(res.data.length <= 0 ? restaurantsCopy : restaurants.filter((r) => {
-                    return res.data.find(x => x.restaurant_id === r.id);
-                }));
-            });
-    }
-
-    let lastCategory = "";
-    function setLastCategoryPrinted(v) {
-        lastCategory = v;
+        .then(res => {
+            setItemConfig(res.data);
+            setRestaurants(res.data.length <= 0 ? restaurantsCopy : restaurants.filter((r) => {
+                return res.data.find(x => x.restaurant_id === r.id);
+            }));
+        });
     }
 
     const restaurantData = [];
@@ -125,7 +120,6 @@ export default function RestaurantsList(props) {
                 setShowGetLocation={setShowGetLocation}
                 setLoadingApiKey={setLoadingApiKey}
             />
-            <br />
             {
                 !showGetLocation && loaded ?
                     <div className="row">
@@ -170,27 +164,29 @@ export default function RestaurantsList(props) {
                                 setDistance(h);
                             }
                             return (
-                                <div className="col-md-6" key={key}>
-                                    <Link to={"/menu"}>
-                                        <button
-                                            className="btn btn-primary m-1 w-100"
-                                            onClick={(e) => selectRestaurant(data)}>
-                                            <b>{data.name} </b>
-                                            <small>
-                                                ({fee > maxFee ? "--" 
-                                                    : USDollar.format(roundedToFixed(fee, 2))}
-                                                    <span> Delivery Fee</span>)
-                                            </small>
-                                                <div>
-                                                <span>{data.address} - </span>
+                                <div className="col-12 col-md-6 col-lg-4" key={key}>
+                                    <div className="m-1">
+                                        <Link to={"/menu"}>
+                                            <button
+                                                className="btn btn-primary form-control"
+                                                onClick={(e) => selectRestaurant(data)}>
+                                                <b>{data.name} </b>
                                                 <small>
-                                                    <span>
-                                                        {h < 100 ? roundedToFixed(h, 1) : "--"}
-                                                    </span> Miles
+                                                    ({fee > maxFee ? "--" 
+                                                        : USDollar.format(roundedToFixed(fee, 2))}
+                                                        <span> Delivery Fee</span>)
                                                 </small>
-                                            </div>
-                                        </button>
-                                    </Link>
+                                                    <div>
+                                                    <span>{data.address} - </span>
+                                                    <small>
+                                                        <span>
+                                                            {h < 100 ? roundedToFixed(h, 1) : "--"}
+                                                        </span> Miles
+                                                    </small>
+                                                </div>
+                                            </button>
+                                        </Link>
+                                    </div>
                                 </div>
                             );
                         })}

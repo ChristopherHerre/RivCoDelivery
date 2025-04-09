@@ -18,8 +18,7 @@
     font-family: 'Open Sans', sans-serif;
 }
 #wr {
-    padding: 50px;
-    background: url('background.jpg');
+    padding: 5px;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -33,7 +32,6 @@
 #wr h4,
 #wr h5, 
 #wr h6 {
-    
     font-weight: bold;
 }
 #wr h5.indent {
@@ -83,9 +81,6 @@
 }
 #wr .input-group {
     text-align: center;
-}
-#wr .outter {
-    max-width: 1000px;
 }
 #wr .google-profile-icon {
     width: 30px;

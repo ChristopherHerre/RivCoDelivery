@@ -77,34 +77,36 @@ export default function Menu(props) {
                                         <h5 className="indent">
                                             {data.category}
                                         </h5>}
-                                        <div className={"col-md-6"} key={data.id}>
-                                            <Link to="/menu/item">
-                                                <button
-                                                        className="btn btn-primary m-1 w-100"
-                                                        onClick={(e) => changeMenuItem(data)}>
-                                                    {data.name}
-                                                    <span> - $</span>
-                                                    {data.price != null &&
-                                                    <span className="fw-bold">
-                                                        {data.price}
-                                                    </span>}
-                                                    {data.price2 != null && <span> - $</span>}
-                                                    {data.price2 != null &&
-                                                    <span className="fw-bold">
-                                                        {data.price2}
-                                                    </span>}
-                                                    {data.price3 != null && <span> - $</span>}
-                                                    {data.price3 != null &&
-                                                    <span className="fw-bold">
-                                                        {data.price3}
-                                                    </span>}
-                                                    {data.price4 != null && <span> - $</span>}
-                                                    {data.price4 != null &&
-                                                    <span className="fw-bold">
-                                                        {data.price4}
-                                                    </span>}
-                                                </button>
-                                            </Link>
+                                        <div className={"col-12 col-md-6 col-xxl-4"} key={data.id}>
+                                            <div className="m-1">
+                                                <Link to="/menu/item">
+                                                    <button
+                                                            className="btn btn-primary form-control"
+                                                            onClick={(e) => changeMenuItem(data)}>
+                                                        {data.name}
+                                                        <span> - $</span>
+                                                        {data.price != null &&
+                                                        <span className="fw-bold">
+                                                            {data.price}
+                                                        </span>}
+                                                        {data.price2 != null && <span> - $</span>}
+                                                        {data.price2 != null &&
+                                                        <span className="fw-bold">
+                                                            {data.price2}
+                                                        </span>}
+                                                        {data.price3 != null && <span> - $</span>}
+                                                        {data.price3 != null &&
+                                                        <span className="fw-bold">
+                                                            {data.price3}
+                                                        </span>}
+                                                        {data.price4 != null && <span> - $</span>}
+                                                        {data.price4 != null &&
+                                                        <span className="fw-bold">
+                                                            {data.price4}
+                                                        </span>}
+                                                    </button>
+                                                </Link>
+                                            </div>
                                         </div>
                                     </React.Fragment>
                                 );
