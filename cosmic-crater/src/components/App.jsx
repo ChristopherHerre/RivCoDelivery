@@ -23,7 +23,6 @@ import BlackjackGame from './users/arcade/Blackjack';
 import MastermindGame from './users/arcade/Mastermind';
 import HangmanGame from './users/arcade/Hangman';
 import SRS from './webmaster/SRS';
-import SRS from './webmaster/SRS';
 
 export const API_URL = false ?
 	"http://localhost:8080"

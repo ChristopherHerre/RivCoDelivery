@@ -1,4 +1,3 @@
-// RequirementsSpec.jsx
 import React from 'react';
 
 const SRS = () => {
@@ -37,7 +36,6 @@ const SRS = () => {
     </div>
   );
 };
-
 export default SRS;
 
 
