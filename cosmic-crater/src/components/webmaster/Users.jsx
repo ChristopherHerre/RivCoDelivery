@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MAX_RETRY_ATTEMPTS } from '../App';
-import Spinner from './Spinner';
+import Spinner from '../users/Spinner';
 import axios from 'axios';
 
 function Users() {

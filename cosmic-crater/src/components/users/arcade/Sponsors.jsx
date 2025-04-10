@@ -36,7 +36,7 @@ function Sponsors() {
   // Set up the interval to rotate sponsors every 30 seconds
   useEffect(() => {
     if (shuffledSponsors.length === 0) return;
-
+    setLoading(true);
     const interval = setInterval(() => {
       setCurrentSponsorIndex(prevIndex => {
         const nextIndex = prevIndex + 1;
@@ -59,17 +59,21 @@ function Sponsors() {
 
   const currentSponsor = shuffledSponsors[currentSponsorIndex];
 
-  return (loading ? <Spinner /> :
+  return (
     <div className="bg-dark text-white p-3">
-      <small>This game is sponsored by local businesses in Riverside County:</small>
-      <h4 className="text-white">{currentSponsor.business_name}</h4>
-      <small>{currentSponsor.phone_number}</small>
-      <p>{currentSponsor.description}</p>
-      {currentSponsor.website_url && (
-        <a href={currentSponsor.website_url} target="_blank" rel="noopener noreferrer">
-          Visit Website
-        </a>
-      )}
+        {loading ? <Spinner /> :
+        <div>
+            <small>This game is sponsored by local businesses in Riverside County:</small>
+            <h4 className="text-white">{currentSponsor.business_name}</h4>
+            <small>{currentSponsor.phone_number}</small>
+            <p>{currentSponsor.description}</p>
+            {currentSponsor.website_url && (
+                <a href={currentSponsor.website_url} target="_blank" rel="noopener noreferrer">
+                Visit Website
+                </a>
+            )}
+        </div>
+        }
     </div>
   );
 }

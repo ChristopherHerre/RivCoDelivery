@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { roundedToFixed } from '../../App';
-import { DeliveryAddress, getStreetOnly } from '../RestaurantsList';
+import { DeliveryAddress, getStreetOnly } from '../../restaurants/RestaurantsList';
 
 export default function Cart(props) {
     const cart = props.cart;

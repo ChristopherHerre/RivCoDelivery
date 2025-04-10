@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import Spinner from '../../users/Spinner';
+import Spinner from '../../../users/Spinner';
 import axios from 'axios';
 
 function EditItem(props) {

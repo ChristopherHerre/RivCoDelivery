@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 function Badge(props) {
     const cartAmount = props.cartAmount;
     return (

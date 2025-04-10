@@ -1,10 +1,10 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios';
-import QuantitySelector from '../QuantitySelector';
+import QuantitySelector from '../../../users/QuantitySelector';
 import currency from 'currency.js';
-import { MAX_RETRY_ATTEMPTS } from '../../App';
-import Spinner from '../Spinner';
+import { MAX_RETRY_ATTEMPTS } from '../../../App';
+import Spinner from '../../../users/Spinner';
 
 export default function MenuItem(props) {
     const USDollar = props.USDollar;

@@ -2,8 +2,8 @@
 import axios from 'axios';
 import qs from 'qs';
 import ManageRestaurant from './ManageRestaurant';
-import MenuItemWithIngredients from './menu_items/MenuItemWithIngredients';
-import AddMenuItem from './menu_items/AddMenuItem';
+import MenuItemWithIngredients from './menu/menu_items/MenuItemWithIngredients';
+import AddMenuItem from './menu/menu_items/AddMenuItem';
 
 export default function Admin(props) {
     const [success, setSuccess] = useState(false);
