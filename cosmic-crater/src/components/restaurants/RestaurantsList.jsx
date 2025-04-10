@@ -166,7 +166,7 @@ export default function RestaurantsList(props) {
                             return (
                                 <div className="col-12 col-md-6 col-lg-4" key={key}>
                                     <div className="m-1">
-                                        <h1>TEST</h1>
+                                        
                                         <Link to={"/menu"}>
                                             <button
                                                 className="btn btn-primary form-control"
