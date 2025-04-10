@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Spinner from '../../../users/Spinner';
+import Spinner from '../../../../users/Spinner';
 import AddIngredient from './AddIngredient';
 import Ingredient from './Ingredient';
 

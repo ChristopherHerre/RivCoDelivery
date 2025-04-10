@@ -2,8 +2,8 @@
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../App';
-import Spinner from './Spinner';
-import Welcome from './address/Welcome';
+import Spinner from '../users/Spinner';
+import Welcome from '../users/address/Welcome';
 
 export default function RestaurantsList(props) {
     const USDollar = props.USDollar;

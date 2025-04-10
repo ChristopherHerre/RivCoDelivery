@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { dbPost2, MAX_RETRY_ATTEMPTS } from '../App';
-import Spinner from '../users/Spinner';
+import { dbPost2, MAX_RETRY_ATTEMPTS } from '../../App';
+import Spinner from '../../users/Spinner';
 
 function DriverOrders() {
     const [driverOrders, setDriverOrders] = useState([]);
@@ -56,15 +56,13 @@ function DriverOrders() {
                 params: { oid: orderId }
             });
             setDriverOrderItems(prevState => ({
-                ...prevState,
-                [orderId]: res.data
+                ...prevState, [orderId]: res.data
             }));
         } catch (err) {
             if (attempt < MAX_RETRY_ATTEMPTS) {
                 fetchDriverOrderItems(orderId, attempt + 1);
             } else {
                 console.error('Error fetching order items:', err);
-                //window.location.href = '/404-page.html';
             }
         }
     };
@@ -96,18 +94,27 @@ function DriverOrders() {
     }
 
     async function changeOrderOpen(e, iid) {
-		e.preventDefault(e);
-		if (e.target.value === "closed") {
-			console.log("@! " + e.target.value + " " + iid);
-			await dbPost2(e, [iid], "changeOrderOpen");
-			setDriverOrderItems([]);
-			setDriverOrders(driverOrders.filter(function(o) { 
-				return o.id !== iid;
-			}));
-			e.target.value = "open";
-            fetchDriverOrderItems();
-		}
-	}
+        e.preventDefault();
+        if (e.target.value === "closed") {
+            setLoading(true);
+            try {
+                console.log("@! " + e.target.value + " " + iid);
+                await dbPost2(e, [iid], "changeOrderOpen");
+                setDriverOrderItems(prev => {
+                    const updated = { ...prev };
+                    delete updated[iid];
+                    return updated;
+                });
+                setDriverOrders(prev => prev.filter(o => o.id !== iid));
+                e.target.value = "open";
+            } catch (error) {
+                console.error("Error changing order open state:", error);
+            } finally {
+                setTimeout(()=>{setLoading(false);},600)
+            }
+        }
+    }
+    
 
     return (
         <div>
@@ -121,9 +128,9 @@ function DriverOrders() {
                         driverOrders.map(order => (
                             <div key={order.id} className="row mb-4">
                                 <div className="col-12">
-                                    <h4 className="text-bg-dark text-center p-1">
+                                    <h5 className="text-bg-dark text-center p-1">
                                         {order.restaurant} - {order.restaurant_address}
-                                    </h4>
+                                    </h5>
                                 </div>
                                 <div className="col-lg-6">
                                     <div className="currency-item">
@@ -219,9 +226,21 @@ function DriverOrders() {
                                                         <td>{item.quantity}</td>
                                                         <td>{USDollar.format(item.price)}</td>
                                                     </tr>
-                                                    <tr>
-                                                        {item.ingredients}
-                                                    </tr>
+                                                    {item.ingredients && item.ingredients.trim() !== '' ? (
+                                                        <tr>
+                                                            <td>
+                                                                {item.ingredients
+                                                                    .trim()
+                                                                    .replace(/^\[+|\]+$/g, '')
+                                                                    .split('] [')
+                                                                    .map((part, index) => (
+                                                                        <div key={index}>[{part}]</div>
+                                                                    ))}
+                                                            </td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                    ) : null}
                                                 </>
                                             )) : (
                                                 <tr>

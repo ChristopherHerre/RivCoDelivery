@@ -40,6 +40,26 @@
 #wr .hover-black:hover {
     color: black;
 }
+#wr .requirements-spec ol {
+    counter-reset: req;
+    list-style: none;
+    margin: 0;
+    padding-left: 1.5em; /* keep this if you like */
+}
+#wr .requirements-spec ol li {
+    counter-increment: req;
+    margin: 0.5em 0;
+    position: relative;
+  
+    /* make room inside each li for the number */
+    padding-left: 1.5em;
+}
+#wr .requirements-spec ol li::before {
+    content: counters(req, ".") " ";
+    font-weight: bold;
+    position: absolute;
+    left: -1.5em; /* still fine */
+}
 #wr ol,
 #wr ol.li {
     margin:0;

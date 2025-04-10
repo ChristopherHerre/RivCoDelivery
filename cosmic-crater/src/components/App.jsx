@@ -3,9 +3,9 @@ import {
 	BrowserRouter, 
 	Routes, 
 	Route } from 'react-router-dom';
-import Menu from './users/menu/Menu';
-import MenuItem from './users/menu/MenuItem';
-import RestaurantsList from './users/RestaurantsList';
+import Menu from './restaurants/menu/Menu';
+import MenuItem from './restaurants/menu/menu_items/MenuItem';
+import RestaurantsList from './restaurants/RestaurantsList';
 import Cart from './users/cart/Cart';
 import Admin from './restaurants/Admin';
 import Checkout from './users/checkout/Checkout';
@@ -13,16 +13,17 @@ import Success from './users/checkout/Success';
 import Failure from './users/checkout/Failure';
 import axios from 'axios';
 import qs from 'qs';
-import UserOrders from './users/UserOrders';
-import DriverOrders from './drivers/DriverOrders';
-import Users from './users/Users';
+import UserOrders from './users/orders/UserOrders';
+import DriverOrders from './drivers/orders/DriverOrders';
+import Users from './webmaster/Users';
 import Donate from './users/nav/Donate';
 import BottomNavbar from './users/nav/BottomNavbar';
 import Navbar from './users/nav/Navbar';
 import BlackjackGame from './users/arcade/Blackjack';
 import MastermindGame from './users/arcade/Mastermind';
 import HangmanGame from './users/arcade/Hangman';
-import BlackjackGame2 from './users/arcade/Blackjack';
+import SRS from './webmaster/SRS';
+import SRS from './webmaster/SRS';
 
 export const API_URL = false ?
 	"http://localhost:8080"
@@ -83,7 +84,7 @@ export function App() {
 						setShowGetLocation={setShowGetLocation}
 						cartAmount={cartAmount}
 					/>
-					<div id="white-area" className="mx-auto blackborder">
+					<div id="white-area" className="blackborder">
 						<Routes>
 							<Route
 								path='*'
@@ -232,6 +233,12 @@ export function App() {
 								path={"/hangman"}
 								element={
 									<HangmanGame />
+								}
+							/>
+							<Route
+								path={"/srs"}
+								element={
+									<SRS/>
 								}
 							/>
 						</Routes>

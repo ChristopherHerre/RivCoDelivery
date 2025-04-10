@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { MAX_RETRY_ATTEMPTS } from '../App';
-import Spinner from './Spinner';
+import { MAX_RETRY_ATTEMPTS } from '../../App';
+import Spinner from '../Spinner';
 
 function UserOrders() {
     const [userOrders, setUserOrders] = useState([]);
@@ -102,9 +102,9 @@ function UserOrders() {
                         userOrders.map(order => (
                             <div key={order.id} className="row mb-4">
                                 <div className="col-12">
-                                    <h4 className="text-bg-dark text-center p-1">
+                                    <h5 className="text-bg-dark text-center p-1">
                                         {order.restaurant} - {order.restaurant_address}
-                                    </h4>
+                                    </h5>
                                 </div>
                                 <div className="col-lg-6">
                                     <div className="currency-item">
@@ -189,9 +189,21 @@ function UserOrders() {
                                                         <td>{item.quantity}</td>
                                                         <td>{USDollar.format(item.price)}</td>
                                                     </tr>
-                                                    <tr>
-                                                        <td>{item.ingredients}</td>
-                                                    </tr>
+                                                    {item.ingredients && item.ingredients.trim() !== '' ? (
+                                                        <tr>
+                                                            <td>
+                                                                {item.ingredients
+                                                                    .trim()
+                                                                    .replace(/^\[+|\]+$/g, '')
+                                                                    .split('] [')
+                                                                    .map((part, index) => (
+                                                                        <div key={index}>[{part}]</div>
+                                                                    ))}
+                                                            </td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                    ) : null}
                                                 </>
                                             )) : (
                                                 <tr>

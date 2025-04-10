@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Spinner from '../../users/Spinner';
-import { dbPost } from '../Admin';
+import Spinner from '../../../users/Spinner';
+import { dbPost } from '../../Admin';
 
 function AddMenuItem(props) {
     const setMenuItems = props.setMenuItems;
