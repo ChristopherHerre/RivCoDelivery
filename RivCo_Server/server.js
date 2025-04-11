@@ -85,7 +85,7 @@ app.use(session({
     cookie: {
         secure: false,
         httpOnly: true,
-        maxAge: 2 * 60 * 60 * 1000 
+        maxAge: 5000//2 * 60 * 60 * 1000 
     }
 }));
 
@@ -712,7 +712,7 @@ app.get('/api/logout', (req, res) => {
     });
 });
 
-app.get('/api/maps-api-key', checkRole(0), (req, res) => {
+app.get('/api/maps-api-key', (req, res) => {
     console.log("API Key Request Received");
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     console.log("Google Maps API Key:", apiKey); 
@@ -885,7 +885,7 @@ app.post('/api/co', checkRole(0), async (req, res) => {
     }
 });
 
-app.put('/api/user/address', checkRole(0), async (req, res) => {
+app.put('/api/user/address', async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -986,7 +986,7 @@ app.get('/api/user/orders', checkRole(0), async (req, res) => {
     }
 });
 
-app.get('/api/user/full-address', checkRole(0), async (req, res) => {
+app.get('/api/user/full-address', /*checkRole(0),*/ async (req, res) => {
     if (!req.session.user?.sub) {
         return res.status(401).json({ error: 'Not authenticated' });
     }

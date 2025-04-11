@@ -67,12 +67,22 @@ export function App() {
 		style: 'currency',
 		currency: 'USD',
 	});
+	axios.defaults.withCredentials = true;
 
+	axios.interceptors.response.use(
+	  res => res,
+	  err => {
+		if (err.response?.status === 401 && localStorage.getItem("profile") !=null) {
+		  localStorage.removeItem('profile');
+		  window.location.href = '/';
+		}
+		return Promise.reject(err);
+	  }
+	);
 	function WhiteArea() {
 		return (
 			<BrowserRouter>
 				<div id="wr">
-					<h1>test1</h1>
 					<Navbar 
 						profile={profile} 
 						setProfile={setProfile}
