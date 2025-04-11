@@ -62,14 +62,26 @@ function DeliveryAddress(props) {
 
     async function editAddress(e) {
         e.preventDefault();
+        // Retrieve the CSRF token from cookie
+        const csrfToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('XSRF-TOKEN='))
+          ?.split('=')[1];
+    
         try {
             const response = await fetch('/api/user/address', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken // include the token here
                 },
-                credentials: 'include'
+                credentials: 'include',
+                body: JSON.stringify({
+                    address,
+                    fullAddress,
+                })
             });
+    
             const result = await response.json();
             if (result.success) {
                 setShowGetLocation(true);
@@ -83,6 +95,7 @@ function DeliveryAddress(props) {
             console.error('Error updating address:', error);
         }
     }
+    
     return (
         <small>
             <b>Deliver to: </b>

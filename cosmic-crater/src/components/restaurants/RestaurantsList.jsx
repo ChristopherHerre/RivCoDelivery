@@ -211,4 +211,3 @@ export function haversine_dist(lat, lng, lat2, lng2) {
 export function getStreetOnly(address) {
     return address.streetNumber + " " + address.street;
 }
-

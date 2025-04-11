@@ -47,8 +47,8 @@ export default function Admin(props) {
         );
     };
     return (
-        <div className="m-1">
-            <h2>Admin Panel</h2>
+        <div className="container-fluid p-3">
+            <h2 className="mb-4">Admin Panel</h2>
             <ManageRestaurant 
                 setLoading={setLoading}
                 success={success}
