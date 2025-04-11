@@ -26,6 +26,7 @@ export default function MenuItem(props) {
     const [customs, setCustoms] = useState([]);
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
+    const [loading2, setLoading2] = useState(true);
     useEffect(() => {
         const fetchMenuItem = async (attempt = 1) => {
             if (props.menuItem < 0) navigate("/");
@@ -59,6 +60,8 @@ export default function MenuItem(props) {
                     console.error('Error fetching menu item ingredients:', err);
                     //window.location.href = '/404-page.html';
                 }
+            } finally {
+                setLoading2(false);
             }
         };
 
@@ -327,7 +330,7 @@ export default function MenuItem(props) {
                                 </div>
                                 <div className="col-md-6">
                                     {console.log(ingredientsData)}
-                                    {ingredientsData && ingredientsData.length > 0 ? (
+                                    {!loading2 ? (
                                         ingredientsData.map((q, key) => {
                                             function changeEnabledRadio(e) {
                                                 let element = e.target;
