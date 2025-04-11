@@ -10,6 +10,8 @@ const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const { OAuth2Client } = require('google-auth-library');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
 dotenv.config();
 const app = express();
 const IP = '0.0.0.0';
@@ -55,11 +57,24 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header("Access-Control-Allow-Credentials", "true");
+
+    // New security headers
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://trusted.cdn.com");
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Referrer-Policy', 'no-referrer');
     next();
 });
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+    origin: 'https://rivcodelivery.com', // Ensure this matches the client’s origin exactly
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
+  
 app.use(express.json());
 
 const pool = mysql.createPool({
@@ -72,37 +87,41 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+app.use(cookieParser());
+
 const sessionStore = new MySQLStore({
     clearExpired: true,
     checkExpirationInterval: 60 * 1000
 }, pool);
 
+// Session middleware
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-        secure: false,
-        httpOnly: true,
-        maxAge: 5000//2 * 60 * 60 * 1000 
+      secure: false,
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 2 * 60 * 60 * 1000 // 2 hours
     }
-}));
-
-/*app.use((req, res, next) => {
-    if (!req.session || !req.session.user) {
-        console.warn("Session expired or missing user data.");
-        return res.status(401).json({ error: "Session expired, please log in again." });
+  }));
+  
+  // CSRF protection
+  app.use(csrf({
+    cookie: {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'none'
     }
+  }));
+  // Expose CSRF token to clients via a cookie
+  app.use((req, res, next) => {
+    res.cookie('XSRF-TOKEN', req.csrfToken());
     next();
-});*/
-
-app.use((req, res, next) => {
-    console.log('Session ID:', req.sessionID);
-    console.log('Session:', req.session);
-    next();
-});
-
+  });
+  
 app.use(passport.initialize());
 app.use(passport.session());
 
