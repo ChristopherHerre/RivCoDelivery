@@ -83,6 +83,7 @@ export function App() {
 		return (
 			<BrowserRouter>
 				<div id="wr">
+				
 					<Navbar 
 						profile={profile} 
 						setProfile={setProfile}
