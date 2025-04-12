@@ -249,7 +249,7 @@ export default function BlackjackGame() {
             <div>Your Hand: {players[currentPlayerIdx].hand.map((c,i) => <Card key={i} card={c} />)} Score: {players[currentPlayerIdx].score}</div>
             <div className="row">
               <div className="col-12 col-md-6">
-                <button className="btn btn-primary form-control" onClick={() => playerHit(currentPlayerIdx)} disabled={players[currentPlayerIdx].bust}>
+                <button className="btn btn-danger form-control" onClick={() => playerHit(currentPlayerIdx)} disabled={players[currentPlayerIdx].bust}>
                   Hit
                 </button>
               </div>
