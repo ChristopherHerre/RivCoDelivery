@@ -5,7 +5,7 @@ import QuantitySelector from '../../../users/QuantitySelector';
 import currency from 'currency.js';
 import { MAX_RETRY_ATTEMPTS } from '../../../App';
 import Spinner from '../../../users/Spinner';
-
+import { groupBy } from '../../RestaurantsList';
 export default function MenuItem(props) {
     const USDollar = props.USDollar;
     const restaurantName = props.restaurantName;
@@ -20,7 +20,7 @@ export default function MenuItem(props) {
     const [val4, setVal4] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [price, setPrice] = useState(-1);
-    const result = Object.groupBy(itemIngredients, i => i.type);
+    const result = groupBy(itemIngredients, i => i.type);
     const [enabled, setEnabled] = useState([]);
     const [halfables, setHalfables] = useState([]);
     const [customs, setCustoms] = useState([]);

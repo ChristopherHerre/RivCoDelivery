@@ -5,6 +5,15 @@ import { MAX_RETRY_ATTEMPTS } from '../App';
 import Spinner from '../users/Spinner';
 import Welcome from '../users/address/Welcome';
 
+export function groupBy(array, keyFn) {
+    return array.reduce((acc, item) => {
+        const key = keyFn(item);
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+    }, {});
+}
+
 export default function RestaurantsList(props) {
     const USDollar = props.USDollar;
     const debug = props.debug;
@@ -26,7 +35,9 @@ export default function RestaurantsList(props) {
     const [restaurantsCopy, setRestaurantsCopy] = useState([]);
     const [itemConfig, setItemConfig] = useState([]);
     const [query, setQuery] = useState("");
-    const result = Object.groupBy(restaurants, r => r.category);
+    //const result = Object.groupBy(restaurants, r => r.category);
+    const result = groupBy(restaurants, r => r.category);
+
     const [loaded, setLoaded] = useState(false);
     const [loadingApiKey, setLoadingApiKey] = useState(false);
     useEffect(() => {

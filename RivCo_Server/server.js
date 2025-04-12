@@ -53,23 +53,24 @@ app.set('trust proxy', 1);
 app.use((req, res, next) => {
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    res.setHeader('Access-Control-Allow-Origin', 'https://rivcodelivery.com'); 
+    res.setHeader('Access-Control-Allow-Origin', 'https://rivcodelivery.com', 'https://www.rivcodelivery.com'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header("Access-Control-Allow-Credentials", "true");
 
     // New security headers
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://trusted.cdn.com");
+  /*res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://trusted.cdn.com");
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Referrer-Policy', 'no-referrer');*/
+
     next();
 });
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-    origin: 'https://rivcodelivery.com', // Ensure this matches the client’s origin exactly
+    origin: ['https://rivcodelivery.com', 'https://www.rivcodelivery.com'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -109,7 +110,7 @@ app.use(session({
   }));
   
   // CSRF protection
-  app.use(csrf({
+  /*app.use(csrf({
     cookie: {
       httpOnly: true,
       secure: false,
@@ -121,7 +122,7 @@ app.use(session({
     res.cookie('XSRF-TOKEN', req.csrfToken());
     next();
   });
-  
+  */
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -767,6 +768,38 @@ app.get('/api/restaurants/:latitude/:longitude', checkRole(0), async (req, res) 
         res.status(500).json({ error: 'Database query failed' });
     }
 });
+
+app.post('/api/cart', async (req, res) => {
+    const cartItems = req.body.cart;
+    const userId = req.body.userId || null; // Optional: attach to a user or session
+
+    if (!cartItems || !Array.isArray(cartItems)) {
+        return res.status(400).json({ error: 'Cart must be an array' });
+    }
+
+    const insertQuery = `
+        INSERT INTO cart (name, price, quantity, ingredients, user_id)
+        VALUES (?, ?, ?, ?, ?)
+    `;
+
+    try {
+        for (let item of cartItems) {
+            await pool.execute(insertQuery, [
+                item.name,
+                item.price,
+                item.quantity,
+                JSON.stringify(item.ingredients),
+                userId
+            ]);
+        }
+
+        res.status(200).json({ message: 'Cart saved' });
+    } catch (err) {
+        console.error('Error saving cart:', err);
+        res.status(500).json({ error: 'Failed to save cart' });
+    }
+});
+
 
 app.get('/api/restaurants2/:restaurantId/menu', checkRole(0), async (req, res) => {
     const { restaurantId } = req.params;

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../../users/Spinner';
+import { groupBy } from '../RestaurantsList';
 
 export default function Menu(props) {
     const restaurant = props.restaurant;
@@ -11,7 +12,7 @@ export default function Menu(props) {
     const restaurantName = props.restaurantName;
     const [menu, setMenu] = useState([]);
     const navigate = useNavigate();
-    const result = Object.groupBy(menu, r => r.category);
+    const result = groupBy(menu, r => r.category);
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {

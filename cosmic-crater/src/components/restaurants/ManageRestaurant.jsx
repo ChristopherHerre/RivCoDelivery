@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Spinner from '../users/Spinner';
 import { dbPost } from './Admin';
+import PlaceAutocomplete from '../users/address/PlaceAutocomplete';
 
 function ManageRestaurant(props) {
     const setSuccess = props.setSuccess;
@@ -87,16 +88,7 @@ function ManageRestaurant(props) {
                         required
                     />
                 </div>
-                <div className="col-12 col-md-4">
-                    <b>Address: </b>
-                    <input
-                        className="bg-dark text-white form-control"
-                        name="address"
-                        type="text"
-                        defaultValue={restaurantData?.address || ""}
-                        required
-                    />
-                </div>
+                
                 <div className="col-12 col-md-4">
                     <b>Category: </b>
                     <input
@@ -107,26 +99,21 @@ function ManageRestaurant(props) {
                         required
                     />
                 </div>
-                <div className="col-12 col-md-4">
-                    <b>Latitude: </b>
-                    <input
-                        className="bg-dark text-white form-control"
-                        name="latitude"
-                        type="text"
-                        defaultValue={restaurantData?.latitude || ""}
-                        required
+                <div className="col-12 col-md-8">
+                    <b>Address: </b>
+                    <PlaceAutocomplete
+                        onPlaceSelected={({ address, latitude, longitude }) => {
+                            document.querySelector('[name="address"]').value = `${address.streetNumber} ${address.street}, ${address.city}, ${address.state} ${address.zip}`;
+                            document.querySelector('[name="latitude"]').value = latitude;
+                            document.querySelector('[name="longitude"]').value = longitude;
+                        }}
                     />
                 </div>
-                <div className="col-12 col-md-4">
-                    <b>Longitude: </b>
-                    <input
-                        className="bg-dark text-white form-control"
-                        name="longitude"
-                        type="text"
-                        defaultValue={restaurantData?.longitude || ""}
-                        required
-                    />
-                </div>
+                <input type="hidden" name="address" />
+                <input type="hidden" name="latitude" />
+                <input type="hidden" name="longitude" />
+
+               
                 <div className="col-12 col-md-4">
                     <br />
                     <button type="submit" className="form-control btn btn-primary">

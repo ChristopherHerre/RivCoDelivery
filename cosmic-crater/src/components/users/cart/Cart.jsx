@@ -20,6 +20,24 @@ export default function Cart(props) {
         calcSubtotal(cart, setSubtotal);
     }
 
+    async function saveCartToBackend() {
+        try {
+            const response = await fetch('/api/cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cart }),
+            });
+    
+            const result = await response.json();
+            console.log('Cart saved:', result);
+        } catch (error) {
+            console.error('Error saving cart:', error);
+        }
+    }
+    
+
     function CartItems(props) {
         const cart = props.cart;
         return (
@@ -77,11 +95,14 @@ export default function Cart(props) {
                     <Subtotal
                         USDollar={USDollar}
                         subtotal={subtotal} />
-                    {cart.length > 0 ? <Link to="/checkout">
-                        <button className="btn btn-primary form-control">
-                            Checkout
-                        </button>
-                    </Link> : ""}
+                    {cart.length > 0 ? (
+                        <Link to="/checkout">
+                            <button className="btn btn-primary form-control" onClick={saveCartToBackend}>
+                                Checkout
+                            </button>
+                        </Link>
+                    ) : ""}
+
                 </div>
             </div>
         </div>
