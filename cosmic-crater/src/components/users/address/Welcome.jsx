@@ -1,128 +1,106 @@
-import DeliveryAddress from './DeliveryAddress';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import axios from 'axios';
-import { MAX_RETRY_ATTEMPTS } from '../../App';
-import Spinner from '../Spinner';
-
-const mapApiJs = 'https://maps.googleapis.com/maps/api/js';
-
+import DeliveryAddress from './DeliveryAddress';
 function Welcome(props) {
-    const address = props.address;
-    const setAddress = props.setAddress;
-    const showGetLocation = props.showGetLocation;
-    const setShowGetLocation = props.setShowGetLocation;
-    const searchInput = useRef(null);
-    const [apiKey, setApiKey] = useState('');
-    const setLoadingApiKey = props.setLoadingApiKey;
+    const {
+        address,
+        setAddress,
+        showGetLocation,
+        setShowGetLocation,
+        setLoadingApiKey,
+    } = props;
+
+    const autocompleteRef = useRef(null);
+    const selectedPlaceRef = useRef(null);
+
     useEffect(() => {
-        const fetchApiKey = async (attempt = 1) => {
+        const initMap = async () => {
+            const script = document.createElement("script");
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${yourApiKey}&libraries=places,geometry&v=beta&loading=async`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        };
+
+        if (showGetLocation) {
             setLoadingApiKey(true);
-            try {
-                const res = await axios.get('/api/maps-api-key')
-                .then((res) => {
-                    setApiKey(res.data.apiKey);
-                    console.log("API KEY IS SET! " + apiKey);
-                })
-                .then(() => {
-                    setLoadingApiKey(false);
-                    console.log('API Key is set, initializing map script in Welcome...');
-                    initMapScript().then(() => {
-                        console.log('Map script loaded in Welcome, initializing autocomplete...');
-                        initAutocomplete();
-                    }).catch(error => {
-                        console.error('Error loading map script in Welcome:', error);
+            axios.get('/api/maps-api-key')
+                .then(res => {
+                    const apiKey = res.data.apiKey;
+                    window.yourApiKey = apiKey;
+                    initMap().then(() => {
+                        setLoadingApiKey(false);
                     });
                 });
-            } catch (error) {
-                console.error('Error fetching API key:', error);
-                if (attempt < MAX_RETRY_ATTEMPTS) {
-                    fetchApiKey(attempt + 1);
-                }
-            }
-        };
-        if (showGetLocation) {
-            console.log("showGetLocation is true, fetching API key...");
-            fetchApiKey();
-        } else {
-            console.log("showGetLocation is false, not fetching API key.");
         }
     }, [showGetLocation]);
-    async function initMapScript() {
-        console.log('initMapScript called');
-        const scriptId = 'google-maps-script';
-        if (document.getElementById(scriptId)) {
-            console.log('Google Maps script already loaded.');
-            return Promise.resolve();
-        }
-        const src = `${mapApiJs}?key=${apiKey}&libraries=places,geometry`;
-        console.log('Loading script with src:', src);
-        return loadAsyncScript(src);
-    }
+
+    useEffect(() => {
+        const autocompleteEl = autocompleteRef.current;
     
-    async function loadAsyncScript(src) {
-        console.log("Calling loadAsyncScript with src:", src);
-        return new Promise(resolve => {
-            const script = document.createElement("script");
-            Object.assign(script, {
-                type: "text/javascript",
-                async: true,
-                defer: true,
-                src
-            });
-            script.addEventListener("load", () => {
-                console.log("Script loaded:", src);
-                resolve(script);
-            });
-            script.addEventListener("error", () => {
-                console.error("Error loading script:", src);
-            });
-            document.head.appendChild(script);
-            console.log("Appended script:", src);
-        });
-    }
+        if (!autocompleteEl) return;
     
-    const initAutocomplete = () => {
-        if (!searchInput.current) return;
-        if (!window.google || !window.google.maps) {
-            console.error("Google Maps script not loaded yet.");
-            return;
-        }
-        const autocomplete = new window.google.maps.places.Autocomplete(searchInput.current);
-        const southwest = { lat: 33.833322851100824, lng: -117.46334029886367 };
-        const northeast = { lat: 34.02489224499665, lng: -117.3135582245764 };
-        const newBounds = new window.google.maps.LatLngBounds(southwest, northeast);
-        autocomplete.setBounds(newBounds);
-        autocomplete.setFields(["address_component", "geometry"]);
-        autocomplete.addListener("place_changed", () => onChangeAddress(autocomplete));
-    };
+        const onSelect = async ({ placePrediction }) => {
+            try {
+                console.log("🧠 Prediction selected:", placePrediction);
     
-    function resetAddressWarning(e) {
-        return e.target.value.length == 0 ? setShowGetLocation(true) : "";
-    }
+                const place = placePrediction.toPlace();
+                await place.fetchFields({
+                    fields: ['displayName', 'formattedAddress', 'location', 'addressComponents']
+                });
     
-    const onChangeAddress = (autocomplete) => {
-        const place = autocomplete.getPlace();
-        if (place) {
-            const address = extractAddress(place);
-            const lat = place.geometry.location.lat();
-            const lng = place.geometry.location.lng();
-            axios.post(`/api/user/address`, 
-                { 
-                    address,
+                const json = place.toJSON();
+                console.log("📍 Full Place JSON:", json);
+    
+                const lat = json.location.lat;
+                const lng = json.location.lng;
+
+    
+                console.log("📌 Latitude:", lat);
+                console.log("📌 Longitude:", lng);
+    
+                const extractedAddress = extractAddress(json);
+                console.log("📬 Extracted Address Object:", extractedAddress);
+    
+                if (!lat || !lng || !extractedAddress) {
+                    console.error("❌ Missing lat/lng or extractedAddress — NOT sending to server.");
+                    return;
+                }
+    
+                const payload = {
+                    address: extractedAddress,
                     latitude: lat,
-                    longitude: lng 
-                }, 
-                { withCredentials: true }
-            ).then(() => {
-                setAddress(address);
-                setLatitude(lat);
-                setLongitude(lng);
-                setShowGetLocation(false);
-            }).catch(err => console.error('Error saving address:', err));
-        }
-    };
+                    longitude: lng
+                };
     
-    const extractAddress = (place) => {
+                console.log("🚀 Sending to backend:", payload);
+                console.log("📍 Full Place JSON:", json);
+                console.log("📍 Raw location object:", json.location);
+                console.log("📍 typeof lat:", typeof json.location.lat);
+                console.log("📍 typeof lng:", typeof json.location.lng);
+                axios.post('/api/user/address', payload, { withCredentials: true })
+                    .then(() => {
+                        console.log("✅ Address saved successfully.");
+                        setAddress(extractedAddress);
+                        setShowGetLocation(false);
+                    })
+                    .catch(err => {
+                        console.error("❌ Error saving address:", err);
+                    });
+            } catch (err) {
+                console.error("🔥 Error inside gmp-select handler:", err);
+            }
+        };
+    
+        autocompleteEl.addEventListener('gmp-select', onSelect);
+    
+        return () => {
+            autocompleteEl.removeEventListener('gmp-select', onSelect);
+        };
+    }, [autocompleteRef.current]);
+    
+
+    const extractAddress = (placeJson) => {
         const address = {
             streetNumber: "",
             street: "",
@@ -130,55 +108,44 @@ function Welcome(props) {
             state: "",
             zip: "",
         };
-        if (!Array.isArray(place?.address_components)) {
-            return address;
-        }
-        place.address_components.forEach(component => {
+
+        const components = placeJson.addressComponents || [];
+        components.forEach(component => {
             const types = component.types;
-            const value = component.short_name;
-            if (types.includes("street_number")) {
-                address.streetNumber = value;
-            }
-            if (types.includes("route")) {
-                address.street = value;
-            }
-            if (types.includes("locality")) {
-                address.city = value;
-            }
-            if (types.includes("administrative_area_level_1")) {
-                address.state = value;
-            }
-            if (types.includes("postal_code")) {
-                address.zip = value;
-            }
+            const value = component.shortText;
+            if (types.includes("street_number")) address.streetNumber = value;
+            if (types.includes("route")) address.street = value;
+            if (types.includes("locality")) address.city = value;
+            if (types.includes("administrative_area_level_1")) address.state = value;
+            if (types.includes("postal_code")) address.zip = value;
         });
+
         return address;
     };
-    return (
-        showGetLocation ? 
-            <div className="row search p-5">
-                <h2>Welcome to Riverside County Delivery!</h2>
-                <h1>We deliver items and we provide rides locally.</h1>
-                <br />
-                <div className="row">
-                    <div className="col-lg-8">
-                        <DeliveryAddress
-                            showGetLocation={showGetLocation} 
-                            setShowGetLocation={setShowGetLocation}
-                            address={address} 
-                            setAddress={setAddress}
-                        />
-                        <input
-                            className="form-control mt-0 text-bg-dark rounded"
-                            ref={searchInput}
-                            type="text"
-                            placeholder="### Street"
-                            onChange={(e) => resetAddressWarning(e)}
-                        />
-                    </div>
+
+    return showGetLocation ? (
+        <div className="row search p-5">
+            <h2>Welcome to Riverside County Delivery!</h2>
+            <h1>We deliver items and we provide rides locally.</h1>
+            <br />
+            <div className="row">
+                <div className="col-lg-8">
+                    <DeliveryAddress
+                        showGetLocation={showGetLocation}
+                        setShowGetLocation={setShowGetLocation}
+                        address={address}
+                        setAddress={setAddress}
+                    />
+                    <gmp-place-autocomplete
+                        ref={autocompleteRef}
+                        class="form-control mt-0 text-bg-dark rounded"
+                        placeholder="### Street"
+                        style={{ width: '100%' }}
+                    ></gmp-place-autocomplete>
                 </div>
             </div>
-        : ""
-    );
+        </div>
+    ) : null;
 }
+
 export default Welcome;
