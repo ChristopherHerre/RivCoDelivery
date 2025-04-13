@@ -1,153 +1,113 @@
 function Resume() {
     return (
-        <div className="row">
-            <div className="col-12 text-center pt-4">
-                <h1>Christopher Kenneth Herre</h1>
-                <h5>React JavaScript Developer</h5>
-            </div>
-            <div className="row">
-                <div className="col-12 text-center p-4">
-                    <small>
-                        <span>Riverside, California | </span>
-                        <span>rivcodelivery@gmail.com | </span>
-                        <a href="https://www.rivcodelivery.com">
-                            www.rivcodelivery.com
-                        </a>
-                    </small>
-                </div>
-            </div>
-            <div className="row mb-2">
-                <div className="bg-dark text-white card col-12 col-md-4">
-                    <div className="card-body">
-                        <h5 className="card-title">
-                            Objective
-                        </h5>
-                    </div>
-                </div>
-                <div className="col-12 col-md-8">
-                    <ul>
-                        <li>
-                            To obtain a full-time position as a React JavaScript Developer where I can utilize my skills and experience to create dynamic and responsive web applications.
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div className="row mb-2">
-                <div className="bg-dark text-white card col-12 col-md-4">
-                    <div className="card-body">
-                        <h5 className="card-title">
-                            Projects
-                        </h5>
-                    </div>
-                </div>
-                <div className="col-12 col-md-8">
-                    <h4>RivCoDelivery</h4>
-                    <ul>
-                        <li>Developed a full-stack order processing system using React and Node.js, integrating Google People API for authentication and Google Places API for location services.</li>
-                        <li>Implemented precise financial calculations for subtotal, tax, and delivery fees by leveraging Currency.js, ensuring accurate pricing across the platform.</li>
-                        <li>Designed and built an admin control panel that enabled restaurant partners to add, update, and manage menu items and ingredients, enhancing operational efficiency.</li>
-                        <li>Designed and implemented a robust MySQL relational database for menu, ingredient, and order management, leveraging junction tables to efficiently handle many-to-many relationships, thereby enhancing data integrity and optimizing query performance.</li>
-                        <li>Engineered RESTful APIs to seamlessly connect front-end and back-end systems, delivering a responsive and intuitive user experience.</li>
-                        <li>Utilized modern JavaScript frameworks and tools to develop a scalable and maintainable full-stack application in an agile development environment.</li>
-                    </ul>
-                </div>
-            </div>
-            <div className="row mb-2">
-                <div className="bg-dark text-white card col-12 col-md-4">
-                    <div className="card-body">
-                        <h5 className="card-title">
-                            Education
-                        </h5>
-                    </div>
-                </div>
-                <div className="col-12 col-md-8">
-                    <ul>
-                        <li>
-                            <h4>California Baptist University</h4>
-                            <small>Graduated December 2024</small>
-                            <p>Bachelor of Science, Computer Information Technology</p>
-                        </li>
-                        <li>
-                            <h4>Saddleback College</h4>
-                            <small>Graduated May 2022</small>
-                            <ol>
-                                <li>Associate of Science, Health Information Technology</li>
-                                <li>Associate of Science, Health Science</li>
-                            </ol>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div className="row mb-2">
-                <div className="bg-dark text-white card col-12 col-md-4">
-                    <div className="card-body">
-                        <h5 className="card-title">
-                            Experience
-                        </h5>
-                    </div>
-                </div>
-                <div className="col-12 col-md-8">
-                    <ul>
-                        <li>
-                            <h4>Uber Eats</h4>
-                            <h5>Delivery Driver</h5>
-                            <small>October 2019 - September 2024</small>
-                            <p>I delivered thousands of items to businesses and residences, I maintained positive ratings, and I received customer complements on the Uber platform.</p>
-                        </li>
-                        <li>
-                            <h4>Arrowhead Regional Medical Center</h4>
-                            <h5>Externship</h5>
-                            <small>February 2022 - March 2022</small>
-                            <p>I completed 50 hours of externship at ARMC in the HIM Department.</p>
-                            <ul>
-                                <li>Job shadowing the HIM Department Director.</li>
-                                <li>Learning about how hospitals use IT.</li>
-                                <li>Talking to supervisors of different responsibilities within HIM.</li>
-                                <li>Learning various job functions within the HIM Department and workflows at the hospital.</li>
-                                <li>Epic EHR software go-live.</li>
-                            </ul>
-                        </li>
-                        <li>
-                            <h4>Jimmy Johns</h4>
-                            <h5>Cashier</h5>
-                            <small>August 2018 - August 2019</small>
-                            <p>I took customer orders and upsold add-ons and combo meals. I was responsible for maintaining the store and stocking the kitchen as well as making orders. I was a delivery driver and took orders to customers.</p>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div className="row mb-2">
-                <div className="bg-dark text-white card col-12 col-md-4">
-                    <div className="card-body">
-                        <h5 className="card-title">
-                            Skills
-                        </h5>
-                    </div>
-                </div>
-                <div className="col-12 col-md-8">
-                    <div className="row">
-                        <div className="col-6">
-                            <ul>
-                                <li>MySQL</li>
-                                <li>Java</li>
-                                <li>C# ASP.NET MVC</li>
-                                <li>JavaScript</li>
-                                <li>React JS</li>
-                            </ul>
-                        </div>
-                        <div className="col-6">
-                            <ul>
-                                <li>Node JS</li>
-                                <li>Google Cloud Platform</li>
-                                <li>Google APIs</li>
-                                <li>Linux</li>
-                                <li>GitHub</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div className="container my-5 px-3" style={{ maxWidth: "800px", fontFamily: "Arial, sans-serif" }}>
+        {/* Header */}
+        <div className="text-center mb-4">
+          <h1 className="fw-bold mb-0">Christopher Kenneth Herre</h1>
+          <p className="lead mb-1">React JavaScript Developer</p>
+          <small>
+            Riverside, California | rivcodelivery@gmail.com |{" "}
+            <a href="https://www.rivcodelivery.com" className="text-decoration-none">
+              www.rivcodelivery.com
+            </a>
+          </small>
         </div>
-    )
-}
-export default Resume;
+  
+        {/* Objective */}
+        <section className="mb-4">
+          <h5 className="fw-bold border-bottom pb-1">Objective</h5>
+          <p>
+            To obtain a full-time position as a React JavaScript Developer where I can utilize my skills and experience to create dynamic and responsive web applications.
+          </p>
+        </section>
+  
+        {/* Projects */}
+        <section className="mb-4">
+          <h5 className="fw-bold border-bottom pb-1">Projects</h5>
+          <h6 className="fw-semibold mb-1">RivCoDelivery</h6>
+          <ul className="ps-3">
+            <li>Developed full-stack order processing using React and Node.js, integrating Google APIs.</li>
+            <li>Used Currency.js for accurate subtotal, tax, and delivery fee calculations.</li>
+            <li>Built an admin control panel for menu and ingredient management.</li>
+            <li>Designed normalized MySQL schema with many-to-many relationships and optimized queries.</li>
+            <li>Created RESTful APIs for seamless front-end/back-end integration.</li>
+            <li>Used agile practices with modern JS tools for scalable development.</li>
+          </ul>
+        </section>
+  
+        {/* Education */}
+        <section className="mb-4">
+          <h5 className="fw-bold border-bottom pb-1">Education</h5>
+          <div className="mb-2">
+            <h6 className="mb-0 fw-semibold">California Baptist University</h6>
+            <small className="text-muted">Graduated December 2024</small>
+            <p className="mb-1">Bachelor of Science, Computer Information Technology</p>
+          </div>
+          <div>
+            <h6 className="mb-0 fw-semibold">Saddleback College</h6>
+            <small className="text-muted">Graduated May 2022</small>
+            <ul className="ps-3 mb-0">
+              <li>Associate of Science, Health Information Technology</li>
+              <li>Associate of Science, Health Science</li>
+            </ul>
+          </div>
+        </section>
+  
+        {/* Experience */}
+        <section className="mb-4">
+          <h5 className="fw-bold border-bottom pb-1">Experience</h5>
+  
+          <div className="mb-3">
+            <h6 className="fw-semibold mb-0">Uber Eats</h6>
+            <p className="mb-0"><em>Delivery Driver | October 2019 - September 2024</em></p>
+            <p>Delivered thousands of items while maintaining excellent customer ratings and receiving positive reviews.</p>
+          </div>
+  
+          <div className="mb-3">
+            <h6 className="fw-semibold mb-0">Arrowhead Regional Medical Center</h6>
+            <p className="mb-0"><em>Externship | February 2022 - March 2022</em></p>
+            <p>Completed 50-hour externship in the HIM Department during Epic EHR go-live.</p>
+            <ul className="ps-3">
+              <li>Shadowed the HIM Director and supervisors.</li>
+              <li>Observed hospital IT infrastructure and workflows.</li>
+              <li>Gained hands-on understanding of EHR deployment.</li>
+            </ul>
+          </div>
+  
+          <div>
+            <h6 className="fw-semibold mb-0">Jimmy Johns</h6>
+            <p className="mb-0"><em>Cashier | August 2018 - August 2019</em></p>
+            <p>Handled orders, upsold add-ons, made deliveries, and supported store operations.</p>
+          </div>
+        </section>
+  
+        {/* Skills */}
+        <section>
+          <h5 className="fw-bold border-bottom pb-1">Skills</h5>
+          <div className="row">
+            <div className="col-6">
+              <ul className="ps-3">
+                <li>JavaScript</li>
+                <li>React JS</li>
+                <li>Node.js</li>
+                <li>MySQL</li>
+                <li>Google APIs</li>
+              </ul>
+            </div>
+            <div className="col-6">
+              <ul className="ps-3">
+                <li>Google Cloud Platform</li>
+                <li>Linux</li>
+                <li>GitHub</li>
+                <li>Java</li>
+                <li>C# ASP.NET MVC</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+  
+  export default Resume;
+  

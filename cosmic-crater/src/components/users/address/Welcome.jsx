@@ -87,7 +87,6 @@ function Welcome(props) {
             state: "",
             zip: "",
         };
-
         const components = placeJson.addressComponents || [];
         components.forEach(component => {
             const types = component.types;
@@ -98,7 +97,6 @@ function Welcome(props) {
             if (types.includes("administrative_area_level_1")) address.state = value;
             if (types.includes("postal_code")) address.zip = value;
         });
-
         return address;
     };
 

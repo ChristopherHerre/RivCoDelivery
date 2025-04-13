@@ -23,6 +23,7 @@ import BlackjackGame from './users/arcade/Blackjack';
 import MastermindGame from './users/arcade/Mastermind';
 import HangmanGame from './users/arcade/Hangman';
 import SRS from './webmaster/SRS';
+import TaxiFareCalculator from './users/address/TaxiFareCalculator';
 
 export const API_URL = false ?
 	"http://localhost:8080"
@@ -62,17 +63,15 @@ export function App() {
 		fetchProfile().catch(error => 
 			 console.error('Error in fetchProfile:', error));
 	}, [cart, setCart, setCartAmount]);
-
 	let USDollar = new Intl.NumberFormat('en-US', {
 		style: 'currency',
 		currency: 'USD',
 	});
 	axios.defaults.withCredentials = true;
-
 	axios.interceptors.response.use(
 	  res => res,
 	  err => {
-		if (err.response?.status === 401 && localStorage.getItem("profile") !=null) {
+		if (err.response?.status === 401 && localStorage.getItem("profile") != null) {
 		  localStorage.removeItem('profile');
 		  window.location.href = '/';
 		}
@@ -83,7 +82,6 @@ export function App() {
 		return (
 			<BrowserRouter>
 				<div id="wr">
-				
 					<Navbar 
 						profile={profile} 
 						setProfile={setProfile}
@@ -250,6 +248,12 @@ export function App() {
 								path={"/srs"}
 								element={
 									<SRS/>
+								}
+							/>
+							<Route
+								path={"/taxi"}
+								element={
+									<TaxiFareCalculator />
 								}
 							/>
 						</Routes>
