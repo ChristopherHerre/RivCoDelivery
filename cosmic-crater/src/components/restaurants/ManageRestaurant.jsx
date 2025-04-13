@@ -102,6 +102,8 @@ function ManageRestaurant(props) {
                 <div className="col-12 col-md-8">
                     <b>Address: </b>
                     <PlaceAutocomplete
+                        className="bg-dark text-white"
+                        style={""}
                         onPlaceSelected={({ address, latitude, longitude }) => {
                             document.querySelector('[name="address"]').value = `${address.streetNumber} ${address.street}, ${address.city}, ${address.state} ${address.zip}`;
                             document.querySelector('[name="latitude"]').value = latitude;
@@ -139,7 +141,7 @@ function ManageRestaurant(props) {
                 ) : ""}
                 {error && (
                     <p className="text-danger mt-2">
-                        <i class="bi bi-exclamation-triangle"> </i>
+                        <i className="bi bi-exclamation-triangle"> </i>
                         {error.length > 0 ? error : ""}
                     </p>
                 )}
