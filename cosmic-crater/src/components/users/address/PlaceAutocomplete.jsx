@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
-function PlaceAutocomplete({ onPlaceSelected, defaultValue = "" }) {
+function PlaceAutocomplete({ onPlaceSelected, defaultValue = "", placeholder = "Enter address" }) {
     const inputRef = useRef(null);
     const [suggestions, setSuggestions] = useState([]);
     const [autocompleteService, setAutocompleteService] = useState(null);
@@ -110,7 +110,7 @@ function PlaceAutocomplete({ onPlaceSelected, defaultValue = "" }) {
                 defaultValue={defaultValue}
                 onChange={handleInputChange}
                 className="form-control bg-dark text-white"
-                placeholder="Enter address"
+                placeholder={placeholder}
                 autoComplete="off"
             />
             {suggestions.length > 0 && (

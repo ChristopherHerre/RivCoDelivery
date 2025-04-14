@@ -35,9 +35,7 @@ export default function RestaurantsList(props) {
     const [restaurantsCopy, setRestaurantsCopy] = useState([]);
     const [itemConfig, setItemConfig] = useState([]);
     const [query, setQuery] = useState("");
-    //const result = Object.groupBy(restaurants, r => r.category);
     const result = groupBy(restaurants, r => r.category);
-
     const [loaded, setLoaded] = useState(false);
     const [loadingApiKey, setLoadingApiKey] = useState(false);
     useEffect(() => {
@@ -85,16 +83,24 @@ export default function RestaurantsList(props) {
     function handleSearch(e) {
         let val = e.target.value;
         setQuery(val);
-        if (val.length == 0) {
-            val = null;
+    
+        if (val.length === 0) {
+            // Reset to the original list when the search string is empty
+            setRestaurants(restaurantsCopy);
+            return;
         }
+    
         axios.get('/api/menu/item/search', { params: { menuItemName: val } })
-        .then(res => {
-            setItemConfig(res.data);
-            setRestaurants(res.data.length <= 0 ? restaurantsCopy : restaurants.filter((r) => {
-                return res.data.find(x => x.restaurant_id === r.id);
-            }));
-        });
+            .then(res => {
+                setItemConfig(res.data);
+                setRestaurants(
+                    res.data.length <= 0
+                        ? restaurantsCopy
+                        : restaurantsCopy.filter((r) => {
+                            return res.data.find(x => x.restaurant_id === r.id);
+                        })
+                );
+            });
     }
 
     const restaurantData = [];
@@ -134,7 +140,7 @@ export default function RestaurantsList(props) {
             {
                 !showGetLocation && loaded ?
                     <div className="row">
-                        <div className="col-12 col-md-6">
+                        <div className="col-12 col-md-4 mb-1">
                             <input 
                                 placeholder="Search for item..." 
                                 className="form-control text-bg-dark rounded" 
@@ -143,8 +149,12 @@ export default function RestaurantsList(props) {
                                 type="text" 
                             />
                         </div>
-                        <div className="col-6 col-md-6">
-                        
+                        <div className="col-12 col-md-4">
+                            <Link to={"/taxi"}>
+                                <button className="btn btn-dark form-control">
+                                    Taxi Ride
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 : ""

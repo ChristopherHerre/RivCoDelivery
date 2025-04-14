@@ -69,14 +69,14 @@ export function App() {
 	});
 	axios.defaults.withCredentials = true;
 	axios.interceptors.response.use(
-	  res => res,
-	  err => {
-		if (err.response?.status === 401 && localStorage.getItem("profile") != null) {
-		  localStorage.removeItem('profile');
-		  window.location.href = '/';
+		res => res,
+		err => {
+			if (err.response?.status === 401 && localStorage.getItem("profile") != null) {
+				localStorage.removeItem('profile');
+				window.location.href = '/';
+			}
+			return Promise.reject(err);
 		}
-		return Promise.reject(err);
-	  }
 	);
 	function WhiteArea() {
 		return (

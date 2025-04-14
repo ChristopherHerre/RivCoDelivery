@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Spinner from '../../../users/Spinner';
 import { dbPost } from '../../Admin';
 
-function AddMenuItem(props) {
+function NewMenuItem(props) {
     const setMenuItems = props.setMenuItems;
     const setLoading3 = props.setLoading3;
     const [success, setSuccess] = useState(false);
@@ -162,4 +162,4 @@ function AddMenuItem(props) {
         </form>
     );
 }
-export default AddMenuItem;
+export default NewMenuItem;
