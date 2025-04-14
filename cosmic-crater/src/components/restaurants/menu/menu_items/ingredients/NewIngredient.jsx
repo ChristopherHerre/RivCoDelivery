@@ -3,7 +3,7 @@ import axios from 'axios';
 import qs from 'qs';
 import Spinner from '../../../../users/Spinner';
 
-function AddIngredient(props) {
+function NewIngredient(props) {
     const menu_item_id = props.menuItem;
     const setIngredients = props.setIngredients;
     const [loading, setLoading] = useState(false);
@@ -70,7 +70,7 @@ function AddIngredient(props) {
         });
     };
     return (
-        <div className="rounded-2 bg-dark text-white">
+        <div className="p-2">
             <h3 className="text-white">
                 Add New Ingredient
             </h3>
@@ -123,4 +123,4 @@ function AddIngredient(props) {
         </div>
     );
 }
-export default AddIngredient;
+export default NewIngredient;

@@ -571,6 +571,8 @@ app.get('/api/menu-items', checkRole(2), async (req, res) => {
     }
 });
 
+
+
 app.get('/api/getUserRestaurant', checkRole(2), async (req, res) => {
     if (!req.session?.user?.sub) {
         return res.status(401).json({ message: 'Authentication required' });
@@ -585,23 +587,6 @@ app.get('/api/getUserRestaurant', checkRole(2), async (req, res) => {
     } catch (error) {
         console.error("Database error:", error);
         res.status(500).json({ error: "Internal server error" });
-    }
-});
-
-app.get('/api/users', checkRole(2), async (req, res) => {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
-    const offset = (page - 1) * limit;
-    try {
-        const query = 'SELECT * FROM users ORDER BY name ASC LIMIT ? OFFSET ?';
-        const [results] = await pool.execute(query, [
-            limit.toString(), 
-            offset.toString()
-        ]);
-        res.json(results);
-    } catch (err) {
-        console.error('Error fetching users:', err);
-        res.status(500).json({ error: 'Failed to fetch users' });
     }
 });
 
@@ -817,14 +802,29 @@ app.get('/api/restaurants2/:restaurantId/menu', checkRole(0), async (req, res) =
     }
 });
 
-app.get('/api/menu/item/search', checkRole(0), async (req, res) => {
-    const menuItemName = req.query.menuItemName;
-    console.log(menuItemName);
-    const query = 'SELECT * FROM menu_items WHERE name LIKE ? LIMIT 50';
-    const queryParam = `%${menuItemName}%`;
+app.get('/api/users', checkRole(2), async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+    const query = req.query.query || '';
+    
     try {
-        const [results] = await pool.execute(query, [queryParam]);
-        console.log(results);
+        let sqlQuery = 'SELECT * FROM users';
+        let params = [];
+        
+        if (query) {
+            sqlQuery += ' WHERE name LIKE ? OR email LIKE ?';
+            params.push(`%${query}%`, `%${query}%`);
+        }
+        
+        sqlQuery += ' ORDER BY name ASC LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+        
+        console.log('Executing SQL:', sqlQuery);
+        console.log('With parameters:', params);
+        
+        const [results] = await pool.execute(sqlQuery, params);
+        console.log('Results count:', results.length);
         res.json(results);
     } catch (err) {
         console.error('Error executing query:', err);

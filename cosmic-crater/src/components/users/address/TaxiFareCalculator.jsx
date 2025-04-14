@@ -34,22 +34,22 @@ export default function TaxiFareCalculator() {
         const distance = haversine_dist(from.latitude, from.longitude, to.latitude, to.longitude);
         return {
             distance: distance.toFixed(2),
-            fare: (distance * 0.5).toFixed(2)
+            fare: (distance * 0.75).toFixed(2)
         };
     };
 
     const fareDetails = calculateFare();
 
     return (
-        <div className="container-fluid p-1 bg-dark text-white">
+        <div className="row p-1 bg-dark text-white">
             <h3 className="text-white mb-4">🚕 Taxi Fare Calculator</h3>
 
-            <div className="mb-3">
+            <div className="col-12 col-md-6 mb-3">
                 <label><strong>From:</strong></label>
                 <PlaceAutocomplete onPlaceSelected={handleFromSelect} />
             </div>
 
-            <div className="mb-3">
+            <div className="col-12 col-md-6 mb-3">
                 <label><strong>To:</strong></label>
                 <PlaceAutocomplete onPlaceSelected={handleToSelect} />
             </div>

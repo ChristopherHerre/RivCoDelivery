@@ -72,7 +72,7 @@ function ManageRestaurant(props) {
     }
     return (loading ? <Spinner /> :
         <form onSubmit={(e) => submitRestaurant(e)}>
-            <div className="row p-2 shadow-lg rounded-2xl">
+            <div className="row p-2 shadow-lg">
                 <div className="col-12">
                     <h3>
                         {hasRestaurant ? "Edit Restaurant" : "Add Restaurant"}
@@ -88,7 +88,6 @@ function ManageRestaurant(props) {
                         required
                     />
                 </div>
-                
                 <div className="col-12 col-md-4">
                     <b>Category: </b>
                     <input
@@ -103,7 +102,7 @@ function ManageRestaurant(props) {
                     <b>Address: </b>
                     <PlaceAutocomplete
                         className="bg-dark text-white"
-                        style={""}
+                        placeholder={restaurantData?.address}
                         onPlaceSelected={({ address, latitude, longitude }) => {
                             document.querySelector('[name="address"]').value = `${address.streetNumber} ${address.street}, ${address.city}, ${address.state} ${address.zip}`;
                             document.querySelector('[name="latitude"]').value = latitude;
@@ -114,8 +113,6 @@ function ManageRestaurant(props) {
                 <input type="hidden" name="address" />
                 <input type="hidden" name="latitude" />
                 <input type="hidden" name="longitude" />
-
-               
                 <div className="col-12 col-md-4">
                     <br />
                     <button type="submit" className="form-control btn btn-primary">

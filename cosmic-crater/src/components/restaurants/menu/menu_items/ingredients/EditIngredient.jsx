@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Spinner from '../../../../users/Spinner';
-import AddIngredient from './AddIngredient';
+import NewIngredient from './NewIngredient';
 import Ingredient from './Ingredient';
 
 const EditIngredients = React.memo(function EditIngredients(props) {
@@ -51,7 +51,7 @@ const EditIngredients = React.memo(function EditIngredients(props) {
             })}
             <div className="row bg-dark text-white">
                 <div className="col-12">
-                    <AddIngredient
+                    <NewIngredient
                         menuItem={menuItem}
                         setIngredients={setIngredients}
                     />

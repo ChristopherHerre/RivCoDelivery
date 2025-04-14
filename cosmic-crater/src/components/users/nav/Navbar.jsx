@@ -91,9 +91,10 @@ function Navbar(props) {
                     <div className="col-12 col-md-6">
                         {
                             !profile ? 
-                                <GoogleOAuthProvider clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
+                                <GoogleOAuthProvider className="btn btn-secondary form-control" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
                                     {/* Custom GoogleLogin Component */}
                                     <GoogleLogin
+                                        className="btn btn-secondary form-control"
                                         onSuccess={handleGoogleLoginSuccess}
                                         onFailure={handleGoogleLoginFailure}
                                         useOneTap
