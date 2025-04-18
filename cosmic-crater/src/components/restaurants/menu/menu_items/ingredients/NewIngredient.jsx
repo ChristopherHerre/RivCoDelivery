@@ -2,7 +2,26 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import qs from 'qs';
 import Spinner from '../../../../users/Spinner';
+import * as bootstrap from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+export function getTooltip(key) {
+    if (key === "type") return "The category label for this ingredient";
+    if (key === "ingredients_name") return "The name of this ingredient";
+    if (key === "price") return "The default price";
+    if (key === "easy_price") return "The easy option price";
+    if (key === "extra_price") return "The extra option price";
+    if (key === "inputType") return "Radio button = 0 or checkbox = 1";
+    if (key === "customize") return "Enable customization options";
+    if (key === "halfable") return "Can be applied to half an item";
+    if (key === "sort_order") return "Order of display";
+    if (key === "selected") return "Default selection state";
+    // Add other fields as needed
+    return ""; // Return empty string for fields without tooltips
+}
+export function isNumericField(key) {
+    return key.includes('price') || 
+           ['sort_order', 'sort', 'inputType', 'halfable', 'customize', 'selected'].includes(key);
+}
 function NewIngredient(props) {
     const menu_item_id = props.menuItem;
     const setIngredients = props.setIngredients;
@@ -10,18 +29,31 @@ function NewIngredient(props) {
     const [formData, setFormData] = useState({
       easy_price: '',
       extra_price: '',
-      inputType: '',
+      inputType: '1',
       ingredients_name: '',
-      customize: '',
+      customize: '0',
       type: '',
       price: '',
-      sort_order: '',
+      sort_order: '2',
       selected: '',
       halfable: ''
     });
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
     
+    useEffect(() => {
+        // Initialize tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+        
+        // Cleanup function
+        return () => {
+            tooltipTriggerList.forEach(el => {
+                const tooltip = bootstrap.Tooltip.getInstance(el);
+                if (tooltip) tooltip.dispose();
+            });
+        };
+    }, []);
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -48,12 +80,12 @@ function NewIngredient(props) {
             setFormData({
                 easy_price: '',
                 extra_price: '',
-                inputType: '',
+                inputType: '1',
                 ingredients_name: '',
-                customize: '',
+                customize: '0',
                 type: '',
                 price: '',
-                sort_order: '',
+                sort_order: '2',
                 selected: '',
                 halfable: ''
             });
@@ -88,8 +120,13 @@ function NewIngredient(props) {
                         }).map((key) => (
                             <div className="col-12 col-md-3" key={key}>
                                 <strong>{key}:</strong>
-                                <input 
-                                    type={key.includes('price') || key === 'sort_order' || key === 'inputType' ? 'number' : 'text'}
+                                <input
+                                    {...(isNumericField(key) && ['inputType', 'halfable', 'customize', 'selected'].includes(key) ? {min: "0", max: "1"} : {})}
+                                    {...(isNumericField(key) && key === 'sort_order' ? {min: "0"} : {})}
+                                    {...(isNumericField(key) && key.includes('price') ? {min: "0", step: "0.01"} : {})}
+                                    data-bs-toggle="tooltip"
+                                    title={getTooltip(key)}
+                                    type={isNumericField(key) ? 'number' : 'text'}
                                     name={key} 
                                     value={formData[key]} 
                                     onChange={handleChange}

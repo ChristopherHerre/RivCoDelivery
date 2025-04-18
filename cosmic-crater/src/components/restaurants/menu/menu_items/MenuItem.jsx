@@ -42,11 +42,9 @@ export default function MenuItem(props) {
                     fetchMenuItem(attempt + 1);
                 } else {
                     console.error('Error fetching menu item:', err);
-                    //window.location.href = '/404-page.html';
                 }
             }
         };
-
         const fetchMenuItemIngredients = async (attempt = 1) => {
             try {
                 const res = await axios.get('/api/menu/item/ingredients', { params: { menuItem: props.menuItem } });
@@ -58,13 +56,11 @@ export default function MenuItem(props) {
                     fetchMenuItemIngredients(attempt + 1);
                 } else {
                     console.error('Error fetching menu item ingredients:', err);
-                    //window.location.href = '/404-page.html';
                 }
             } finally {
                 setLoading2(false);
             }
         };
-
         fetchMenuItem();
         fetchMenuItemIngredients();
     }, [cart, setCart, setPrice, setEnabled, setHalfables, setCustoms, setVal1, setVal2, setVal3, setVal4]);
@@ -123,7 +119,6 @@ export default function MenuItem(props) {
         );
         navigate("/menu");
     }
-
     const ingredientsData = [];
     function populateIngredientData() {
         for (const j in result) {
@@ -134,12 +129,346 @@ export default function MenuItem(props) {
         // Sort ingredientsData by the sort_order column
         ingredientsData.sort((a, b) => a.sort_order - b.sort_order);
     }
-
     let lastCategory = "";
     function setLastCategoryPrinted(v) {
         lastCategory = v;
     }
     populateIngredientData();
+    function MI() {
+        return (
+            itemConfig.map((item, key) => {
+                function calcItemTotal(uu) {
+                    // Start with base price of 0
+                    let configPrice = currency(0);
+                    
+                    // Process each ingredient's price contribution
+                    ingredientsData.forEach((ingredient, key) => {
+                        // Only calculate for enabled ingredients
+                        if (enabled[key] === true) {
+                            // Determine price based on customization (Extra, Easy, Regular)
+                            let ingredientPrice = currency(0);
+                            
+                            if (customs[key] === "Extra") {
+                                ingredientPrice = currency(ingredient.extra_price);
+                            } else if (customs[key] === "Easy") {
+                                ingredientPrice = currency(ingredient.easy_price);
+                            } else {
+                                // Regular price
+                                ingredientPrice = currency(ingredient.price);
+                            }
+                            
+                            // Apply half-price calculation if ingredient is only on half the item
+                            const isHalfItem = halfables[key] === "Right Half" || halfables[key] === "Left Half";
+                            if (isHalfItem) {
+                                ingredientPrice = ingredientPrice.divide(2);
+                            }
+                            
+                            // Add to running total
+                            configPrice = configPrice.add(ingredientPrice.value);
+                        }
+                    });
+                    
+                    // Add base item price according to size selection (uu)
+                    const itemSizePrice = uu === 1 ? item.price : 
+                                         uu === 2 ? item.price2 : 
+                                         uu === 3 ? item.price3 : 
+                                         uu === 4 ? item.price4 : item.price;
+                    
+                    // Update the final price
+                    setPrice(configPrice.add(itemSizePrice).value);
+                }
+                function itemTotal() {
+                    if (val1 == 1) {
+                        calcItemTotal(1);
+                    } else if (val2 == 1) {
+                        calcItemTotal(2);
+                    } else if (val3 == 1) {
+                        calcItemTotal(3);
+                    } else if (val4 == 1) {
+                        calcItemTotal(4);
+                    }
+                }
+                useEffect(()=>{
+                    itemTotal();
+                }, [val1, val2, val3, val4])
+                function changeRadio1(e) {
+                    setVal1(1);
+                    setVal2(0);
+                    setVal3(0);
+                    setVal4(0);
+                    calcItemTotal(1);
+                }
+                function changeRadio2(e) {
+                    setVal1(0);
+                    setVal2(1);
+                    setVal3(0);
+                    setVal4(0);
+                    calcItemTotal(2);
+                }
+                function changeRadio3(e) {
+                    setVal1(0);
+                    setVal2(0);
+                    setVal3(1);
+                    setVal4(0);
+                    calcItemTotal(3);
+                }
+                function changeRadio4(e) {
+                    setVal1(0);
+                    setVal2(0);
+                    setVal3(0);
+                    setVal4(1);
+                    calcItemTotal(4);
+                }
+                return (
+                    <form key={key} onSubmit={(e) => addToCart(e, item)}>
+                        <div className="row">
+                            <div className="col-sm-12 text-center">
+                                <h2>{item.name}</h2>
+                                <h3>
+                                    <p>
+                                        <b className="text-success">
+                                            {USDollar.format(price)}
+                                        </b>
+                                    </p>
+                                </h3>
+                            </div>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-6">
+                                <div>
+                                    <h5 className="m-1">
+                                        <span className="text-danger">*</span>
+                                        Size
+                                    </h5>
+                                    {(item.size1 != null && item.size1 != "") ? (
+                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                            <label>
+                                                <input
+                                                    required
+                                                    type="radio"
+                                                    checked={val1}
+                                                    onChange={(e) => changeRadio1(e)}
+                                                    name="itemSize"
+                                                />
+                                                <span> </span>
+                                                {item.size1} {debug ? val1 : ""}
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        ""
+                                    )}
+                                    {(item.size2 != null && item.size2 != "") ? (
+                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    checked={val2}
+                                                    onChange={(e) => changeRadio2(e)}
+                                                    name="itemSize"
+                                                />
+                                                <span> </span>
+                                                {item.size2} {debug ? val2 : ""}
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        ""
+                                    )}
+                                    {(item.size3 != null && item.size3 != "") ? (
+                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    checked={val3}
+                                                    onChange={(e) => changeRadio3(e)}
+                                                    name="itemSize"
+                                                />
+                                                <span> </span>
+                                                {item.size3} {debug ? val3 : ""}
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        ""
+                                    )}
+                                    {(item.size4 != null && item.size4 != "") ? (
+                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    checked={val4}
+                                                    onChange={(e) => changeRadio4(e)}
+                                                    name="itemSize"
+                                                />
+                                                <span> </span>
+                                                {item.size4} {debug ? val4 : ""}
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        ""
+                                    )}
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                {console.log(ingredientsData)}
+                                {!loading2 ? (
+                                    ingredientsData.map((q, key) => {
+                                        function changeEnabledRadio(e) {
+                                            // Create a new array to properly update state
+                                            const newEnabled = [...enabled];
+                                            // Find all elements of the same type
+                                            for (let i = 0; i < ingredientsData.length; i++) {
+                                                if (ingredientsData[i]['type'] === q['type']) {
+                                                    // Set only the clicked one to true, others to false
+                                                    newEnabled[i] = (i === key);
+                                                }
+                                            }
+                                            // Update state with the new array
+                                            setEnabled(newEnabled);
+                                            //itemTotal();
+                                        }
+                                        function changeEnabledCheckbox(e) {
+                                            enabled[key] = !enabled[key];
+                                            console.log(key + " " + enabled[key]);
+                                            setEnabled(enabled.map((e) => e));
+                                            itemTotal();
+                                        }
+                                        function changeHalfer(e) {
+                                            console.log("[[ " + e.target.value + " " + e.target.id);
+                                            halfables[key] = e.target.value;
+                                            console.log("]]" + halfables[key]);
+                                            itemTotal();
+                                        }
+                                        function changeCustomizer(e) {
+                                            console.log("[[ " + e.target.value + " " + e.target.id);
+                                            
+                                            // Create a new copy of the customs object
+                                            const updatedCustoms = { ...customs };
+                                            updatedCustoms[key] = e.target.value;
+                                            
+                                            // Update the state with the new object
+                                            setCustoms(updatedCustoms); // Assuming you have a state setter function
+                                            
+                                            console.log("]]" + updatedCustoms[key]);
+                                            itemTotal();
+                                        }
+                                        return ingredientsData ? (
+                                            <div key={key}>
+                                                {lastCategory != q['type'] ? (
+                                                    <h5 className="m-1">
+                                                        {q['inputType'] == 1 ? (
+                                                            <span className="text-danger">*</span>
+                                                        ) : (
+                                                            ""
+                                                        )}
+                                                        {q['type']}
+                                                    </h5>
+                                                ) : (
+                                                    ""
+                                                )}
+                                                {setLastCategoryPrinted(q['type'])}
+                                                <div className="p-3 m-1 text-bg-dark rounded">
+                                                    <div className="row">
+                                                        <div className="col-lg-6">
+                                                            {q['inputType'] == 0 ? (
+                                                                <label>
+                                                                    <input
+                                                                        onChange={(e) => changeEnabledCheckbox(e)}
+                                                                        type="checkbox"
+                                                                        id="ingredients"
+                                                                        defaultChecked={enabled[key] ? true : false}
+                                                                        name={q['type']}
+                                                                    />
+                                                                    <span> </span>
+                                                                    <span>{q['ingredients_name']}</span>
+                                                                </label>
+                                                            ) : (
+                                                                <label>
+                                                                    <input
+                                                                        required
+                                                                        onChange={(e) => changeEnabledRadio(e)}
+                                                                        type="radio"
+                                                                        id="ingredients"
+                                                                        defaultChecked={enabled[key] ? true : false}
+                                                                        name={q['type']}
+                                                                    />
+                                                                    {q['selected']}
+                                                                    <span> </span>
+                                                                    <span>{q['ingredients_name']}</span>
+                                                                </label>
+                                                            )}
+                                                        </div>
+                                                        <div className="col-lg-6 text-end">
+                                                            <div>
+                                                                <select
+                                                                    disabled={enabled[key] == false ? "disabled" : null}
+                                                                    style={{
+                                                                        visibility:
+                                                                            q['customize'] == 0 || q['halfable'] == 0
+                                                                                ? "hidden"
+                                                                                : "visible",
+                                                                    }}
+                                                                    onChange={(e) => changeHalfer(e)}
+                                                                    className="middle"
+                                                                    name="halfer"
+                                                                    defaultValue={halfables[key] || "Whole"}
+                                                                    id={key}
+                                                                >
+                                                                    <option value="Left Half">Left half</option>
+                                                                    <option value="Whole">Whole</option>
+                                                                    <option value="Right Half">Right half</option>
+                                                                </select>
+                                                                <span> </span>
+                                                                <select
+                                                                    disabled={enabled[key] == false ? "disabled" : null}
+                                                                    style={{
+                                                                        visibility: q['customize'] == 0 ? "hidden" : "visible",
+                                                                    }}
+                                                                    onChange={(e) => changeCustomizer(e)}
+                                                                    className="middle"
+                                                                    name="customizer"
+                                                                    value={customs[key] || 'Regular'}
+                                                                    id={q['type']}
+                                                                >
+                                                                    <option value="Easy">Easy</option>
+                                                                    <option value="Regular">Regular</option>
+                                                                    <option value="Extra">Extra</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <Spinner />
+                                        );
+                                    })
+                                ) : (
+                                    <Spinner />
+                                )}
+                                <div className="col-lg-4 m-1">
+                                    <h5 className="">
+                                        <span className="text-danger">*</span>
+                                        Quantity
+                                    </h5>
+                                    <QuantitySelector
+                                        className="form-control"
+                                        inputValue={quantity}
+                                        onInputValueChange={setQuantity}
+                                    />
+                                </div>
+                                <div className="col-lg-8 m-1">
+                                    <input
+                                        type="submit"
+                                        className="btn btn-primary form-control"
+                                        value={"Add " + quantity + " to cart"}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                );
+            })
+        )
+    }
     return (
         <>
             <Link to="/menu">
@@ -154,360 +483,7 @@ export default function MenuItem(props) {
                     </div>
                 </div>
             ) : (
-                itemConfig.map((item, key) => {
-                    function calcItemTotal(uu) {
-                        let configPrice = currency(0);
-                        ingredientsData.map((i, key) => {
-                            if (enabled[key] == true) {
-                                if (customs[key] == "Extra") {
-                                    console.log("9999 " + customs[key] + " " + i['extra_price']);
-                                    if (halfables[key] == "Right Half" || halfables[key] == "Left Half") {
-                                        configPrice = configPrice.add(currency(i['extra_price']).divide(2).value);
-                                        console.log("t4: " + configPrice.value);
-                                    } else {
-                                        configPrice = configPrice.add(currency(i['extra_price']).value);
-                                    }
-                                    console.log("t1: " + configPrice.value);
-                                } else if (customs[key] == "Easy") {
-                                    if (halfables[key] == "Right Half" || halfables[key] == "Left Half") {
-                                        configPrice = configPrice.add(currency(i['easy_price']).divide(2).value);
-                                        console.log("t4: " + configPrice.value);
-                                    } else {
-                                        configPrice = configPrice.add(currency(i['easy_price']).value);
-                                    }
-                                    console.log("t2: " + configPrice.value);
-                                } else {
-                                    if (halfables[key] == "Right Half" || halfables[key] == "Left Half") {
-                                        configPrice = configPrice.add(currency(i['price']).divide(2).value);
-                                        console.log("t4: " + configPrice.value);
-                                    } else {
-                                        configPrice = configPrice.add(currency(i['price']).value);
-                                    }
-                                    console.log("t3: " + configPrice.value);
-                                }
-                            }
-                        });
-                        console.log(val1);
-                        console.log(val2);
-                        console.log(val3);
-                        console.log(val4);
-                        if (uu == 1) {
-                            setPrice(configPrice.add(item['price']).value);
-                        } else if (uu == 2) {
-                            setPrice(configPrice.add(item['price2']).value);
-                        } else if (uu == 3) {
-                            setPrice(configPrice.add(item['price3']).value);
-                        } else if (uu == 4) {
-                            setPrice(configPrice.add(item['price4']).value);
-                        }
-                    }
-                    function changeRadio1(e) {
-                        setVal1(1);
-                        setVal2(0);
-                        setVal3(0);
-                        setVal4(0);
-                        calcItemTotal(1);
-                    }
-                    function changeRadio2(e) {
-                        setVal1(0);
-                        setVal2(1);
-                        setVal3(0);
-                        setVal4(0);
-                        calcItemTotal(2);
-                    }
-                    function changeRadio3(e) {
-                        setVal1(0);
-                        setVal2(0);
-                        setVal3(1);
-                        setVal4(0);
-                        calcItemTotal(3);
-                    }
-                    function changeRadio4(e) {
-                        setVal1(0);
-                        setVal2(0);
-                        setVal3(0);
-                        setVal4(1);
-                        calcItemTotal(4);
-                    }
-                    function itemTotal() {
-                        if (val1 == 1) {
-                            calcItemTotal(1);
-                        } else if (val2 == 1) {
-                            calcItemTotal(2);
-                        } else if (val3 == 1) {
-                            calcItemTotal(3);
-                        } else if (val4 == 1) {
-                            calcItemTotal(4);
-                        }
-                    }
-                    return (
-                        <form key={key} onSubmit={(e) => addToCart(e, item)}>
-                            <div className="row">
-                                <div className="col-sm-12 text-center">
-                                    <h2>{item.name}</h2>
-                                    <h3>
-                                        <p>
-                                            <b className="text-success">
-                                                {USDollar.format(price)}
-                                            </b>
-                                        </p>
-                                    </h3>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-md-6">
-                                    <div>
-                                        <h5 className="m-1">
-                                            <span className="text-danger">*</span>
-                                            Size
-                                        </h5>
-                                        {(item.size1 != null && item.size1 != "") ? (
-                                            <div className="p-3 m-1 text-bg-dark rounded">
-                                                <label>
-                                                    <input
-                                                        required
-                                                        type="radio"
-                                                        checked={val1}
-                                                        onChange={(e) => changeRadio1(e)}
-                                                        name="itemSize"
-                                                    />
-                                                    <span> </span>
-                                                    {item.size1} {debug ? val1 : ""}
-                                                </label>
-                                            </div>
-                                        ) : (
-                                            ""
-                                        )}
-                                        {(item.size2 != null && item.size2 != "") ? (
-                                            <div className="p-3 m-1 text-bg-dark rounded">
-                                                <label>
-                                                    <input
-                                                        type="radio"
-                                                        checked={val2}
-                                                        onChange={(e) => changeRadio2(e)}
-                                                        name="itemSize"
-                                                    />
-                                                    <span> </span>
-                                                    {item.size2} {debug ? val2 : ""}
-                                                </label>
-                                            </div>
-                                        ) : (
-                                            ""
-                                        )}
-                                        {(item.size3 != null && item.size3 != "") ? (
-                                            <div className="p-3 m-1 text-bg-dark rounded">
-                                                <label>
-                                                    <input
-                                                        type="radio"
-                                                        checked={val3}
-                                                        onChange={(e) => changeRadio3(e)}
-                                                        name="itemSize"
-                                                    />
-                                                    <span> </span>
-                                                    {item.size3} {debug ? val3 : ""}
-                                                </label>
-                                            </div>
-                                        ) : (
-                                            ""
-                                        )}
-                                        {(item.size4 != null && item.size4 != "") ? (
-                                            <div className="p-3 m-1 text-bg-dark rounded">
-                                                <label>
-                                                    <input
-                                                        type="radio"
-                                                        checked={val4}
-                                                        onChange={(e) => changeRadio4(e)}
-                                                        name="itemSize"
-                                                    />
-                                                    <span> </span>
-                                                    {item.size4} {debug ? val4 : ""}
-                                                </label>
-                                            </div>
-                                        ) : (
-                                            ""
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="col-md-6">
-                                    {console.log(ingredientsData)}
-                                    {!loading2 ? (
-                                        ingredientsData.map((q, key) => {
-                                            function changeEnabledRadio(e) {
-                                                let element = e.target;
-                                                // find all of the select elements for Easy, Regular, and Extra
-                                                // try 10 times to find them
-                                                for (let i = 0; i < 10; i++) {
-                                                    if (
-                                                        element.elements == undefined ||
-                                                        element.elements['customizer'] == undefined
-                                                    ) {
-                                                        // if not yet found, go up to the parent element
-                                                        element = element.parentNode;
-                                                    } else {
-                                                        // once found, break loop and use element to access all of the select elements
-                                                        element = element.elements['customizer'];
-                                                        break;
-                                                    }
-                                                }
-                                                // loop through all of the select elements
-                                                for (let i = 0; i < element.length; i++) {
-                                                    // if the element's id attribute is equal to the ingredient's type
-                                                    // then it must be under the same heading because the list was sorted
-                                                    // by types and the same types will be grouped together
-                                                    if (element[i].id == q['type']) {
-                                                        // disable all of the select elements that are not the one
-                                                        // that the user has enabled
-                                                        console.log("edc " + element[i].defaultChecked);
-                                                        if (key != i) {
-                                                            element[i].disabled = "disabled";
-                                                            enabled[i] = true;
-                                                        } else {
-                                                            // enable the one that the user has enabled
-                                                            element[i].disabled = null;
-                                                            enabled[i] = true;
-                                                        }
-                                                    }
-                                                }
-                                                console.log("????? " + key + " " + enabled[key]);
-                                                setEnabled(enabled.map((e) => e));
-                                                for (let i = 0; i < enabled.length; i++) {
-                                                    console.log("enabled[" + i + "]: " + enabled[i]);
-                                                }
-                                                itemTotal();
-                                            }
-                                            function changeEnabledCheckbox(e) {
-                                                enabled[key] = !enabled[key];
-                                                console.log(key + " " + enabled[key]);
-                                                setEnabled(enabled.map((e) => e));
-                                                itemTotal();
-                                            }
-                                            function changeHalfer(e) {
-                                                console.log("[[ " + e.target.value + " " + e.target.id);
-                                                halfables[key] = e.target.value;
-                                                console.log("]]" + halfables[key]);
-                                                itemTotal();
-                                            }
-                                            function changeCustomizer(e) {
-                                                console.log("[[ " + e.target.value + " " + e.target.id);
-                                                customs[key] = e.target.value;
-                                                console.log("]]" + customs[key]);
-                                                itemTotal();
-                                            }
-                                            return ingredientsData ? (
-                                                <div key={key}>
-                                                    {lastCategory != q['type'] ? (
-                                                        <h5 className="m-1">
-                                                            {q['inputType'] == 1 ? (
-                                                                <span className="text-danger">*</span>
-                                                            ) : (
-                                                                ""
-                                                            )}
-                                                            {q['type']}
-                                                        </h5>
-                                                    ) : (
-                                                        ""
-                                                    )}
-                                                    {setLastCategoryPrinted(q['type'])}
-                                                    <div className="p-3 m-1 text-bg-dark rounded">
-                                                        <div className="row">
-                                                            <div className="col-lg-6">
-                                                                {q['inputType'] == 0 ? (
-                                                                    <label>
-                                                                        <input
-                                                                            onChange={(e) => changeEnabledCheckbox(e)}
-                                                                            type="checkbox"
-                                                                            id="ingredients"
-                                                                            defaultChecked={q['selected'] ? true : false}
-                                                                            name={q['type']}
-                                                                        />
-                                                                        <span> </span>
-                                                                        <span>{q['ingredients_name']}</span>
-                                                                    </label>
-                                                                ) : (
-                                                                    <label>
-                                                                        <input
-                                                                            required
-                                                                            onChange={(e) => changeEnabledRadio(e)}
-                                                                            type="radio"
-                                                                            id="ingredients"
-                                                                            name={q['type']}
-                                                                        />
-                                                                        <span> </span>
-                                                                        <span>{q['ingredients_name']}</span>
-                                                                    </label>
-                                                                )}
-                                                            </div>
-                                                            <div className="col-lg-6 text-end">
-                                                                <div>
-                                                                    <select
-                                                                        disabled={enabled[key] == false ? "disabled" : null}
-                                                                        style={{
-                                                                            visibility:
-                                                                                q['customize'] == 0 || q['halfable'] == 0
-                                                                                    ? "hidden"
-                                                                                    : "visible",
-                                                                        }}
-                                                                        onChange={(e) => changeHalfer(e)}
-                                                                        className="middle"
-                                                                        name="halfer"
-                                                                        defaultValue="Whole"
-                                                                        id={key}
-                                                                    >
-                                                                        <option value="Left Half">Left half</option>
-                                                                        <option value="Whole">Whole</option>
-                                                                        <option value="Right Half">Right half</option>
-                                                                    </select>
-                                                                    <span> </span>
-                                                                    <select
-                                                                        disabled={enabled[key] == false ? "disabled" : null}
-                                                                        style={{
-                                                                            visibility: q['customize'] == 0 ? "hidden" : "visible",
-                                                                        }}
-                                                                        onChange={(e) => changeCustomizer(e)}
-                                                                        className="middle"
-                                                                        name="customizer"
-                                                                        defaultValue="Regular"
-                                                                        id={q['type']}
-                                                                    >
-                                                                        <option value="Easy">Easy</option>
-                                                                        <option value="Regular">Regular</option>
-                                                                        <option value="Extra">Extra</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <Spinner />
-                                            );
-                                        })
-                                    ) : (
-                                        <Spinner />
-                                    )}
-                                    <div className="col-lg-4 m-1">
-                                        <h5 className="">
-                                            <span className="text-danger">*</span>
-                                            Quantity
-                                        </h5>
-                                        <QuantitySelector
-                                            className="form-control"
-                                            inputValue={quantity}
-                                            onInputValueChange={setQuantity}
-                                        />
-                                    </div>
-                                    <div className="col-lg-8 m-1">
-                                        <input
-                                            type="submit"
-                                            className="btn btn-primary form-control"
-                                            value={"Add " + quantity + " to cart"}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    );
-                })
+                <MI />
             )}
         </>
     );

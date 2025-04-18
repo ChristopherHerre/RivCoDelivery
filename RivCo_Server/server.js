@@ -802,23 +802,38 @@ app.get('/api/restaurants2/:restaurantId/menu', checkRole(0), async (req, res) =
     }
 });
 
+app.get('/api/menu/item/search', checkRole(0), async (req, res) => {
+    const menuItemName = req.query.menuItemName;
+    console.log(menuItemName);
+    const query = 'SELECT * FROM menu_items WHERE name LIKE ? LIMIT 50';
+    const queryParam = `%${menuItemName}%`;
+    try {
+        const [results] = await pool.execute(query, [queryParam]);
+        console.log(results);
+        res.json(results);
+    } catch (err) {
+        console.error('Error executing query:', err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
+});
+
 app.get('/api/users', checkRole(2), async (req, res) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
-    const query = req.query.query || '';
+    const searchQuery = req.query.query || '';
     
     try {
         let sqlQuery = 'SELECT * FROM users';
         let params = [];
         
-        if (query) {
+        if (searchQuery) {
             sqlQuery += ' WHERE name LIKE ? OR email LIKE ?';
-            params.push(`%${query}%`, `%${query}%`);
+            params.push(`%${searchQuery}%`, `%${searchQuery}%`);
         }
         
-        sqlQuery += ' ORDER BY name ASC LIMIT ? OFFSET ?';
-        params.push(limit, offset);
+        // Use direct integer values instead of placeholders for LIMIT/OFFSET
+        sqlQuery += ` ORDER BY name ASC LIMIT ${limit} OFFSET ${offset}`;
         
         console.log('Executing SQL:', sqlQuery);
         console.log('With parameters:', params);
@@ -831,7 +846,6 @@ app.get('/api/users', checkRole(2), async (req, res) => {
         res.status(500).json({ error: 'Database query failed' });
     }
 });
-
 app.get('/api/menu/item/ingredients', checkRole(0), async (req, res) => {
     const { menuItem } = req.query;
     if (!menuItem) {
@@ -894,12 +908,12 @@ app.get('/api/menu/item', checkRole(0), async (req, res) => {
 });
 
 const orderLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 10,
-    message: { error: 'Too many orders, please try again in an hour' }
+    windowMs: 3 * 60 * 1000,
+    max: 1,
+    message: { error: 'Too many orders, please try again in 3 minutes' }
 });
   
-app.post('/api/co', checkRole(0), async (req, res) => {
+app.post('/api/co', checkRole(0), orderLimiter, async (req, res) => {
     console.log("Placing order...");
     console.log(req.body);
     const userInputData = req.body[0];

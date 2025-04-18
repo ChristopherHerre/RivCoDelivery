@@ -112,6 +112,7 @@ function PlaceAutocomplete({ onPlaceSelected, defaultValue = "", placeholder = "
                 className="form-control bg-dark text-white"
                 placeholder={placeholder}
                 autoComplete="off"
+                required
             />
             {suggestions.length > 0 && (
                 <ul className="list-group position-absolute w-100 shadow-sm z-10" style={{ top: '100%', zIndex: 999 }}>

@@ -1,9 +1,7 @@
-﻿import React, { useEffect, useState, useCallback } from 'react';
+﻿import React, { useState } from 'react';
 import axios from 'axios';
 import qs from 'qs';
 import ManageRestaurant from './ManageRestaurant';
-import MenuItemWithIngredients from './menu/menu_items/MenuItemWithIngredients';
-import NewMenuItem from './menu/menu_items/NewMenuItem';
 import MenuUpdate from './menu/MenuUpdate';
 
 export default function Admin(props) {

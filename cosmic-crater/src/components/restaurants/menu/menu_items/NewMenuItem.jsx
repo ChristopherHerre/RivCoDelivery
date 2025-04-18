@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Spinner from '../../../users/Spinner';
 import { dbPost } from '../../Admin';
-
 function NewMenuItem(props) {
     const setMenuItems = props.setMenuItems;
     const setLoading3 = props.setLoading3;
@@ -12,7 +11,7 @@ function NewMenuItem(props) {
         name: '',
         category: '',
         price: '',
-        size1: '',
+        size1: 'Regular',
         price2: '',
         size2: '',
         price3: '',
@@ -27,7 +26,7 @@ function NewMenuItem(props) {
     async function submitMenuItem(e) {
         e.preventDefault();
         setLoading(true);
-        const inputs = { ...formData, restaurant_id: null }; // Will be set server-side
+        const inputs = { ...formData, restaurant_id: null }; 
         try {
             const response = await dbPost(e, e.target, inputs, "add-menu-item");
             if (response.status >= 200 && response.status < 300) {
@@ -38,7 +37,7 @@ function NewMenuItem(props) {
                     name: '',
                     category: '',
                     price: '',
-                    size1: '',
+                    size1: 'Regular',
                     price2: '',
                     size2: '',
                     price3: '',

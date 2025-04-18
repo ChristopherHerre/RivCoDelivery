@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import Spinner from '../../../users/Spinner';
 import axios from 'axios';
-
+import { isNumericField, getTooltip } from './ingredients/NewIngredient';
 function EditItem(props) {
     const item = props.item;
     const [success2, setSuccess2] = useState(false);
@@ -81,10 +81,13 @@ function EditItem(props) {
                     <b>{key}:</b>
                     <br />
                     <input
-                        type={typeof item[key] === "number" ? "number" : "text"}
-                        defaultValue={item[key]}
+                        {...(isNumericField(key) && key.includes('price') ? {min: "0", step: "0.01"} : {})}
+                        data-bs-toggle="tooltip"
+                        title={getTooltip(key)}
+                        type={isNumericField(key) ? "number" : "text"}
+                        defaultValue={item[key] ?? ""}
                         onChange={(e) => handleChange(item.id, key, e.target.value)}
-                        className="ml-2 p-1 border rounded form-control bg-dark text-white"
+                        className="form-control bg-dark text-white"
                     />
                 </div>
             ))}

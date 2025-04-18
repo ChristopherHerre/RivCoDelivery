@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Spinner from '../../../../users/Spinner';
-
+import { isNumericField, getTooltip } from './NewIngredient';
+import * as bootstrap from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 function Ingredient(props) {
     const index = props.index;
     const sortedFields = props.sortedFields;
@@ -11,6 +12,19 @@ function Ingredient(props) {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
     const [error2, setError2] = useState("");
+    useEffect(() => {
+        // Initialize tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+        
+        // Cleanup function
+        return () => {
+            tooltipTriggerList.forEach(el => {
+                const tooltip = bootstrap.Tooltip.getInstance(el);
+                if (tooltip) tooltip.dispose();
+            });
+        };
+    }, []);
     const handleChange = useCallback((id, key, value) => {
         setIngredients(prevItems =>
             prevItems.map(item =>
@@ -65,7 +79,12 @@ function Ingredient(props) {
                         <div key={field} className="col-12 col-md-3">
                             <b>{field}:</b>
                             <input
-                                type={typeof ingredient[field] === "number" ? "number" : "text"}
+                                {...(isNumericField(field) && ['inputType', 'halfable', 'customize', 'selected'].includes(field) ? {min: "0", max: "1"} : {})}
+                                {...(isNumericField(field) && field === 'sort_order' ? {min: "0"} : {})}
+                                {...(isNumericField(field) && field.includes('price') ? {min: "0", step: "0.01"} : {})}
+                                data-bs-toggle="tooltip"
+                                title={getTooltip(field)}
+                                type={isNumericField(field) ? "number" : "text"}
                                 defaultValue={ingredient[field] ?? ""}
                                 onChange={(e) => handleChange(ingredient.id, field, e.target.value)}
                                 className="form-control bg-dark text-white"
@@ -79,10 +98,19 @@ function Ingredient(props) {
                 <button onClick={() => handleSave(ingredient.id)} className="btn btn-primary form-control">
                     <i className="bi bi-pencil-square"> </i>Save
                 </button>
-                {success ? (
+                
+            </div>
+            <div className="col-12 col-md-3">
+                <br />
+                <button onClick={() => handleDelete(ingredient.id)} className="btn btn-danger form-control">
+                    <i className="bi bi-trash"> </i>Delete
+                </button>
+            </div>
+            <div className="col-12">
+            {success ? (
                     <p className="text-success">
                         <i className="bi bi-check-circle-fill"> </i>
-                        Item updated successfully.
+                        Ingredient updated successfully.
                     </p>) : ""
                 }
                 {error && (
@@ -90,13 +118,8 @@ function Ingredient(props) {
                         <i class="bi bi-exclamation-triangle"> </i>
                         {error.length > 0 ? error : ""}
                     </p>
-                )}
-            </div>
-            <div className="col-12 col-md-3">
-                <br />
-                <button onClick={() => handleDelete(ingredient.id)} className="btn btn-danger form-control">
-                    <i className="bi bi-trash"> </i>Delete
-                </button>
+                )
+            }
             </div>
             <div className="col-12">
                 {error2 && (
