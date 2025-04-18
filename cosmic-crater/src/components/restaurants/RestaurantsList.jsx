@@ -74,7 +74,7 @@ export default function RestaurantsList(props) {
                 }
             }
         };
-        if (latitude && longitude /*&& loaded && result.length > 0*/)
+        if (latitude && longitude)
         {
             fetchRestaurants();
         }
@@ -83,13 +83,11 @@ export default function RestaurantsList(props) {
     function handleSearch(e) {
         let val = e.target.value;
         setQuery(val);
-    
         if (val.length === 0) {
             // Reset to the original list when the search string is empty
             setRestaurants(restaurantsCopy);
             return;
         }
-    
         axios.get('/api/menu/item/search', { params: { menuItemName: val } })
             .then(res => {
                 setItemConfig(res.data);
@@ -100,9 +98,9 @@ export default function RestaurantsList(props) {
                             return res.data.find(x => x.restaurant_id === r.id);
                         })
                 );
-            });
+            }
+        );
     }
-
     const restaurantData = [];
     function populateRestaurantData() {
         for (const j in result) {
@@ -152,6 +150,7 @@ export default function RestaurantsList(props) {
                         <div className="col-12 col-md-4">
                             <Link to={"/taxi"}>
                                 <button className="btn btn-dark form-control">
+                                    <i className="bi bi-taxi-front-fill"> </i>
                                     Taxi Ride
                                 </button>
                             </Link>

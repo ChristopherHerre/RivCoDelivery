@@ -102,7 +102,7 @@ function ManageRestaurant(props) {
                     <b>Address: </b>
                     <PlaceAutocomplete
                         className="bg-dark text-white"
-                        placeholder={restaurantData?.address}
+                        defaultValue={restaurantData?.address}
                         onPlaceSelected={({ address, latitude, longitude }) => {
                             document.querySelector('[name="address"]').value = `${address.streetNumber} ${address.street}, ${address.city}, ${address.state} ${address.zip}`;
                             document.querySelector('[name="latitude"]').value = latitude;
@@ -110,9 +110,9 @@ function ManageRestaurant(props) {
                         }}
                     />
                 </div>
-                <input type="hidden" name="address" />
-                <input type="hidden" name="latitude" />
-                <input type="hidden" name="longitude" />
+                <input type="hidden" value={restaurantData.address} name="address" />
+                <input type="hidden" value={restaurantData.latitude} name="latitude" />
+                <input type="hidden" value={restaurantData.longitude}name="longitude" />
                 <div className="col-12 col-md-4">
                     <br />
                     <button type="submit" className="form-control btn btn-primary">

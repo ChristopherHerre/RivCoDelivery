@@ -242,46 +242,63 @@ export default function BlackjackGame() {
             </div>
         )}
         {gameState === 'playing' && (
-            <div>
-            <h3>Dealer</h3>
-            <div>{dealer.hand.map((c,i) => <Card key={i} card={c} hidden={i===1} />)} Score: {calculateScore([dealer.hand[0]])}</div>
-            <h3>{players[currentPlayerIdx].name}'s Turn</h3>
-            <div>Your Hand: {players[currentPlayerIdx].hand.map((c,i) => <Card key={i} card={c} />)} Score: {players[currentPlayerIdx].score}</div>
-            <div className="row">
-              <div className="col-12 col-md-6">
-                <button className="btn btn-danger form-control" onClick={() => playerHit(currentPlayerIdx)} disabled={players[currentPlayerIdx].bust}>
-                  Hit
-                </button>
-              </div>
-              <div className="col-12 col-md-6">
-                <button className="btn btn-primary form-control" onClick={playerStay} style={{ marginLeft: 10 }}>
-                  Stay
-                </button>
+          <div className="row">
+            <div className="col-12 col-md-6">
+              <h3>{players[currentPlayerIdx].name}'s Turn</h3>
+              <div>Your Hand: {players[currentPlayerIdx].hand.map((c,i) => <Card key={i} card={c} />)} Score: {players[currentPlayerIdx].score}</div>
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <button className="btn btn-danger form-control" onClick={() => playerHit(currentPlayerIdx)} disabled={players[currentPlayerIdx].bust}>
+                    Hit
+                  </button>
+                </div>
+                <div className="col-12 col-md-6">
+                  <button className="btn btn-primary form-control" onClick={playerStay} style={{ marginLeft: 10 }}>
+                    Stay
+                  </button>
+                </div>
               </div>
             </div>
+            <div className="col-12 col-md-6">
+              <h3>Dealer</h3>
+              <div>
+                {dealer.hand.map((c,i) => 
+                  <Card key={i} card={c} hidden={i===1} />)
+                } Score: {calculateScore([dealer.hand[0]])}
+              </div>
             </div>
+          </div>
         )}
         {gameState === 'result' && (
-            <div>
-            <h3>Dealer</h3>
-            <div>{dealer.hand.map((c,i) => <Card key={i} card={c} />)} Score: {dealer.score}</div>
-            <h3>Results</h3>
-            {players.map((p,i) => (
-                <div key={i} style={{ marginBottom: 12 }}>
-                <div>{p.name}: {p.result.toUpperCase()} (Bank: ${p.bank})</div>
-                <div>Cards: {p.hand.map((c,j) => <Card key={j} card={c} />)}</div>
-                </div>
-            ))}
+          <div>
+            <div className="row">
+              <div className="col-12 col-md-6">
+                <h3>Results</h3>
+                {players.map((p,i) => (
+                    <div key={i} style={{ marginBottom: 12 }}>
+                      <div>{p.name}: {p.result.toUpperCase()} (Bank: ${p.bank})</div>
+                      <div>Cards: {p.hand.map((c,j) => <Card key={j} card={c} />)}</div>
+                    </div>
+                ))}
+              </div>
+              <div className="col-12 col-md-6">
+                <h3>Dealer</h3>
+                {dealer.hand.map((c,i) => 
+                  <Card key={i} card={c} />)
+                } Score: {dealer.score}
+              </div>
+            </div>
             {/* Remaining deck and verification */}
             <div>
                 <h3>Remaining Deck</h3>
                 <div>{deck.map((c,i) => <Card key={i} card={c} />)}</div>
                 <h3>Deck Verification</h3>
                 <DeckVerification remaining={deck} players={players} dealer={dealer} numDecks={numDecks} />
-
             </div>
-            <button className="btn btn-primary form-control" onClick={nextRound} style={{ marginTop: 10 }}>Next Round</button>
-            </div>
+            <button className="btn btn-primary form-control" onClick={nextRound} style={{ marginTop: 10 }}>
+              Next Round
+            </button>
+          </div>
         )}
         </div>
         <div className="col-12 col-md-4">

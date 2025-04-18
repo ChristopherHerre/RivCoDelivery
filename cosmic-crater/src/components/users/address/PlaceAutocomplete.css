@@ -1,29 +1,41 @@
-/* Style the shadow root input inside gmp-place-autocomplete */
-gmp-place-autocomplete::part(text-field),
-gmp-place-autocomplete::part(input-wrapper) {
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    background-color: black;
-    color: black;
-    width: 100%;
-    box-shadow: none;
-    outline: none;
-    border-radius: 5px;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
 
-gmp-place-autocomplete::part(text-field):focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-}
-gmp-place-autocomplete {
-    --md-outlined-text-field-input-text-color: #f8f9fa;
-    --md-outlined-text-field-container-color: #212529;
-    --md-outlined-text-field-outline-color: #495057;
-    --md-outlined-text-field-label-text-color: #ced4da;
-    --md-outlined-text-field-focus-outline-color: #0d6efd;
+  /* 
+ * Always set the map height explicitly to define the size of the div element
+ * that contains the map. 
+ */
+#map {
+    height: 100%;
   }
   
+  /* 
+   * Optional: Makes the sample page fill the window. 
+   */
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #place-autocomplete-card {
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    margin: 10px;
+    padding: 5px;
+    font-family: Roboto, sans-serif;
+    font-size: large;
+    font-weight: bold;
+  }
+  
+  gmp-place-autocomplete {
+    width: 300px;
+  }
+  
+  #infowindow-content .title {
+    font-weight: bold;
+  }
+  
+  #map #infowindow-content {
+    display: inline;
+  }
