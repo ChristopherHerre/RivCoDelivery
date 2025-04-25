@@ -3,7 +3,8 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../Spinner';
-
+import EditIcon from '@mui/icons-material/Edit';
+import { IconButton } from '@mui/material';
 export async function getFullAddress(address) {
     if (!address || !address.streetNumber || !address.zip) {
         try {
@@ -110,11 +111,15 @@ function DeliveryAddress(props) {
                             Address Required!
                         </u>
                     )}
-                    <span> </span>
                     <b>
-                        <a href="#" onClick={(e) => editAddress(e)}>
-                            <i className="bi bi-pencil-square"></i>
-                        </a>
+                    <IconButton
+                        aria-label="edit address"
+                        onClick={editAddress}
+                        size="small"
+                        sx={{ p: 0 }}
+                    >
+                        <EditIcon fontSize="small" />
+                    </IconButton>
                     </b>
                 </>
             )}

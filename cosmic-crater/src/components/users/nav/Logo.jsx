@@ -1,14 +1,11 @@
 import { Link } from 'react-router-dom';
 import DeliveryAddress from '../address/DeliveryAddress';
+import { Box, Button, Typography } from '@mui/material';
 
 function Logo(props) {
-    const profile = props.profile;
-    const showGetLocation = props.showGetLocation;
-    const setShowGetLocation = props.setShowGetLocation;
-    const address = props.address;
-    const setAddress = props.setAddress;
+    const { profile, showGetLocation, setShowGetLocation, address, setAddress } = props;
     return (
-        <div className="col-12 col-lg-6">
+        <Box sx={{ width: '100%' }}>
             <Link to="/">
                 <button 
                         className="removebutton align-text-bottom" 
@@ -17,22 +14,21 @@ function Logo(props) {
                     <span className="logofont">DELIVERY</span>
                 </button>
             </Link>
-            <div className="col-12">
-                {profile ? <DeliveryAddress 
-                    showGetLocation={showGetLocation} 
-                    setShowGetLocation={setShowGetLocation} 
-                    address={address} 
-                    setAddress={setAddress}
-                /> : 
-                <div>
-                    <label>
-                        <u className="text-danger">
-                            You must sign in to place an order!
-                        </u>
-                    </label>
-                </div>}
-            </div>
-        </div>
+            <Box sx={{ width: '100%', mt: 1 }}>
+                {profile ? (
+                    <DeliveryAddress
+                        showGetLocation={showGetLocation}
+                        setShowGetLocation={setShowGetLocation}
+                        address={address}
+                        setAddress={setAddress}
+                    />
+                ) : (
+                    <Typography color="error" variant="body2" sx={{ textDecoration: 'underline' }}>
+                        You must sign in to place an order!
+                    </Typography>
+                )}
+            </Box>
+        </Box>
     );
 }
 export default Logo;

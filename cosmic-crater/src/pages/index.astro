@@ -1,5 +1,4 @@
 ---
-import "bootstrap/dist/css/bootstrap.min.css";
 import '../components/index.css'
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
@@ -19,6 +18,7 @@ import { createPopper } from "@popperjs/core";
 	<body>
 		<Header />
 		<App client:only />
+
 		<Footer />
 	</body>
 </html>

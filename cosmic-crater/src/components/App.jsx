@@ -24,6 +24,8 @@ import MastermindGame from './users/arcade/Mastermind';
 import HangmanGame from './users/arcade/Hangman';
 import SRS from './webmaster/SRS';
 import TaxiFareCalculator from './users/address/TaxiFareCalculator';
+import Container from '@mui/material/Container';
+import Box from '@mui/material/Box';
 
 export const API_URL = false ?
 	"http://localhost:8080"
@@ -80,20 +82,30 @@ export function App() {
 	);
 	function WhiteArea() {
 		return (
-			<BrowserRouter>
-				<div id="wr">
-					<Navbar 
-						profile={profile} 
-						setProfile={setProfile}
-						loginLoading={loginLoading}
-						setLoginLoading={setLoginLoading}
-						address={address}
-						setAddress={setAddress}
-						showGetLocation={showGetLocation}
-						setShowGetLocation={setShowGetLocation}
-						cartAmount={cartAmount}
-					/>
-					<div id="white-area" className="blackborder">
+		  <BrowserRouter>
+			<Container maxWidth={false} disableGutters>
+			  <Navbar 
+				profile={profile} 
+				setProfile={setProfile}
+				loginLoading={loginLoading}
+				setLoginLoading={setLoginLoading}
+				address={address}
+				setAddress={setAddress}
+				showGetLocation={showGetLocation}
+				setShowGetLocation={setShowGetLocation}
+				cartAmount={cartAmount}
+			  />
+			  <Box
+				id="white-area"
+				sx={{
+				  width: '100%',
+				  border: '1px solid #000', // replaces 'blackborder'
+				  bgcolor: '#fff',
+				  borderRadius: 2,
+				  mt: 2,
+				  p: 2,
+				}}
+			  >
 						<Routes>
 							<Route
 								path='*'
@@ -257,9 +269,9 @@ export function App() {
 								}
 							/>
 						</Routes>
-					</div>
+					</Box>
 					<BottomNavbar profile={profile} />
-				</div>
+				</Container>
 			</BrowserRouter>
 		);
 	}
