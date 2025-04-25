@@ -64,6 +64,7 @@ function NewMenuItem(props) {
             <div className="col-12 col-md-3">
                 <b>Name:</b>
                 <input
+                    type="text"
                     className="form-control bg-dark text-white"
                     name="name"
                     value={formData.name}
@@ -74,6 +75,7 @@ function NewMenuItem(props) {
             <div className="col-12 col-md-3">
                 <b>Category:</b>
                 <input
+                    type="text"
                     className="form-control bg-dark text-white"
                     name="category"
                     value={formData.category}
@@ -87,6 +89,8 @@ function NewMenuItem(props) {
                     type="number"
                     className="form-control bg-dark text-white"
                     name="sort"
+                    min="0"
+                    max="100"
                     value={formData.sort}
                     onChange={handleChange}
                     required
@@ -97,6 +101,7 @@ function NewMenuItem(props) {
                 <input
                     type="number"
                     step="0.01"
+                    min="0"
                     className="form-control bg-dark text-white"
                     name="price"
                     value={formData.price}
@@ -110,6 +115,7 @@ function NewMenuItem(props) {
                     <div className="col-12 col-md-3">
                         <b>Size{num}:</b>
                         <input
+                            type="text"
                             className="form-control bg-dark text-white"
                             name={`size${num}`}
                             value={formData[`size${num}`]}
@@ -121,6 +127,7 @@ function NewMenuItem(props) {
                         <input
                             type="number"
                             step="0.01"
+                            min="0"
                             className="form-control bg-dark text-white"
                             name={`price${num + 1}`}
                             value={formData[`price${num + 1}`]}
@@ -132,6 +139,7 @@ function NewMenuItem(props) {
             <div className="col-12 col-md-3">
                 <b>Size4:</b>
                 <input
+                    type="text"
                     className="form-control bg-dark text-white"
                     name={`size4`}
                     value={formData[`size4`]}

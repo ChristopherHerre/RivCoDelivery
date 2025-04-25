@@ -12,11 +12,36 @@ const { OAuth2Client } = require('google-auth-library');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
+const z = require('zod');
 dotenv.config();
 const app = express();
 const IP = '0.0.0.0';
 const PORT = 8080;
 const path = require("path");
+
+const validate = (schema) => (req, res, next) => {
+    try {
+        schema.parse(req.body);
+        next();
+    } catch (error) {
+        return res.status(400).json({
+        error: 'Validation failed',
+        details: error.errors
+        });
+    }
+};
+
+// Add these schemas before the routes they validate
+
+// Schema for updating user role
+const updateRoleSchema = z.object({
+    role: z.number().int().min(0).max(2) // Assuming roles are 0-2
+});
+
+// Schema for updating restaurant
+const updateRestaurantSchema = z.object({
+    restaurant_id: z.number().int().positive().or(z.null())
+});
 
 const checkRole = (requiredRole) => {
     return async (req, res, next) => {
@@ -491,7 +516,7 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
     }
 });
 
-app.put('/api/users/:id/role', checkRole(2), (req, res) => {
+app.put('/api/users/:id/role', checkRole(2), validate(updateRoleSchema), (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     const query = 'UPDATE users SET role = ? WHERE id = ?';
@@ -507,7 +532,7 @@ app.put('/api/users/:id/role', checkRole(2), (req, res) => {
     });
 });
 
-app.put('/api/users/:id/restaurant', checkRole(2), (req, res) => {
+app.put('/api/users/:id/restaurant', checkRole(2), validate(updateRestaurantSchema), (req, res) => {
     const { id } = req.params;
     const { restaurant_id } = req.body;
     const query = 'UPDATE users SET restaurant_id = ? WHERE id = ?';
