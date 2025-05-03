@@ -6,26 +6,10 @@ import currency from 'currency.js';
 import { MAX_RETRY_ATTEMPTS } from '../../../App';
 import Spinner from '../../../users/Spinner';
 import { groupBy } from '../../RestaurantsList';
-import { Box, Button, CircularProgress } from '@mui/material';
-import {
-    Typography,
-    Paper,
-    Grid,
-    FormControl,
-    FormControlLabel,
-    Checkbox,
-    Radio,
-    RadioGroup,
-    TextField,
-    Select,
-    InputLabel,
-    MenuItem as MuiMenuItem,
-    Chip,
-    Container
-} from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-
+import { useParams } from 'react-router-dom';
+import { saveCartToBackend } from '../../../users/cart/Cart';
 export default function MenuItem(props) {
+    const { restaurant } = useParams();
     const USDollar = props.USDollar;
     const restaurantName = props.restaurantName;
     const debug = props.debug;
@@ -84,23 +68,37 @@ export default function MenuItem(props) {
         fetchMenuItemIngredients();
     }, [cart, setCart, setPrice, setEnabled, setHalfables, setCustoms, setVal1, setVal2, setVal3, setVal4]);
 
-    function addToCart(e, item) {
+    async function addToCart(e, item) {
         e.preventDefault();
-        
-        // Create arrays to store customizations using state values
         let boxes = [];
         let boxes2 = [];
-        
-        // Use state values instead of form elements
-        ingredientsData.forEach((ingredient, idx) => {
-            boxes.push([enabled[idx], customs[idx] || 'Regular']);
-            boxes2.push([halfables[idx] || 'Whole']);
-        });
-        
+        const form = e.target;
+        const elements = form.elements['ingredients'];
+        const customizer = form.elements['customizer'];
+        const halfer = form.elements['halfer'];
+        if (elements != null) {
+            if (elements.length != undefined) {
+                for (let i = 0; i < elements.length; i++) {
+                    const v = elements[i];
+                    boxes.push([v.checked, customizer[i].value]);
+                    if (halfer[i] == undefined) {
+                        continue;
+                    }
+                    boxes2.push([halfer[i].value]);
+                }
+            } else {
+                const v = elements;
+                boxes.push([v.checked, customizer.value]);
+                boxes2.push([halfer.value]);
+            }
+        }
+        if (!Array.isArray(boxes)) boxes = [];
+        if (!Array.isArray(boxes2)) boxes2 = [];
         const cartItem = {
             name: item.name,
             address: item.restaurantAddress,
             restaurant: restaurantName,
+            restaurant_id: restaurant,
             size1: item.size1,
             val1: val1,
             size2: item.size2,
@@ -113,14 +111,38 @@ export default function MenuItem(props) {
             arrs: ingredientsData,
             quantity: quantity,
             price: price,
-            customizer: customs,  // Use the state directly
             halfer: boxes2,
         };
-        
-        // Rest of your code...
         cart.push(cartItem);
-        setCart([...cart]); // Better way to update cart state
-        navigate("/menu");
+        setCart([...cart]);
+        const profile = JSON.parse(localStorage.getItem('profile'));
+        if (profile?.sub) {
+            const cleanCart = cart.map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                ingredients: item.ingredients,
+                size1: item.size1,
+                val1: item.val1,
+                size2: item.size2,
+                val2: item.val2,
+                size3: item.size3,
+                val3: item.val3,
+                size4: item.size4,
+                val4: item.val4,
+                halfer: item.halfer,
+                arrs: item.arrs
+            }));
+            axios.post('/api/cart', { 
+                cart: cleanCart,
+                userId: profile.sub 
+            }).catch(error => {
+                console.error('Error saving cart:', error);
+            });
+        }
+        await saveCartToBackend(cart, profile.sub).then(() => {
+            navigate(`/${restaurant}/menu`);
+        });
     }
     const ingredientsData = [];
     function populateIngredientData() {
@@ -150,6 +172,7 @@ export default function MenuItem(props) {
                         if (enabled[key] === true) {
                             // Determine price based on customization (Extra, Easy, Regular)
                             let ingredientPrice = currency(0);
+                            
                             if (customs[key] === "Extra") {
                                 ingredientPrice = currency(ingredient.extra_price);
                             } else if (customs[key] === "Easy") {
@@ -158,11 +181,13 @@ export default function MenuItem(props) {
                                 // Regular price
                                 ingredientPrice = currency(ingredient.price);
                             }
+                            
                             // Apply half-price calculation if ingredient is only on half the item
                             const isHalfItem = halfables[key] === "Right Half" || halfables[key] === "Left Half";
                             if (isHalfItem) {
                                 ingredientPrice = ingredientPrice.divide(2);
                             }
+                            
                             // Add to running total
                             configPrice = configPrice.add(ingredientPrice.value);
                         }
@@ -173,6 +198,7 @@ export default function MenuItem(props) {
                                          uu === 2 ? item.price2 : 
                                          uu === 3 ? item.price3 : 
                                          uu === 4 ? item.price4 : item.price;
+                    
                     // Update the final price
                     setPrice(configPrice.add(itemSizePrice).value);
                 }
@@ -220,251 +246,93 @@ export default function MenuItem(props) {
                 }
                 return (
                     <form key={key} onSubmit={(e) => addToCart(e, item)}>
-                        <Box sx={{ mb: 4 }}>
-                            <Grid container justifyContent="center">
-                                <Grid item xs={12}>
-                                    <Box sx={{ textAlign: 'center' }}>
-                                        <Typography variant="h4" component="h2" sx={{ 
-                                            mb: 1,
-                                            fontWeight: 600,
-                                            color: '#2e4765'
-                                        }}>
-                                            {item.name}
-                                        </Typography>
-                                        <Typography variant="h5" component="h3" sx={{ mb: 2 }}>
-                                            <Box component="span" sx={{ 
-                                                fontWeight: 'bold',
-                                                color: '#2e7c67' 
-                                            }}>
-                                                {USDollar.format(price)}
-                                            </Box>
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                        </Box>
-                        <Grid container spacing={3}>
-                            <Grid item md={6}>
-                                <Box sx={{ mb: 3 }}>
-                                    <Box sx={{ mb: 2 }}> {/* Add this wrapper Box to match ingredient categories */}
-                                        <Typography 
-                                            variant="h6" 
-                                            sx={{ 
-                                                ml: 1,
-                                                mb: 1.5,
-                                                fontWeight: 600,
-                                                color: '#2e4765',
-                                                position: 'relative',
-                                                display: 'inline-block',
-                                                pb: 0.5
-                                            }}
-                                        >
-                                            <Box 
-                                                component="span" 
-                                                sx={{ 
-                                                    color: '#ff6b6b',
-                                                    mr: 0.5
-                                                }}
-                                            >
-                                                *
-                                            </Box>
-                                            Size
-                                        </Typography>
-                                    </Box>
-                                    
-                                    <FormControl component="fieldset">
-                                        <RadioGroup name="itemSize" value={
-                                            val1 ? "size1" : 
-                                            val2 ? "size2" : 
-                                            val3 ? "size3" : 
-                                            val4 ? "size4" : "size1"
-                                        }>
-                                            {(item.size1 != null && item.size1 !== "") && (
-                                                <Paper 
-                                                    elevation={0}
-                                                    sx={{ 
-                                                        p: 3, 
-                                                        mb: 2, 
-                                                        borderRadius: 2, 
-                                                        bgcolor: '#2e4765',
-                                                        color: 'white',
-                                                        position: 'relative',
-                                                        overflow: 'hidden',
-                                                        '&:before': {
-                                                            content: '""',
-                                                            position: 'absolute',
-                                                            top: 0,
-                                                            left: 0,
-                                                            width: '6px',
-                                                            height: '100%',
-                                                            backgroundColor: '#ff9966',
-                                                        },
-                                                    }}
-                                                >
-                                                    <FormControlLabel
-                                                        value="size1"
-                                                        control={
-                                                            <Radio 
-                                                                required
-                                                                checked={val1}
-                                                                onChange={(e) => changeRadio1(e)}
-                                                                sx={{
-                                                                    color: 'rgba(255, 255, 255, 0.7)',
-                                                                    '&.Mui-checked': {
-                                                                        color: '#ff9966',
-                                                                    },
-                                                                }}
-                                                            />
-                                                        }
-                                                        label={
-                                                            <Typography variant="body1">
-                                                                {item.size1} {debug && val1 ? val1 : ""}
-                                                            </Typography>
-                                                        }
-                                                    />
-                                                </Paper>
-                                            )}
-                                            
-                                            {(item.size2 != null && item.size2 !== "") && (
-                                                <Paper 
-                                                    elevation={0}
-                                                    sx={{ 
-                                                        p: 3, 
-                                                        mb: 2, 
-                                                        borderRadius: 2, 
-                                                        bgcolor: '#2e4765',
-                                                        color: 'white',
-                                                        position: 'relative',
-                                                        overflow: 'hidden',
-                                                        '&:before': {
-                                                            content: '""',
-                                                            position: 'absolute',
-                                                            top: 0,
-                                                            left: 0,
-                                                            width: '6px',
-                                                            height: '100%',
-                                                            backgroundColor: '#ff9966',
-                                                        },
-                                                    }}
-                                                >
-                                                    <FormControlLabel
-                                                        value="size2"
-                                                        control={
-                                                            <Radio 
-                                                                checked={val2}
-                                                                onChange={(e) => changeRadio2(e)}
-                                                                sx={{
-                                                                    color: 'rgba(255, 255, 255, 0.7)',
-                                                                    '&.Mui-checked': {
-                                                                        color: '#ff9966',
-                                                                    },
-                                                                }}
-                                                            />
-                                                        }
-                                                        label={
-                                                            <Typography variant="body1">
-                                                                {item.size2} {debug && val2 ? val2 : ""}
-                                                            </Typography>
-                                                        }
-                                                    />
-                                                </Paper>
-                                            )}
-                                            
-                                            {(item.size3 != null && item.size3 !== "") && (
-                                                <Paper 
-                                                    elevation={0}
-                                                    sx={{ 
-                                                        p: 3, 
-                                                        mb: 2, 
-                                                        borderRadius: 2, 
-                                                        bgcolor: '#2e4765',
-                                                        color: 'white',
-                                                        position: 'relative',
-                                                        overflow: 'hidden',
-                                                        '&:before': {
-                                                            content: '""',
-                                                            position: 'absolute',
-                                                            top: 0,
-                                                            left: 0,
-                                                            width: '6px',
-                                                            height: '100%',
-                                                            backgroundColor: '#ff9966',
-                                                        },
-                                                    }}
-                                                >
-                                                    <FormControlLabel
-                                                        value="size3"
-                                                        control={
-                                                            <Radio 
-                                                                checked={val3}
-                                                                onChange={(e) => changeRadio3(e)}
-                                                                sx={{
-                                                                    color: 'rgba(255, 255, 255, 0.7)',
-                                                                    '&.Mui-checked': {
-                                                                        color: '#ff9966',
-                                                                    },
-                                                                }}
-                                                            />
-                                                        }
-                                                        label={
-                                                            <Typography variant="body1">
-                                                                {item.size3} {debug && val3 ? val3 : ""}
-                                                            </Typography>
-                                                        }
-                                                    />
-                                                </Paper>
-                                            )}
-                                            
-                                            {(item.size4 != null && item.size4 !== "") && (
-                                                <Paper 
-                                                    elevation={0}
-                                                    sx={{ 
-                                                        p: 3, 
-                                                        mb: 2, 
-                                                        borderRadius: 2, 
-                                                        bgcolor: '#2e4765',
-                                                        color: 'white',
-                                                        position: 'relative',
-                                                        overflow: 'hidden',
-                                                        '&:before': {
-                                                            content: '""',
-                                                            position: 'absolute',
-                                                            top: 0,
-                                                            left: 0,
-                                                            width: '6px',
-                                                            height: '100%',
-                                                            backgroundColor: '#ff9966',
-                                                        },
-                                                    }}
-                                                >
-                                                    <FormControlLabel
-                                                        value="size4"
-                                                        control={
-                                                            <Radio 
-                                                                checked={val4}
-                                                                onChange={(e) => changeRadio4(e)}
-                                                                sx={{
-                                                                    color: 'rgba(255, 255, 255, 0.7)',
-                                                                    '&.Mui-checked': {
-                                                                        color: '#ff9966',
-                                                                    },
-                                                                }}
-                                                            />
-                                                        }
-                                                        label={
-                                                            <Typography variant="body1">
-                                                                {item.size4} {debug && val4 ? val4 : ""}
-                                                            </Typography>
-                                                        }
-                                                    />
-                                                </Paper>
-                                            )}
-                                        </RadioGroup>
-                                    </FormControl>
-                                </Box>
-                            </Grid>
-                            
-                            <Grid item md={6}>
+                        <div className="row">
+                            <div className="col-sm-12 text-center">
+                                <h2>{item.name}</h2>
+                                <h3>
+                                    <p>
+                                        <b className="text-success">
+                                            {USDollar.format(price)}
+                                        </b>
+                                    </p>
+                                </h3>
+                            </div>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-6">
+                                <div>
+                                    <h5 className="m-1">
+                                        <span className="text-danger">*</span>
+                                        Size
+                                    </h5>
+                                    {(item.size1 != null && item.size1 != "") ? (
+                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                            <label>
+                                                <input
+                                                    required
+                                                    type="radio"
+                                                    checked={val1}
+                                                    onChange={(e) => changeRadio1(e)}
+                                                    name="itemSize"
+                                                />
+                                                <span> </span>
+                                                {item.size1} {debug ? val1 : ""}
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        ""
+                                    )}
+                                    {(item.size2 != null && item.size2 != "") ? (
+                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    checked={val2}
+                                                    onChange={(e) => changeRadio2(e)}
+                                                    name="itemSize"
+                                                />
+                                                <span> </span>
+                                                {item.size2} {debug ? val2 : ""}
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        ""
+                                    )}
+                                    {(item.size3 != null && item.size3 != "") ? (
+                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    checked={val3}
+                                                    onChange={(e) => changeRadio3(e)}
+                                                    name="itemSize"
+                                                />
+                                                <span> </span>
+                                                {item.size3} {debug ? val3 : ""}
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        ""
+                                    )}
+                                    {(item.size4 != null && item.size4 != "") ? (
+                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    checked={val4}
+                                                    onChange={(e) => changeRadio4(e)}
+                                                    name="itemSize"
+                                                />
+                                                <span> </span>
+                                                {item.size4} {debug ? val4 : ""}
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        ""
+                                    )}
+                                </div>
+                            </div>
+                            <div className="col-md-6">
                                 {console.log(ingredientsData)}
                                 {!loading2 ? (
                                     ingredientsData.map((q, key) => {
@@ -480,308 +348,165 @@ export default function MenuItem(props) {
                                             }
                                             // Update state with the new array
                                             setEnabled(newEnabled);
-                                            itemTotal();
+                                            //itemTotal();
                                         }
                                         function changeEnabledCheckbox(e) {
-                                            const newEnabled = [...enabled];
-                                            newEnabled[key] = !newEnabled[key];
-                                            console.log(key + " " + newEnabled[key]);
-                                            setEnabled(newEnabled);
+                                            enabled[key] = !enabled[key];
+                                            console.log(key + " " + enabled[key]);
+                                            setEnabled(enabled.map((e) => e));
                                             itemTotal();
                                         }
                                         function changeHalfer(e) {
-                                            const itemKey = key; // Capture the current key in closure
-                                            const newHalfables = [...halfables];
-                                            newHalfables[itemKey] = e.target.value;
-                                            setHalfables(newHalfables);
+                                            console.log("[[ " + e.target.value + " " + e.target.id);
+                                            halfables[key] = e.target.value;
+                                            console.log("]]" + halfables[key]);
                                             itemTotal();
                                         }
                                         function changeCustomizer(e) {
+                                            console.log("[[ " + e.target.value + " " + e.target.id);
+                                            
+                                            // Create a new copy of the customs object
                                             const updatedCustoms = { ...customs };
                                             updatedCustoms[key] = e.target.value;
-                                            setCustoms(updatedCustoms);
+                                            
+                                            // Update the state with the new object
+                                            setCustoms(updatedCustoms); // Assuming you have a state setter function
+                                            
+                                            console.log("]]" + updatedCustoms[key]);
                                             itemTotal();
                                         }
                                         return ingredientsData ? (
-                                            // Keep the existing Material UI code for ingredients
-                                            <Box key={key} sx={{ mb: 2 }}>
-                                                {/* Existing ingredients code - unchanged */}
+                                            <div key={key}>
                                                 {lastCategory != q['type'] ? (
-                                                    <Typography 
-                                                        variant="h6" 
-                                                        sx={{ 
-                                                            ml: 1,
-                                                            mb: 1.5,
-                                                            fontWeight: 600,
-                                                            color: '#2e4765',
-                                                            position: 'relative',
-                                                            display: 'inline-block',
-                                                            pb: 0.5
-                                                        }}
-                                                    >
-                                                        {q['inputType'] == 1 && (
-                                                            <Box 
-                                                                component="span" 
-                                                                sx={{ 
-                                                                    color: '#ff6b6b',
-                                                                    mr: 0.5
-                                                                }}
-                                                            >
-                                                                *
-                                                            </Box>
+                                                    <h5 className="m-1">
+                                                        {q['inputType'] == 1 ? (
+                                                            <span className="text-danger">*</span>
+                                                        ) : (
+                                                            ""
                                                         )}
                                                         {q['type']}
-                                                    </Typography>
-                                                ) : null}
-                                                
+                                                    </h5>
+                                                ) : (
+                                                    ""
+                                                )}
                                                 {setLastCategoryPrinted(q['type'])}
-                                                
-                                                <Paper 
-                                                    elevation={0}
-                                                    sx={{ 
-                                                        p: 3, 
-                                                        mb: 2, 
-                                                        borderRadius: 2, 
-                                                        bgcolor: '#2e4765',
-                                                        color: 'white',
-                                                        position: 'relative',
-                                                        overflow: 'hidden',
-                                                        '&:before': {
-                                                            content: '""',
-                                                            position: 'absolute',
-                                                            top: 0,
-                                                            left: 0,
-                                                            width: '6px',
-                                                            height: '100%',
-                                                            backgroundColor: '#ff9966',
-                                                        },
-                                                    }}
-                                                >
-                                                    <Grid container spacing={2}>
-                                                        <Grid item xs={12} lg={6}>
+                                                <div className="p-3 m-1 text-bg-dark rounded">
+                                                    <div className="row">
+                                                        <div className="col-lg-6">
                                                             {q['inputType'] == 0 ? (
-                                                                <FormControlLabel
-                                                                    control={
-                                                                        <Checkbox 
-                                                                            checked={enabled[key] || false} 
-                                                                            onChange={(e) => changeEnabledCheckbox(e)}
-                                                                            sx={{
-                                                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                                                '&.Mui-checked': {
-                                                                                    color: '#ff9966',
-                                                                                }
-                                                                            }}
-                                                                        />
-                                                                    }
-                                                                    label={q['ingredients_name']}
-                                                                />
+                                                                <label>
+                                                                    <input
+                                                                        onChange={(e) => changeEnabledCheckbox(e)}
+                                                                        type="checkbox"
+                                                                        id="ingredients"
+                                                                        defaultChecked={enabled[key] ? true : false}
+                                                                        name={q['type']}
+                                                                    />
+                                                                    <span> </span>
+                                                                    <span>{q['ingredients_name']}</span>
+                                                                </label>
                                                             ) : (
-                                                                <FormControlLabel
-                                                                    control={
-                                                                        <Radio 
-                                                                            checked={enabled[key] || false} 
-                                                                            onChange={(e) => changeEnabledRadio(e)}
-                                                                            required
-                                                                            name={q['type']}
-                                                                            sx={{
-                                                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                                                '&.Mui-checked': {
-                                                                                    color: '#ff9966',
-                                                                                }
-                                                                            }}
-                                                                        />
-                                                                    }
-                                                                    label={q['ingredients_name']}
-                                                                />
+                                                                <label>
+                                                                    <input
+                                                                        required
+                                                                        onChange={(e) => changeEnabledRadio(e)}
+                                                                        type="radio"
+                                                                        id="ingredients"
+                                                                        defaultChecked={enabled[key] ? true : false}
+                                                                        name={q['type']}
+                                                                    />
+                                                                    <span> </span>
+                                                                    <span>{q['ingredients_name']}</span>
+                                                                </label>
                                                             )}
-                                                        </Grid>
-                                                        
-                                                        <Grid item xs={12} lg={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                            <Box sx={{ display: 'flex', gap: 2 }}>
-                                                                {/* Existing halfer and customizer code - unchanged */}
-                                                                {(q['halfable'] !== 0 && q['customize'] !== 0) && (
-                                                                    <FormControl 
-                                                                        variant="outlined" 
-                                                                        size="small"
-                                                                        disabled={!enabled[key]}
-                                                                        sx={{ 
-                                                                            minWidth: 120,
-                                                                            visibility: q['customize'] == 0 || q['halfable'] == 0 ? 'hidden' : 'visible',
-                                                                            '.MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'rgba(255,255,255,0.3)',
-                                                                            },
-                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'rgba(255,255,255,0.5)',
-                                                                            },
-                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: '#ff9966',
-                                                                            },
-                                                                            '.MuiSvgIcon-root': {
-                                                                                color: 'rgba(255,255,255,0.7)',
-                                                                            },
-                                                                            '.MuiSelect-select': {
-                                                                                color: 'white'
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <Select
-                                                                            value={halfables[key] || "Whole"}
-                                                                            onChange={(e) => changeHalfer(e)}
-                                                                            id={q['type']}
-                                                                            name={"halfer"}
-                                                                            sx={{ display: 'flex', justifyContent: 'flex-end' }}
-                                                                        >
-                                                                            <MuiMenuItem value="Left Half">Left half</MuiMenuItem>
-                                                                            <MuiMenuItem value="Whole">Whole</MuiMenuItem>
-                                                                            <MuiMenuItem value="Right Half">Right half</MuiMenuItem>
-                                                                        </Select>
-                                                                    </FormControl>
-                                                                )}
-                                                                
-                                                                {q['customize'] !== 0 && (
-                                                                    <FormControl 
-                                                                        variant="outlined" 
-                                                                        size="small"
-                                                                        disabled={!enabled[key]}
-                                                                        sx={{ 
-                                                                            minWidth: 120,
-                                                                            visibility: q['customize'] == 0 ? 'hidden' : 'visible',
-                                                                            '.MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'rgba(255,255,255,0.3)',
-                                                                            },
-                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'rgba(255,255,255,0.5)',
-                                                                            },
-                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: '#ff9966',
-                                                                            },
-                                                                            '.MuiSvgIcon-root': {
-                                                                                color: 'rgba(255,255,255,0.7)',
-                                                                            },
-                                                                            '.MuiSelect-select': {
-                                                                                color: 'white'
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <Select
-                                                                            value={customs[key] || 'Regular'}
-                                                                            onChange={(e) => changeCustomizer(e)}
-                                                                            id={q['type']}
-                                                                            name="customizer"
-                                                                        >
-                                                                            <MuiMenuItem value="Easy">Easy</MuiMenuItem>
-                                                                            <MuiMenuItem value="Regular">Regular</MuiMenuItem>
-                                                                            <MuiMenuItem value="Extra">Extra</MuiMenuItem>
-                                                                        </Select>
-                                                                    </FormControl>
-                                                                )}
-                                                            </Box>
-                                                        </Grid>
-                                                    </Grid>
-                                                </Paper>
-                                            </Box>
+                                                        </div>
+                                                        <div className="col-lg-6 text-end">
+                                                            <div>
+                                                                <select
+                                                                    disabled={enabled[key] == false ? "disabled" : null}
+                                                                    style={{
+                                                                        visibility:
+                                                                            q['customize'] == 0 || q['halfable'] == 0
+                                                                                ? "hidden"
+                                                                                : "visible",
+                                                                    }}
+                                                                    onChange={(e) => changeHalfer(e)}
+                                                                    className="middle"
+                                                                    name="halfer"
+                                                                    defaultValue={halfables[key] || "Whole"}
+                                                                    id={key}
+                                                                >
+                                                                    <option value="Left Half">Left half</option>
+                                                                    <option value="Whole">Whole</option>
+                                                                    <option value="Right Half">Right half</option>
+                                                                </select>
+                                                                <span> </span>
+                                                                <select
+                                                                    disabled={enabled[key] == false ? "disabled" : null}
+                                                                    style={{
+                                                                        visibility: q['customize'] == 0 ? "hidden" : "visible",
+                                                                    }}
+                                                                    onChange={(e) => changeCustomizer(e)}
+                                                                    className="middle"
+                                                                    name="customizer"
+                                                                    value={customs[key] || 'Regular'}
+                                                                    id={q['type']}
+                                                                >
+                                                                    <option value="Easy">Easy</option>
+                                                                    <option value="Regular">Regular</option>
+                                                                    <option value="Extra">Extra</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         ) : (
-                                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                                                <CircularProgress sx={{ color: '#4a6fa5' }} />
-                                            </Box>
+                                            <Spinner />
                                         );
                                     })
                                 ) : (
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                                        <CircularProgress sx={{ color: '#4a6fa5' }} />
-                                    </Box>
+                                    <Spinner />
                                 )}
-                                
-                                {/* Convert quantity and add to cart buttons to Material UI */}
-                                <Grid container spacing={2} sx={{ mt: 2 }}>
-                                    <Grid item xs={12} md={4}>
-                                        <Typography 
-                                            variant="h6" 
-                                            sx={{ 
-                                                mb: 1.5,
-                                                fontWeight: 600,
-                                                color: '#2e4765',
-                                            }}
-                                        >
-                                            <Box 
-                                                component="span" 
-                                                sx={{ 
-                                                    color: '#ff6b6b',
-                                                    mr: 0.5
-                                                }}
-                                            >
-                                                *
-                                            </Box>
-                                            Quantity
-                                        </Typography>
-                                        <QuantitySelector
-                                            inputValue={quantity}
-                                            onInputValueChange={setQuantity}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} md={8}>
-                                        <Button
-                                            type="submit"
-                                            variant="contained"
-                                            fullWidth
-                                            sx={{ 
-                                                mt: { xs: 0, md: 4.5 },
-                                                height: 56,
-                                                bgcolor: '#4a6fa5',
-                                                '&:hover': {
-                                                    bgcolor: '#2e4765',
-                                                }
-                                            }}
-                                        >
-                                            Add {quantity} to cart
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </Grid>
+                                <div className="col-lg-4 m-1">
+                                    <h5 className="">
+                                        <span className="text-danger">*</span>
+                                        Quantity
+                                    </h5>
+                                    <QuantitySelector
+                                        className="form-control"
+                                        inputValue={quantity}
+                                        onInputValueChange={setQuantity}
+                                    />
+                                </div>
+                                <div className="col-lg-8 m-1">
+                                    <input
+                                        type="submit"
+                                        className="btn btn-primary form-control"
+                                        value={"Add " + quantity + " to cart"}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 );
             })
         )
     }
     return (
-        <Container>
-            <Box sx={{ mb: 3 }}>
-                <Link to="/menu" style={{ textDecoration: 'none' }}>
-                    <Button 
-                        startIcon={<ArrowBackIcon />} 
-                        variant="outlined"
-                        sx={{
-                            borderRadius: 2,
-                            borderColor: '#4a6fa5',
-                            color: '#4a6fa5',
-                            '&:hover': {
-                                borderColor: '#2e4765',
-                                backgroundColor: 'rgba(74, 111, 165, 0.04)'
-                            },
-                            mb: 2
-                        }}
-                    >
-                        {restaurantName || "Back to Menu"}
-                    </Button>
-                </Link>
-            
-                {loading ? (
-                    <Box 
-                        sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'center', 
-                            alignItems: 'center',
-                            minHeight: 250,
-                            py: 4
-                        }}
-                    >
-                        <CircularProgress color="primary" />
-                    </Box>
-                ) : (
-                    <MI />
-                )}
-            </Box>
-        </Container>
+        <>
+            <button className="btn btn-secondary btn-lg m-1" onClick={(e) => navigate(`/${restaurant}/menu`)}>
+                <i className="bi bi-arrow-return-left"></i> {restaurantName != undefined ? restaurantName : "Back"}
+            </button>
+            {loading ? (
+                <div className="row text-center">
+                    <div className="col-12">
+                        <Spinner />
+                    </div>
+                </div>
+            ) : (
+                <MI />
+            )}
+        </>
     );
 }

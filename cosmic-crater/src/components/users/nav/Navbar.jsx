@@ -3,18 +3,11 @@ import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Badge from '../cart/Badge';
 import Logo from './Logo';
 import Spinner from '../Spinner';
-import { Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import MuiBadge from '@mui/material/Badge';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-
-import { Grid, Box, Button } from '@mui/material';
-import ListIcon from '@mui/icons-material/List';
 
 function Navbar(props) {
+    const cart = props.cart;
     const profile = props.profile;
     const setProfile = props.setProfile;
     const loginLoading = props.loginLoading;
@@ -24,6 +17,7 @@ function Navbar(props) {
     const setAddress = props.setAddress;
     const showGetLocation = props.showGetLocation;
     const setShowGetLocation = props.setShowGetLocation;
+    const navigate = useNavigate();
 
     function ShowGoogleUserInfo(props) {
         const { profile } = props;
@@ -85,97 +79,58 @@ function Navbar(props) {
     }
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
-          <AppBar position="static" color="default" elevation={1}>
-            <Toolbar sx={{ px: { xs: 1, md: 2 }, py: 1 }}>
-              <Grid container alignItems="stretch" spacing={2}>
-                {/* Left side: Logo and location */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ bgcolor: '#f5f5f5', borderRadius: 2, p: 2, height: '100%' }}>
-                    <Logo
-                      profile={profile}
-                      address={address}
-                      setAddress={setAddress}
-                      showGetLocation={showGetLocation}
-                      setShowGetLocation={setShowGetLocation}
-                    />
-                  </Box>
-                </Grid>
-                {/* Right side: User info and buttons */}
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ bgcolor: '#fafafa', borderRadius: 2, p: 2, height: '100%' }}>
-                    {profile ? <ShowGoogleUserInfo profile={profile} /> : null}
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        {!profile ? (
-                          <GoogleOAuthProvider clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
-                            <GoogleLogin
-                              onSuccess={handleGoogleLoginSuccess}
-                              onFailure={handleGoogleLoginFailure}
-                              useOneTap
-                              render={(props) => (
-                                <Button
-                                  {...props}
-                                  variant="contained"
-                                  fullWidth
-                                  sx={{
-                                    bgcolor: '#616161',
-                                    color: '#fff',
-                                    '&:hover': { bgcolor: '#424242' },
-                                  }}
-                                  startIcon={<i className="bi bi-google google-icon"></i>}
-                                >
-                                  Sign in with Google
-                                </Button>
-                              )}
-                            />
-                          </GoogleOAuthProvider>
-                        ) : (
-                          <Link to="/user-orders" style={{ width: '100%' }}>
-                            <Button
-                              variant="contained"
-                              fullWidth
-                              startIcon={<ListIcon />}
-                              sx={{
-                                bgcolor: '#616161',
-                                color: '#fff',
-                                '&:hover': { bgcolor: '#424242' },
-                              }}
-                              type="button"
-                            >
-                              My Orders
-                            </Button>
-                          </Link>
-                        )}
-                        {profile && loginLoading ? <Spinner /> : null}
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Link to="/cart" style={{ width: '100%' }}>
-                          <Button
-                            variant="contained"
-                            fullWidth
-                            sx={{
-                              bgcolor: '#616161',
-                              color: '#fff',
-                              '&:hover': { bgcolor: '#424242' },
-                            }}
-                          >
-                            <MuiBadge badgeContent={cartAmount} color="error">
-                              <ShoppingCartIcon />
-                            </MuiBadge>
-                            <span style={{ marginLeft: 10 }}>Cart</span>
-                          </Button>
-                        </Link>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-              </Grid>
-            </Toolbar>
-          </AppBar>
-        </Box>
-      );
-      
+        <div id="navbar" className="row">
+            <Logo
+                profile={profile}
+                address={address}
+                setAddress={setAddress}
+                showGetLocation={showGetLocation}
+                setShowGetLocation={setShowGetLocation}
+            />
+            <div className="col-12 col-lg-6">
+                {profile ? <ShowGoogleUserInfo profile={profile} /> : ""}
+                <div className="row">
+                    <div className="col-12 col-md-6">
+                        {
+                            !profile ? 
+                                <GoogleOAuthProvider className="btn btn-secondary form-control" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
+                                    {/* Custom GoogleLogin Component */}
+                                    <GoogleLogin
+                                        className="btn btn-secondary form-control"
+                                        onSuccess={handleGoogleLoginSuccess}
+                                        onFailure={handleGoogleLoginFailure}
+                                        useOneTap
+                                        render={(props) => (
+                                            <button
+                                                {...props}
+                                                className="google-login-btn btn form-control mb-1"
+                                            >
+                                                <i className="bi bi-google google-icon"></i> Sign in with Google
+                                            </button>
+                                        )}
+                                    />
+                                </GoogleOAuthProvider>
+                            : ""
+                        }
+                        {profile && loginLoading ? <Spinner /> : ""}
+                        {profile ? 
+                            <button className="btn btn-secondary form-control mb-1" type="button" onClick={() => navigate('/user-orders')}>
+                                <i className="bi bi-list"></i> My Orders
+                            </button> : ""
+                        }
+                    </div>
+                    <div className="col-12 col-md-6">
+                        <button className="btn btn-secondary form-control mb-1" type="button" onClick={() => navigate(`/${cart[0].restaurant_id}/cart`)}>
+                            <i className="bi bi-cart"> </i>
+                            Cart
+                            <span> </span>
+                            <Badge cartAmount={cartAmount} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export default Navbar;

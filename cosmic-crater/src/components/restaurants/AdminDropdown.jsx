@@ -1,72 +1,63 @@
-import React, { useState } from 'react';
-import { Menu, MenuItem, Button, ListItemIcon, ListItemText } from '@mui/material';
-import CasinoIcon from '@mui/icons-material/Casino';
-import HelpIcon from '@mui/icons-material/Help';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import PeopleIcon from '@mui/icons-material/People';
-import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { Link } from 'react-router-dom';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
-function AdminDropdown({ profile, full }) {
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const handleClick = (event) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
-
-  return (
-    <div>
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={handleClick}
-        startIcon={<SettingsApplicationsIcon />}
-        sx={{ mb: 1 }}
-      >
-        Admin Menu
-      </Button>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
-        PaperProps={{ sx: { bgcolor: '#212121', color: '#fff' } }}
-      >
-        {profile && (
-          <>
-            <MenuItem component={Link} to="/users" onClick={handleClose}>
-              <ListItemIcon>
-                <PeopleIcon sx={{ color: '#fff' }} />
-              </ListItemIcon>
-              <ListItemText primary="User Management" />
-            </MenuItem>
-            <MenuItem component={Link} to="/admin" onClick={handleClose}>
-              <ListItemIcon>
-                <SettingsApplicationsIcon sx={{ color: '#fff' }} />
-              </ListItemIcon>
-              <ListItemText primary="Restaurant Control Panel" />
-            </MenuItem>
-            <MenuItem component={Link} to="/orders" onClick={handleClose}>
-              <ListItemIcon>
-                <LocalShippingIcon sx={{ color: '#fff' }} />
-              </ListItemIcon>
-              <ListItemText primary="Driver Orders" />
-            </MenuItem>
-          </>
-        )}
-      </Menu>
-      <Button
-        component={Link}
-        to="/donate"
-        variant="contained"
-        color="primary"
-        startIcon={<CreditCardIcon />}
-        sx={{ mt: 1, bgcolor: '#1976d2', color: '#fff', '&:hover': { bgcolor: '#115293' } }}
-        
-      >
-        Donate
-      </Button>
-    </div>
-  );
-}
+const AdminDropdown = (props) => {
+    const full = props.full;
+    const profile = props.profile;
+    return (
+        <div className="dropdown">
+            {profile ? (
+                <a
+                    className={
+                        full
+                            ? "btn btn-secondary mt-1 dropdown-toggle form-control"
+                            : "btn btn-secondary mt-1 dropdown-toggle"
+                    }
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    role="button"
+                    id="dropdownMenuLink"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <i className="bi bi-briefcase"> </i>
+                    Admin
+                </a>
+            ) : ""}
+            <Link to="/donate">
+                <button
+                    className={
+                        full
+                            ? "btn btn-secondary mt-1 mr-1 form-control"
+                            : "btn btn-secondary mt-1 mr-1"
+                    }
+                >
+                    <i className="bi bi-credit-card-fill"> </i>
+                    Donate
+                </button>
+            </Link>
+            {profile ? (
+                <div
+                    className="dropdown-menu bg-dark form-control text-white"
+                    aria-labelledby="dropdownMenuLink"
+                >
+                    <Link to="/users" className="dropdown-item text-white hover-black">
+                        <i className="bi bi-people"> </i>
+                        User Management
+                    </Link>
+                    <Link to="/admin" className="dropdown-item text-white hover-black">
+                        <i className="bi bi-sliders2-vertical"> </i>
+                        Restaurant Control Panel
+                    </Link>
+                    <Link to="/orders" className="dropdown-item text-white hover-black">
+                        <i className="bi bi-box2"> </i>
+                        Driver Orders
+                    </Link>
+                </div>
+            ) : ""}
+        </div>
+    );
+};
 
 export default AdminDropdown;

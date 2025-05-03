@@ -16,6 +16,17 @@ export function getTooltip(key) {
     if (key === "sort_order") return "Order of display";
     if (key === "selected") return "Default selection state";
     // Add other fields as needed
+    // Added tooltips for pizza menu columns
+    if (key === "category") return "The menu category, e.g., Pizzas";
+    if (key === "name") return "The name of the menu item, e.g., Build Your Own Pizza";
+    if (key === "price2") return "Price for the second size (e.g., Medium)";
+    if (key === "price3") return "Price for the third size (e.g., Large)";
+    if (key === "price4") return "Price for the fourth size (if applicable)";
+    if (key === "size1") return "Label for the first size option (e.g., Small)";
+    if (key === "size2") return "Label for the second size option (e.g., Medium)";
+    if (key === "size3") return "Label for the third size option (e.g., Large)";
+    if (key === "size4") return "Label for the fourth size option (if applicable)";
+    if (key === "sort") return "Order in which this menu item appears in the list";
     return ""; // Return empty string for fields without tooltips
 }
 export function isNumericField(key) {

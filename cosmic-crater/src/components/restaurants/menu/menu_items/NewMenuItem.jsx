@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Spinner from '../../../users/Spinner';
 import { dbPost } from '../../Admin';
+import { getTooltip } from './ingredients/NewIngredient';
 function NewMenuItem(props) {
     const setMenuItems = props.setMenuItems;
     const setLoading3 = props.setLoading3;
@@ -32,7 +33,6 @@ function NewMenuItem(props) {
             if (response.status >= 200 && response.status < 300) {
                 setSuccess(true);
                 setLoading3(true);
-                //setMenuItems(prevMenuItems => [...prevMenuItems, formData]);
                 setFormData({
                     name: '',
                     category: '',
@@ -64,22 +64,25 @@ function NewMenuItem(props) {
             <div className="col-12 col-md-3">
                 <b>Name:</b>
                 <input
-                    type="text"
                     className="form-control bg-dark text-white"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
+                    data-bs-toggle="tooltip"
+                    title={getTooltip("name")}
                     required
                 />
             </div>
             <div className="col-12 col-md-3">
                 <b>Category:</b>
                 <input
-                    type="text"
                     className="form-control bg-dark text-white"
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
+                    data-bs-toggle="tooltip"
+                    title={getTooltip("category")}
+
                     required
                 />
             </div>
@@ -89,10 +92,10 @@ function NewMenuItem(props) {
                     type="number"
                     className="form-control bg-dark text-white"
                     name="sort"
-                    min="0"
-                    max="100"
                     value={formData.sort}
                     onChange={handleChange}
+                    data-bs-toggle="tooltip"
+                    title={getTooltip("sort")}
                     required
                 />
             </div>
@@ -101,11 +104,12 @@ function NewMenuItem(props) {
                 <input
                     type="number"
                     step="0.01"
-                    min="0"
                     className="form-control bg-dark text-white"
                     name="price"
                     value={formData.price}
                     onChange={handleChange}
+                    data-bs-toggle="tooltip"
+                    title={getTooltip("price")}
                     required
                 />
             </div>
@@ -115,11 +119,12 @@ function NewMenuItem(props) {
                     <div className="col-12 col-md-3">
                         <b>Size{num}:</b>
                         <input
-                            type="text"
                             className="form-control bg-dark text-white"
                             name={`size${num}`}
                             value={formData[`size${num}`]}
                             onChange={handleChange}
+                            data-bs-toggle="tooltip"
+                            title={getTooltip(`size${num}`)}
                         />
                     </div>
                     <div className="col-12 col-md-3">
@@ -127,11 +132,12 @@ function NewMenuItem(props) {
                         <input
                             type="number"
                             step="0.01"
-                            min="0"
                             className="form-control bg-dark text-white"
                             name={`price${num + 1}`}
                             value={formData[`price${num + 1}`]}
                             onChange={handleChange}
+                            data-bs-toggle="tooltip"
+                            title={getTooltip(`price${num + 1}`)}
                         />
                     </div>
                 </React.Fragment>
@@ -139,11 +145,12 @@ function NewMenuItem(props) {
             <div className="col-12 col-md-3">
                 <b>Size4:</b>
                 <input
-                    type="text"
                     className="form-control bg-dark text-white"
                     name={`size4`}
                     value={formData[`size4`]}
                     onChange={handleChange}
+                    data-bs-toggle="tooltip"
+                    title={getTooltip(`size4`)}
                 />
             </div>
             <div className="col-12 col-md-3">

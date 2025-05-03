@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import axios from 'axios';
 import DeliveryAddress from './DeliveryAddress';
 import PlaceAutocomplete from './PlaceAutocomplete';
+import Spinner from '../Spinner';
 
 function Welcome(props) {
     const {
@@ -10,6 +11,7 @@ function Welcome(props) {
         showGetLocation,
         setShowGetLocation,
         setLoadingApiKey,
+        loadingApiKey,
     } = props;
 
     const autocompleteRef = useRef(null);
@@ -101,35 +103,37 @@ function Welcome(props) {
     };
 
     return showGetLocation ? (
-        <div className="row search p-5">
-            <h2>Welcome to Riverside County Delivery!</h2>
-            <h1>We deliver items and we provide rides locally.</h1>
-            <br />
-            <div className="row">
-                <div className="col-lg-8">
-                    <DeliveryAddress
-                        showGetLocation={showGetLocation}
-                        setShowGetLocation={setShowGetLocation}
-                        address={address}
-                        setAddress={setAddress}
-                    />
-                    <PlaceAutocomplete
-                        onPlaceSelected={async ({ address, latitude, longitude }) => {
-                            await axios.post('/api/user/address', {
-                                address,
-                                latitude,
-                                longitude
-                            }, { withCredentials: true });
+        <>
+            {loadingApiKey && <Spinner />}
+            <div className="row search p-5">
+                <h2>Welcome to Riverside County Delivery!</h2>
+                <h1>We deliver items and we provide rides locally.</h1>
+                <br />
+                <div className="row">
+                    <div className="col-12">
+                        <DeliveryAddress
+                            showGetLocation={showGetLocation}
+                            setShowGetLocation={setShowGetLocation}
+                            address={address}
+                            setAddress={setAddress}
+                        />
+                        <PlaceAutocomplete
+                            onPlaceSelected={async ({ address, latitude, longitude }) => {
+                                await axios.post('/api/user/address', {
+                                    address,
+                                    latitude,
+                                    longitude
+                                }, { withCredentials: true });
 
-                            console.log("✅ Address saved");
-                            setAddress(address);
-                            setShowGetLocation(false);
-                        }}
-                    />
-
+                                console.log("✅ Address saved");
+                                setAddress(address);
+                                setShowGetLocation(false);
+                            }}
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     ) : null;
 }
 
