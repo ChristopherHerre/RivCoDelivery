@@ -12,36 +12,12 @@ const { OAuth2Client } = require('google-auth-library');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
-const z = require('zod');
 dotenv.config();
 const app = express();
 const IP = '0.0.0.0';
 const PORT = 8080;
 const path = require("path");
-
-const validate = (schema) => (req, res, next) => {
-    try {
-        schema.parse(req.body);
-        next();
-    } catch (error) {
-        return res.status(400).json({
-        error: 'Validation failed',
-        details: error.errors
-        });
-    }
-};
-
-// Add these schemas before the routes they validate
-
-// Schema for updating user role
-const updateRoleSchema = z.object({
-    role: z.number().int().min(0).max(2) // Assuming roles are 0-2
-});
-
-// Schema for updating restaurant
-const updateRestaurantSchema = z.object({
-    restaurant_id: z.number().int().positive().or(z.null())
-});
+const { z } = require('zod');
 
 const checkRole = (requiredRole) => {
     return async (req, res, next) => {
@@ -174,10 +150,17 @@ passport.use(new GoogleStrategy({
 app.use(express.json());
 
 app.delete('/api/menu-item-ingredients/:ingredient_id', checkRole(2), async (req, res) => {
+    const paramSchema = z.object({
+        ingredient_id: z.coerce.number().int("ingredient_id must be an integer"),
+    });
+    const parseResult = paramSchema.safeParse(req.params);
+    if (!parseResult.success) {
+        return res.status(400).json({ error: parseResult.error.errors.map(e => e.message).join(', ') });
+    }
+    const { ingredient_id } = parseResult.data;
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-        const { ingredient_id } = req.params;
         const query1 = `DELETE FROM menu_item_ingredients_map WHERE ingredient_id = ?`;
         await connection.query(query1, [ingredient_id]);
         const query2 = `DELETE FROM menu_item_ingredients WHERE id = ?`;
@@ -197,10 +180,17 @@ app.delete('/api/menu-item-ingredients/:ingredient_id', checkRole(2), async (req
 });
 
 app.delete('/api/menu-items/:id', checkRole(2), async (req, res) => {
+    const paramSchema = z.object({
+        id: z.coerce.number().int("id must be an integer"),
+    });
+    const parseResult = paramSchema.safeParse(req.params);
+    if (!parseResult.success) {
+        return res.status(400).json({ error: parseResult.error.errors.map(e => e.message).join(', ') });
+    }
+    const { id } = parseResult.data;
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-        const { id } = req.params;
         const deleteMappings = `DELETE FROM menu_item_ingredients_map WHERE menu_item_id = ?`;
         await connection.query(deleteMappings, [id]);
         const deleteItem = `DELETE FROM menu_items WHERE id = ?`;
@@ -219,15 +209,44 @@ app.delete('/api/menu-items/:id', checkRole(2), async (req, res) => {
     }
 });
 
-// Add new ingredient
 app.post('/api/menu-item-ingredients', checkRole(2), async (req, res) => {
+    // Zod schema for validation and sanitization
+    const bodySchema = z.object({
+        easy_price: z.coerce.number().optional().nullable(),
+        extra_price: z.coerce.number().optional().nullable(),
+        inputType: z.coerce.number().int().optional().default(0),
+        ingredients_name: z.string()
+            .min(1, "ingredients_name is required")
+            .max(100, "ingredients_name must be less than 100 characters")
+            .regex(/^[a-zA-Z0-9\s\-_]+$/, "ingredients_name can only contain letters, numbers, spaces, hyphens, and underscores")
+            .transform(str => str.trim())
+            .refine(
+                name => !name.includes('  '), 
+                "ingredients_name cannot contain multiple consecutive spaces"
+            ),
+        customize: z.coerce.number().int().optional().default(0),
+        type: z.string()
+            .min(1, "type is required")
+            .max(50, "type must be less than 50 characters")
+            .regex(/^[a-zA-Z0-9\s\-_]+$/, "type can only contain letters, numbers, spaces, hyphens, and underscores")
+            .transform(str => str.trim()),
+        price: z.coerce.number().optional().default(0),
+        sort_order: z.coerce.number().int().optional().default(0),
+        selected: z.coerce.number().int().optional().default(0),
+        halfable: z.coerce.number().int().optional().default(0),
+        menu_item_id: z.coerce.number().int().optional().nullable(),
+    });
+    const parseResult = bodySchema.safeParse(req.body);
+    if (!parseResult.success) {
+        return res.status(400).json({ error: parseResult.error.errors.map(e => e.message).join(', ') });
+    }
+    const {
+        easy_price, extra_price, inputType, ingredients_name,
+        customize, type, price, sort_order, selected, halfable, menu_item_id
+    } = parseResult.data;
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-        const {
-            easy_price, extra_price, inputType, ingredients_name,
-            customize, type, price, sort_order, selected, halfable, menu_item_id
-        } = req.body;
         const query1 = `
             INSERT INTO menu_item_ingredients (
                 easy_price, 
@@ -244,19 +263,19 @@ app.post('/api/menu-item-ingredients', checkRole(2), async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values1 = [
-            easy_price || null,
-            extra_price || null,
-            inputType || 0,
+            easy_price,
+            extra_price,
+            inputType,
             ingredients_name,
-            customize || 0,
+            customize,
             type,
-            price || 0,
-            sort_order || 0,
-            selected || 0,
-            halfable || 0
+            price,
+            sort_order,
+            selected,
+            halfable
         ];
         const [result] = await connection.query(query1, values1);
-        const ingredient_id = result.insertId; // Retrieve the inserted ingredient's ID
+        const ingredient_id = result.insertId;
         if (menu_item_id) {
             const query2 = `
                 INSERT INTO menu_item_ingredients_map (menu_item_id, ingredient_id)
@@ -266,7 +285,7 @@ app.post('/api/menu-item-ingredients', checkRole(2), async (req, res) => {
         }
         await connection.commit();
         res.status(201).json({ 
-            message: "Ingredient added successfully!",
+            message: "Ingredient added successfully!!!",
             ingredient: {
                 id: ingredient_id,
                 easy_price,
@@ -418,7 +437,7 @@ app.post('/api/manageRestaurant', checkRole(2), async (req, res) => {
     }
 });
 
-app.post('/api/menu-items', checkRole(2), (req, res) => {
+app.post('/api/menu-items', checkRole(2), async (req, res) => {
     const { menu_item_id, ingredient_id } = req.body;
     if (!menu_item_id || !ingredient_id) {
       return res.status(400).json({ error: 'Menu item ID and Ingredient ID are required' });
@@ -427,13 +446,13 @@ app.post('/api/menu-items', checkRole(2), (req, res) => {
         INSERT INTO menu_item_ingredients_map (menu_item_id, ingredient_id)
         VALUES (?, ?);
     `;
-    pool.query(insertQuery, [menu_item_id, ingredient_id], (err, results) => {
-      if (err) {
+    try {
+        const [result] = await pool.execute(insertQuery, [menu_item_id, ingredient_id]);
+        res.status(201).json({ message: 'New row inserted successfully', id: result.insertId });
+    } catch (err) {
         console.error('Error inserting new row:', err);
-        return res.status(500).json({ error: 'Failed to insert new row' });
-      }
-      res.status(201).json({ message: 'New row inserted successfully', id: results.insertId });
-    });
+        res.status(500).json({ error: 'Failed to insert new row' });
+    }
 });
 
 app.post('/api/add-menu-item', checkRole(2), async (req, res) => {
@@ -516,37 +535,107 @@ app.get('/api/menu-items-list', checkRole(2), async (req, res) => {
     }
 });
 
-app.put('/api/users/:id/role', checkRole(2), validate(updateRoleSchema), (req, res) => {
+app.put('/api/users/:id/role', checkRole(2), async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     const query = 'UPDATE users SET role = ? WHERE id = ?';
-    pool.query(query, [role, id], (err, result) => {
-        if (err) {
-            console.error('Error updating role:', err);
-            return res.status(500).json({ message: 'Server error' });
-        }
+
+    try {
+        const [result] = await pool.execute(query, [role, id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
         res.json({ message: 'Role updated successfully' });
-    });
+    } catch (err) {
+        console.error('Error updating role:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
-app.put('/api/users/:id/restaurant', checkRole(2), validate(updateRestaurantSchema), (req, res) => {
+app.put('/api/users/:id/restaurant', checkRole(2), async (req, res) => {
     const { id } = req.params;
     const { restaurant_id } = req.body;
     const query = 'UPDATE users SET restaurant_id = ? WHERE id = ?';
 
-    pool.query(query, [restaurant_id, id], (err, result) => {
-        if (err) {
-            console.error('Error updating restaurant ID:', err);
-            return res.status(500).json({ message: 'Server error' });
-        }
+    try {
+        const [result] = await pool.execute(query, [restaurant_id, id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
         res.json({ message: 'Restaurant ID updated successfully' });
-    });
+    } catch (err) {
+        console.error('Error updating restaurant ID:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/users/:id/selected_restaurant', checkRole(0), async (req, res) => {
+    const { id } = req.params;
+    console.log("id: " + id);
+    const { restaurant_id } = req.body;
+    console.log("restaurant_id: " + restaurant_id);
+    const query = 'UPDATE users SET selected_restaurant = ? WHERE id = ?';
+
+    try {
+        const [result] = await pool.execute(query, [restaurant_id, id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'Restaurant ID updated successfully' });
+    } catch (err) {
+        console.error('Error updating restaurant ID:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Assuming you have express, pool (mysql2/promise), and session middleware set up
+
+app.get('/api/checkout-data/:selected_restaurant', async (req, res) => {
+    const { selected_restaurant } = req.params;
+    const userId = req.session?.user?.sub; // or however you store the user ID
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Fetch cart items
+        const [cart] = await connection.query(
+            'SELECT * FROM cart WHERE user_id = ?',
+            [userId]
+        );
+
+        // 2. Fetch user address
+        const [[userAddress]] = await connection.query(
+            'SELECT address_street_number, address_street, address_city, address_state, address_zip, address_latitude, address_longitude FROM users WHERE id = ?',
+            [userId]
+        );
+        let restaurant = null;
+        if (selected_restaurant) {
+            const [[restaurantDetails]] = await connection.query(
+                'SELECT id, name, address, latitude, longitude FROM restaurants WHERE id = ?',
+                [selected_restaurant]
+            );
+            restaurant = restaurantDetails;
+        }
+        await connection.commit();
+        console.log("cart: " + cart);
+        console.log("userAddress: " + userAddress);
+        console.log("restaurant: " + restaurant);  
+        res.json({
+            cart,
+            userAddress,
+            restaurant
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('Error in /api/checkout-data:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        connection.release();
+    }
 });
 
 // Route to fetch all sponsors
@@ -779,37 +868,133 @@ app.get('/api/restaurants/:latitude/:longitude', checkRole(0), async (req, res) 
     }
 });
 
-app.post('/api/cart', async (req, res) => {
+app.post('/api/cart', checkRole(0), async (req, res) => {
     const cartItems = req.body.cart;
-    const userId = req.body.userId || null; // Optional: attach to a user or session
-
+    const userId = req.session?.user?.sub;
+    if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
     if (!cartItems || !Array.isArray(cartItems)) {
         return res.status(400).json({ error: 'Cart must be an array' });
     }
-
-    const insertQuery = `
-        INSERT INTO cart (name, price, quantity, ingredients, user_id)
-        VALUES (?, ?, ?, ?, ?)
-    `;
-
+    console.log('Received cart items:', JSON.stringify(cartItems, null, 2));
+    const connection = await pool.getConnection();
     try {
-        for (let item of cartItems) {
-            await pool.execute(insertQuery, [
-                item.name,
-                item.price,
-                item.quantity,
-                JSON.stringify(item.ingredients),
-                userId
-            ]);
-        }
+        await connection.beginTransaction();
+        
+        // First clear existing cart items
+        await connection.execute(
+            'DELETE FROM cart WHERE user_id = ?',
+            [userId]
+        );
 
-        res.status(200).json({ message: 'Cart saved' });
+        // Process each cart item
+        for (let item of cartItems) {
+            // Ensure price is a valid number and within DECIMAL(10,2) range
+            const price = parseFloat(item.price || 0).toFixed(2);
+            if (isNaN(price) || price < 0 || price > 9999999.99) {
+                throw new Error(`Invalid price value: ${item.price}`);
+            }
+
+            // Verify restaurant exists if restaurant_id is provided
+            if (item.restaurant_id) {
+                const [restaurantExists] = await connection.execute(
+                    'SELECT id FROM restaurants WHERE id = ?',
+                    [item.restaurant_id]
+                );
+                if (restaurantExists.length === 0) {
+                    throw new Error(`Restaurant with ID ${item.restaurant_id} does not exist`);
+                }
+            }
+
+            const cartData = {
+                name: item.name || null,
+                price: price,
+                quantity: parseInt(item.quantity || 1, 10),
+                ingredients: item.ingredients || [],
+                size1: item.size1 || null,
+                val1: parseInt(item.val1 || 0, 10),
+                size2: item.size2 || null,
+                val2: parseInt(item.val2 || 0, 10),
+                size3: item.size3 || null,
+                val3: parseInt(item.val3 || 0, 10),
+                size4: item.size4 || null,
+                val4: parseInt(item.val4 || 0, 10),
+                halfer: item.halfer || [],
+                arrs: item.arrs || [],
+                restaurant_id: item.restaurant_id ? parseInt(item.restaurant_id, 10) : null
+            };
+
+            await connection.execute(
+                `INSERT INTO cart (
+                    name, price, quantity, ingredients, user_id, 
+                    size1, val1, size2, val2, size3, val3, size4, val4, 
+                    halfer, arrs, restaurant_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    cartData.name,
+                    cartData.price,
+                    cartData.quantity,
+                    JSON.stringify(cartData.ingredients),
+                    userId,
+                    cartData.size1,
+                    cartData.val1,
+                    cartData.size2,
+                    cartData.val2,
+                    cartData.size3,
+                    cartData.val3,
+                    cartData.size4,
+                    cartData.val4,
+                    JSON.stringify(cartData.halfer),
+                    JSON.stringify(cartData.arrs),
+                    cartData.restaurant_id
+                ]
+            );
+        }
+        await connection.commit();
+        res.status(200).json({ message: 'Cart saved successfully' });
     } catch (err) {
+        await connection.rollback();
         console.error('Error saving cart:', err);
-        res.status(500).json({ error: 'Failed to save cart' });
+        res.status(500).json({ error: err.message || 'Failed to save cart' });
+    } finally {
+        connection.release();
     }
 });
 
+app.get('/api/cart', checkRole(0), async (req, res) => {
+    const userId = req.session?.user?.sub;
+    if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
+    try {
+        const [results] = await pool.execute(
+            'SELECT * FROM cart WHERE user_id = ?', [userId]
+        );
+        const cartItems = results.map(item => {
+            try {
+                return {
+                    ...item,
+                    ingredients: item.ingredients ? JSON.parse(item.ingredients) : [],
+                    halfer: item.halfer ? JSON.parse(item.halfer) : [],
+                    arrs: item.arrs ? JSON.parse(item.arrs) : []
+                };
+            } catch (err) {
+                console.error('Error parsing cart item:', err);
+                return {
+                    ...item,
+                    ingredients: [],
+                    halfer: [],
+                    arrs: []
+                };
+            }
+        });
+        res.json(cartItems);
+    } catch (err) {
+        console.error('Error loading cart:', err);
+        res.status(500).json({ error: 'Failed to load cart' });
+    }
+});
 
 app.get('/api/restaurants2/:restaurantId/menu', checkRole(0), async (req, res) => {
     const { restaurantId } = req.params;
@@ -933,7 +1118,7 @@ app.get('/api/menu/item', checkRole(0), async (req, res) => {
 });
 
 const orderLimiter = rateLimit({
-    windowMs: 3 * 60 * 1000,
+    windowMs: 30 * 1000,
     max: 1,
     message: { error: 'Too many orders, please try again in 3 minutes' }
 });
@@ -1120,18 +1305,22 @@ app.get('/api/user/details', checkRole(0), async (req, res) => {
         res.status(500).json({ error: 'Database query failed' });
     }
 });
-/*
-const options = {
-  key: fs.readFileSync("server-key.pem"), // Your server's private key
-  cert: fs.readFileSync("server-cert.pem"), // Your server's certificate
-  ca: fs.readFileSync("cloudflare-ca.pem"), // Cloudflare's CA certificate
-//  requestCert: true, // Require client certificate
-  rejectUnauthorized: true, // Reject requests without valid certificate
-};
-https.createServer(options, app).listen(8080, () => {
-  console.log("Secure Node.js API running on port 443");
+
+app.get('/api/users/:id/selected_restaurant', checkRole(0), async (req, res) => {
+    const { id } = req.params;
+    const query = 'SELECT selected_restaurant FROM users WHERE id = ?';
+    try {
+        const [results] = await pool.execute(query, [id]);
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({ selected_restaurant: results[0].selected_restaurant });
+    } catch (err) {
+        console.error('Error executing query:', err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
 });
-*/
+
 // Start the server
 app.listen(PORT, IP, () => {
     console.log("Server is running on " + IP + ":" + PORT);

@@ -1,4 +1,3 @@
-import { List, ListItem, ListItemText } from "@mui/material";
 const Skills = () => {
     const skillCategories = [
       {
@@ -61,11 +60,11 @@ const Skills = () => {
                 <p className="lead text-secondary mb-0 fs-6">Full-Stack JavaScript Developer</p>
                 <p className="small mb-0">
                     Riverside, California |{" "}
-                    <a href="mailto:rivcodelivery@gmail.com" className="text-decoration-none">
+                    <a href="mailto:rivcodelivery@gmail.com" className="text-black text-decoration-none">
                         rivcodelivery@gmail.com
                     </a>
                     {" "}|{" "}
-                    <a href="https://www.rivcodelivery.com" className="text-decoration-none">
+                    <a href="https://www.rivcodelivery.com" className="text-black text-decoration-none">
                         www.rivcodelivery.com
                     </a>
                 </p>
@@ -77,8 +76,7 @@ const Skills = () => {
                 <div className="col-12">
                 <h5 className="border-bottom pb-1 mb-1">Professional Summary</h5>
                 <p className="small mb-0 lh-sm">
-                    Passionate React JavaScript Developer with solid full-stack development experience creating dynamic, responsive web applications
-                    using modern JavaScript frameworks, robust back-end integrations, and agile practices.
+                    Full-Stack JavaScript Developer with hands-on experience in food delivery logistics and healthcare technology. Proven ability to translate real-world industry experience into technical solutions, demonstrated through the development of RivCoDelivery - a comprehensive food delivery platform. Strong background in React, Node.js, and database design, complemented by practical experience in customer service and enterprise technology implementations.
                 </p>
                 </div>
                 
@@ -86,8 +84,7 @@ const Skills = () => {
                 <div className="col-12">
                 <h5 className="border-bottom pb-1 mb-1">Objective</h5>
                 <p className="small mb-0 lh-sm">
-                    Seeking a full-time React JavaScript Developer position in Riverside, leveraging development skills and project experience
-                    to build engaging, high-performance applications that drive business success.
+                    Seeking a full-time Full-Stack JavaScript Developer position where I can leverage my unique combination of technical skills and industry experience in food delivery and healthcare technology to build innovative, user-focused web applications. Particularly interested in opportunities that allow me to apply my expertise in React, Node.js, and database design to solve real-world business challenges.
                 </p>
                 </div>
             </div>
@@ -97,7 +94,7 @@ const Skills = () => {
                 <div className="col">
                     <h5 className="border-bottom pb-1 mb-1">Projects</h5>
                     <div className="mb-0">
-                        <b className="small">RivCoDelivery</b>
+                        <b className="small">www.RivCoDelivery.com</b>
                     </div>
                     <div className="d-flex justify-content-between">
                         <small className="text-muted fst-italic">Lead Developer & Project Manager</small>
@@ -190,9 +187,23 @@ const Skills = () => {
                             <small className="text-muted fst-italic">Delivery Driver</small>
                             <small className="text-muted">October 2019 - September 2024</small>
                         </div>
-                        <p className="small mb-0 lh-sm">
-                        High customer satisfaction with excellent time management and effective communication.
-                        </p>
+                        <ul className="small mb-0">
+                            <li className="mb-0 lh-sm">
+                                Delivered thousands of orders with a 98% customer satisfaction rating, demonstrating exceptional reliability and customer service skills.
+                            </li>
+                            <li className="mb-0 lh-sm">
+                                Gained firsthand experience in food delivery logistics, customer expectations, and restaurant operations, providing valuable insights for developing RivCoDelivery.
+                            </li>
+                            <li className="mb-0 lh-sm">
+                                Managed diverse delivery types including restaurant meals, pharmacy medications, and retail packages, developing expertise in handling different delivery requirements.
+                            </li>
+                            <li className="mb-0 lh-sm">
+                                Optimized delivery routes using navigation apps and local knowledge, contributing to efficient delivery times and positive customer experiences.
+                            </li>
+                            <li className="mb-0 lh-sm">
+                                Maintained consistent communication with customers and restaurants, ensuring smooth order fulfillment and addressing any delivery concerns promptly.
+                            </li>
+                        </ul>
                     </div>
                     <div className="d-flex justify-content-between">
                         <b className="small">Arrowhead Regional Medical Center</b>
@@ -201,16 +212,35 @@ const Skills = () => {
                         <small className="text-muted fst-italic">HIM Department Externship</small>
                         <small className="text-muted">February 2022 - March 2022</small>
                     </div>
-                    <p className="small mb-0 lh-sm">
-                    50-hour externship during Epic EHR go-live with hospital IT teams.
-                    </p>
+                    <ul className="small mb-0">
+                        <li className="mb-0 lh-sm">
+                            Observed executive-level meetings during Epic EHR implementation, gaining insights into hospital-wide technology migration strategies and decision-making processes.
+                        </li>
+                        <li className="mb-0 lh-sm">
+                            Engaged with HIM supervisors to understand departmental operations including clinical documentation integrity, hospital statistics, and revenue cycle management.
+                        </li>
+                        <li className="mb-0 lh-sm">
+                            Learned about enterprise healthcare technology solutions from vendors including Epic, Nuance Communications, and Hyland Software.
+                        </li>
+                    </ul>
                     <div className="d-flex justify-content-between">
                         <b className="small">Jimmy Johns</b>
                     </div>
                     <div className="d-flex justify-content-between">
-                        <small className="text-muted fst-italic">Cashier</small>
+                        <small className="text-muted fst-italic">Delivery Driver & Cashier</small>
                         <small className="text-muted">August 2018 - August 2019</small>
                     </div>
+                    <ul className="small mb-0">
+                        <li className="mb-0 lh-sm">
+                            Managed multiple roles including delivery driver, cashier, and food preparation, demonstrating adaptability and strong work ethic.
+                        </li>
+                        <li className="mb-0 lh-sm">
+                            Collaborated with team members on the make-line to prepare customer orders efficiently while maintaining food safety standards.
+                        </li>
+                        <li className="mb-0 lh-sm">
+                            Performed opening and closing duties including ingredient preparation, store maintenance, and cleaning tasks.
+                        </li>
+                    </ul>
                 </div>
             </div>
             {/* Skills */}

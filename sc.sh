@@ -1,4 +1,4 @@
-cd /Users/chrisherre/Downloads/RivCoDelivery-main
+cd "/Users/chrisherre/Downloads/RivCoDelivery-RBAC 2"
 rm -rf node_modules
 npm install
 git remote add origin https://github.com/ChristopherHerre/RivCoDelivery.git

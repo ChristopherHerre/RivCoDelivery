@@ -2,13 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { 
 	BrowserRouter, 
 	Routes, 
-	Route } from 'react-router-dom';
+	Route,
+	Outlet } from 'react-router-dom';
 import Menu from './restaurants/menu/Menu';
 import MenuItem from './restaurants/menu/menu_items/MenuItem';
 import RestaurantsList from './restaurants/RestaurantsList';
 import Cart from './users/cart/Cart';
 import Admin from './restaurants/Admin';
-import Checkout from './users/checkout/Checkout';
+import Checkout from './users/checkout/CheckoutForm';
 import Success from './users/checkout/Success';
 import Failure from './users/checkout/Failure';
 import axios from 'axios';
@@ -19,19 +20,38 @@ import Users from './webmaster/Users';
 import Donate from './users/nav/Donate';
 import BottomNavbar from './users/nav/BottomNavbar';
 import Navbar from './users/nav/Navbar';
-import BlackjackGame from './users/arcade/Blackjack';
-import MastermindGame from './users/arcade/Mastermind';
-import HangmanGame from './users/arcade/Hangman';
 import SRS from './webmaster/SRS';
 import TaxiFareCalculator from './users/address/TaxiFareCalculator';
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
 
 export const API_URL = false ?
 	"http://localhost:8080"
 :
 	"https://rivcodelivery.com";
 export const MAX_RETRY_ATTEMPTS = 3;
+
+function Layout(props) {
+	const cart = props.cart;
+	return (
+		<div id="wr">
+			<Navbar 
+				cart={cart}
+				profile={props.profile} 
+				setProfile={props.setProfile}
+				loginLoading={props.loginLoading}
+				setLoginLoading={props.setLoginLoading}
+				address={props.address}
+				setAddress={props.setAddress}
+				showGetLocation={props.showGetLocation}
+				setShowGetLocation={props.setShowGetLocation}
+				cartAmount={props.cartAmount}
+			/>
+			<div id="white-area" className="blackborder">
+				<Outlet />
+			</div>
+			<BottomNavbar profile={props.profile} />
+		</div>
+	);
+}
 
 export function App() {
 	const [cart, setCart] = useState([]);
@@ -49,13 +69,47 @@ export function App() {
 	const [longitude, setLongitude] = useState(null);
 	const [profile, setProfile] = useState(null);
 	const [loginLoading, setLoginLoading] = useState(false);
+	const [cartLoading, setCartLoading] = useState(true);
 	useEffect(() => {
-		console.log("useEffect App");
+		console.log("useEffect App - Cart Amount");
 		let ca = 0;
 		for (const item in cart) {
 			ca += cart[item].quantity;
 		}
 		setCartAmount(ca);
+	}, [cart]); // Only depend on cart changes for amount calculation
+
+	useEffect(() => {
+		console.log("useEffect App - Cart Loading");
+		// Load cart from backend when component mounts or profile changes
+		const loadCartFromBackend = async () => {
+			const profile = JSON.parse(localStorage.getItem('profile'));
+			if (profile?.sub) {
+				try {
+					const response = await axios.get('/api/cart');
+					if (response.data && Array.isArray(response.data)) {
+						// Only update cart if it's different from current cart
+						if (JSON.stringify(response.data) !== JSON.stringify(cart)) {
+							setCart(response.data);
+						}
+					}
+				} catch (error) {
+					console.error('Error loading cart:', error);
+				} finally {
+					setCartLoading(false);
+				}
+			}
+		};
+
+		// Only load cart on initial mount or when profile changes
+		const storedProfile = localStorage.getItem('profile');
+		if (storedProfile) {
+			const parsedProfile = JSON.parse(storedProfile);
+			if (JSON.stringify(parsedProfile) !== JSON.stringify(profile)) {
+				loadCartFromBackend();
+			}
+		}
+
 		const fetchProfile = async () => {
 			const storedProfile = localStorage.getItem('profile');
 			if (storedProfile) {
@@ -64,7 +118,7 @@ export function App() {
 		};
 		fetchProfile().catch(error => 
 			 console.error('Error in fetchProfile:', error));
-	}, [cart, setCart, setCartAmount]);
+	}, [setCart]); // Only depend on profile changes for cart loading
 	let USDollar = new Intl.NumberFormat('en-US', {
 		style: 'currency',
 		currency: 'USD',
@@ -82,196 +136,186 @@ export function App() {
 	);
 	function WhiteArea() {
 		return (
-		  <BrowserRouter>
-			<Container maxWidth={false} disableGutters>
-			  <Navbar 
-				profile={profile} 
-				setProfile={setProfile}
-				loginLoading={loginLoading}
-				setLoginLoading={setLoginLoading}
-				address={address}
-				setAddress={setAddress}
-				showGetLocation={showGetLocation}
-				setShowGetLocation={setShowGetLocation}
-				cartAmount={cartAmount}
-			  />
-			  <Box
-				id="white-area"
-				sx={{
-				  width: '100%',
-				  border: '1px solid #000', // replaces 'blackborder'
-				  bgcolor: '#fff',
-				  borderRadius: 2,
-				  mt: 2,
-				  p: 2,
-				}}
-			  >
-						<Routes>
-							<Route
-								path='*'
-								exact={true}
-								element={
-									<RestaurantsList
-										USDollar={USDollar}
-										setRestaurant={setRestaurant}
-										setRestaurantName={setRestaurantName}
-										roundedToFixed={roundedToFixed}
-										showGetLocation={showGetLocation}
-										setShowGetLocation={setShowGetLocation}
-										address={address}
-										setAddress={setAddress}
-										setRestaurantAddress={setRestaurantAddress}
-										setDeliveryFee={setDeliveryFee}
-										debug={debug}
-										setDistance={setDistance}
-										latitude={latitude}
-										setLatitude={setLatitude}
-										longitude={longitude}
-										setLongitude={setLongitude}
-									/>
-								}
+			<BrowserRouter>
+				<Routes>
+					<Route
+						path="/"
+						element={
+							<Layout
+								cart={cart}
+								profile={profile}
+								setProfile={setProfile}
+								loginLoading={loginLoading}
+								setLoginLoading={setLoginLoading}
+								address={address}
+								setAddress={setAddress}
+								showGetLocation={showGetLocation}
+								setShowGetLocation={setShowGetLocation}
+								cartAmount={cartAmount}
 							/>
-							<Route
-								path={"/orders"}
-								element={
-									<DriverOrders />
-								}
-							/>
-							<Route
-								path={"/users"}
-								element={
-									<Users />
-								}
-							/>
-							<Route
-								path={"/user-orders"}
-								element={
-									<UserOrders />
-								}
-							/>
-							<Route
-								path={"/success"}
-								element={
-									<Success />
-								}
-							/>
-							<Route
-								path={"/failure"}
-								element={
-									<Failure />
-								}
-							/>
-							<Route
-								path={"/menu"}
-								element={
-									<Menu
-										restaurantName={restaurantName}
-										restaurant={restaurant}
-										menuItem={menuItem}
-										setMenuItem={setMenuItem}
-									/>
-								}
-							/>
-							<Route
-								path={"/menu/item"}
-								element={
-									<MenuItem
-										USDollar={USDollar}
-										cartAmount={cartAmount}
-										setCartAmount={setCartAmount}
-										restaurant={restaurant}
-										restaurantName={restaurantName}
-										restaurantAddress={restaurantAddress}
-										menuItem={menuItem}
-										debug={debug}
-										cart={cart}
-										setCart={setCart} />
-								}
-							/>
-							<Route
-								path={"/cart"}
-								element={
-									<Cart
-										showGetLocation={showGetLocation}
-										setShowGetLocation={setShowGetLocation}
-										address={address}
-										USDollar={USDollar}
-										cartAmount={cartAmount}
-										setCartAmount={setCartAmount}
-										cart={cart}
-										setCart={setCart} />
-								} 
-							/>
-							<Route
-								path={"/checkout"}
-								element={
-									<Checkout
-										USDollar={USDollar}
-										cart={cart}
-										setCart={setCart}
-										showGetLocation={showGetLocation}
-										setShowGetLocation={setShowGetLocation}
-										address={address}
-										setAddress={setAddress}
-										restaurantAddress={restaurantAddress}
-										setRestaurantAddress={setRestaurantAddress}
-										deliveryFee={deliveryFee}
-										distance={distance}
-									/>
-								} 
-							/>
-							<Route
-								path={"/admin"}
-								element={
-									<Admin
-										profile={profile}
-										latitude={latitude}
-										setLatitude={setLatitude}
-										longitude={longitude}
-										setLongitude={setLongitude} />
-								}
-							/>
-							<Route
-								path={"/donate"}
-								element={
-									<Donate />
-								}
-							/>
-							<Route
-								path={"/blackjack"}
-								element={
-									<BlackjackGame />
-								}
-							/>
-							
-							<Route
-								path={"/mastermind"}
-								element={
-									<MastermindGame />
-								}
-							/>
-							<Route
-								path={"/hangman"}
-								element={
-									<HangmanGame />
-								}
-							/>
-							<Route
-								path={"/srs"}
-								element={
-									<SRS/>
-								}
-							/>
-							<Route
-								path={"/taxi"}
-								element={
-									<TaxiFareCalculator />
-								}
-							/>
-						</Routes>
-					</Box>
-					<BottomNavbar profile={profile} />
-				</Container>
+						}
+					>
+						<Route
+							index
+							element={
+								<RestaurantsList
+									USDollar={USDollar}
+									restaurant={restaurant}
+									setRestaurant={setRestaurant}
+									setRestaurantName={setRestaurantName}
+									roundedToFixed={roundedToFixed}
+									showGetLocation={showGetLocation}
+									setShowGetLocation={setShowGetLocation}
+									address={address}
+									setAddress={setAddress}
+									setRestaurantAddress={setRestaurantAddress}
+									setDeliveryFee={setDeliveryFee}
+									debug={debug}
+									setDistance={setDistance}
+									latitude={latitude}
+									setLatitude={setLatitude}
+									longitude={longitude}
+									setLongitude={setLongitude}
+									cartAmount={cartAmount}
+								/>
+							}
+						/>
+						<Route
+							path="orders"
+							element={<DriverOrders cartAmount={cartAmount} />}
+						/>
+						<Route
+							path="users"
+							element={<Users cartAmount={cartAmount} />}
+						/>
+						<Route
+							path="user-orders"
+							element={<UserOrders cartAmount={cartAmount} />}
+						/>
+						<Route
+							path="success"
+							element={<Success cartAmount={cartAmount} />}
+						/>
+						<Route
+							path="failure"
+							element={<Failure cartAmount={cartAmount} />}
+						/>
+						<Route
+							path="admin"
+							element={
+								<Admin
+									profile={profile}
+									latitude={latitude}
+									setLatitude={setLatitude}
+									longitude={longitude}
+									setLongitude={setLongitude}
+									cartAmount={cartAmount}
+								/>
+							}
+						/>
+						<Route
+							path="donate"
+							element={<Donate cartAmount={cartAmount} />}
+						/>
+						<Route
+							path="srs"
+							element={<SRS cartAmount={cartAmount} />}
+						/>
+						<Route
+							path="taxi"
+							element={<TaxiFareCalculator cartAmount={cartAmount} />}
+						/>
+						<Route
+							path=":restaurant/menu"
+							element={
+								<Menu
+									restaurantName={restaurantName}
+									restaurant={restaurant}
+									menuItem={menuItem}
+									setMenuItem={setMenuItem}
+									cartAmount={cartAmount}
+								/>
+							}
+						/>
+						<Route
+							path=":restaurant/menu/item"
+							element={
+								<MenuItem
+									USDollar={USDollar}
+									cartAmount={cartAmount}
+									setCartAmount={setCartAmount}
+									restaurant={restaurant}
+									restaurantName={restaurantName}
+									restaurantAddress={restaurantAddress}
+									menuItem={menuItem}
+									debug={debug}
+									cart={cart}
+									setCart={setCart}
+								/>
+							}
+						/>
+						<Route
+							path=":restaurant/cart"
+							element={
+								<Cart
+									restaurant={restaurant}
+									showGetLocation={showGetLocation}
+									setShowGetLocation={setShowGetLocation}
+									address={address}
+									USDollar={USDollar}
+									cartAmount={cartAmount}
+									setCartAmount={setCartAmount}
+									cart={cart}
+									setCart={setCart}
+								/>
+							}
+						/>
+						<Route
+							path=":restaurant/checkout"
+							element={
+								<Checkout
+									USDollar={USDollar}
+									address={address}
+									setAddress={setAddress}
+									restaurant={restaurant}
+									restaurantAddress={restaurantAddress}
+									setRestaurantAddress={setRestaurantAddress}
+									deliveryFee={deliveryFee}
+									distance={distance}
+									cartAmount={cartAmount}
+									cart={cart}
+									setCart={setCart}
+									cartLoading={cartLoading}
+								/>
+							}
+						/>
+						<Route
+							path="*"
+							element={
+								<RestaurantsList
+									USDollar={USDollar}
+									restaurant={restaurant}
+									setRestaurant={setRestaurant}
+									setRestaurantName={setRestaurantName}
+									roundedToFixed={roundedToFixed}
+									showGetLocation={showGetLocation}
+									setShowGetLocation={setShowGetLocation}
+									address={address}
+									setAddress={setAddress}
+									setRestaurantAddress={setRestaurantAddress}
+									setDeliveryFee={setDeliveryFee}
+									debug={debug}
+									setDistance={setDistance}
+									latitude={latitude}
+									setLatitude={setLatitude}
+									longitude={longitude}
+									setLongitude={setLongitude}
+									cartAmount={cartAmount}
+								/>
+							}
+						/>
+					</Route>
+				</Routes>
 			</BrowserRouter>
 		);
 	}
