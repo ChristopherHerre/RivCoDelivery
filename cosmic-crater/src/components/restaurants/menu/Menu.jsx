@@ -38,7 +38,6 @@ export default function Menu(props) {
     }, [restaurant, navigate]);
 
     function changeMenuItem(m) {
-
         setMenuItem(m.id);
         console.log("menu = " + menuItem);
         navigate(`/${restaurant}/menu/item`);
@@ -88,22 +87,22 @@ export default function Menu(props) {
                                                         onClick={(e) => changeMenuItem(data)}>
                                                     {data.name}
                                                     <span> - $</span>
-                                                    {data.price != null &&
+                                                    {data.price != null && data.price > 0 &&
                                                     <span className="fw-bold">
                                                         {data.price}
                                                     </span>}
-                                                    {data.price2 != null && <span> - $</span>}
-                                                    {data.price2 != null &&
+                                                    {data.price2 != null && data.price2 > 0 && <span> - $</span>}
+                                                    {data.price2 != null && data.price2 > 0 &&
                                                     <span className="fw-bold">
                                                         {data.price2}
                                                     </span>}
-                                                    {data.price3 != null && <span> - $</span>}
-                                                    {data.price3 != null &&
+                                                    {data.price3 != null && data.price3 > 0 && <span> - $</span>}
+                                                    {data.price3 != null && data.price3 > 0 &&
                                                     <span className="fw-bold">
                                                         {data.price3}
                                                     </span>}
-                                                    {data.price4 != null && <span> - $</span>}
-                                                    {data.price4 != null &&
+                                                    {data.price4 != null && data.price4 > 0 && <span> - $</span>}
+                                                    {data.price4 != null && data.price4 > 0 &&
                                                     <span className="fw-bold">
                                                         {data.price4}
                                                     </span>}
