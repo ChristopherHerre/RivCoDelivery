@@ -1,3 +1,5 @@
+const { cartItemInputSchema } = require('../utils/schemas');
+
 function cartRoutes(app, pool, checkRole) {
     const router = require('express').Router();
 
@@ -21,37 +23,33 @@ function cartRoutes(app, pool, checkRole) {
             const sanitizedItems = [];
             let restaurantId = null;
 
-            for (const rawItem of cartItems) {
-                if (!rawItem || typeof rawItem !== 'object') {
-                    throw new Error('Each cart item must be an object');
+            // Validate each cart item using Zod schema (addresses vulnerability 1.1)
+            for (let i = 0; i < cartItems.length; i++) {
+                const rawItem = cartItems[i];
+                const parseResult = cartItemInputSchema.safeParse(rawItem);
+                
+                if (!parseResult.success) {
+                    const errors = parseResult.error.flatten().fieldErrors;
+                    const errorMessage = Object.entries(errors)
+                        .map(([field, messages]) => `${field}: ${messages?.join(', ') || 'Invalid'}`)
+                        .join('; ');
+                    throw new Error(`Invalid cart item at index ${i}: ${errorMessage}`);
                 }
 
-                const name = typeof rawItem.name === 'string' ? rawItem.name.trim() : '';
-                if (!name) {
-                    throw new Error('Cart item name is required');
-                }
+                const validatedItem = parseResult.data;
+                const name = validatedItem.name;
+                const priceNumber = validatedItem.price;
+                const quantity = validatedItem.quantity;
+                const itemRestaurantId = validatedItem.restaurant_id;
 
-                const priceNumber = Number(rawItem.price);
-                if (!Number.isFinite(priceNumber) || priceNumber < 0 || priceNumber > 9999999.99) {
-                    throw new Error(`Invalid price value: ${rawItem.price}`);
-                }
-
-                const quantity = Number.isInteger(rawItem.quantity) ? rawItem.quantity : parseInt(rawItem.quantity, 10);
-                if (!Number.isFinite(quantity) || quantity <= 0 || quantity > 100) {
-                    throw new Error(`Invalid quantity for cart item "${name}"`);
-                }
-
-                const itemRestaurantId = Number(rawItem.restaurant_id);
-                if (!Number.isInteger(itemRestaurantId) || itemRestaurantId <= 0) {
-                    throw new Error(`Cart item "${name}" is missing a valid restaurant_id`);
-                }
-
+                // Ensure all items belong to the same restaurant
                 if (restaurantId === null) {
                     restaurantId = itemRestaurantId;
                 } else if (restaurantId !== itemRestaurantId) {
                     throw new Error('All cart items must belong to the same restaurant');
                 }
 
+                // Verify menu item exists in database
                 const [[menuItemRow]] = await connection.execute(
                     `SELECT id 
                      FROM menu_items 
@@ -63,25 +61,22 @@ function cartRoutes(app, pool, checkRole) {
                     throw new Error(`Menu item "${name}" is not available for this restaurant`);
                 }
 
-                const ingredients = Array.isArray(rawItem.ingredients) ? rawItem.ingredients : [];
-                const halfer = Array.isArray(rawItem.halfer) ? rawItem.halfer : [];
-                const arrs = Array.isArray(rawItem.arrs) ? rawItem.arrs : [];
-
+                // Prepare sanitized item with validated data
                 sanitizedItems.push({
                     name,
                     price: priceNumber.toFixed(2),
                     quantity,
-                    ingredients,
-                    halfer,
-                    arrs,
-                    size1: typeof rawItem.size1 === 'string' ? rawItem.size1.trim().slice(0, 255) : null,
-                    val1: Number.isInteger(rawItem.val1) ? rawItem.val1 : parseInt(rawItem.val1, 10) || 0,
-                    size2: typeof rawItem.size2 === 'string' ? rawItem.size2.trim().slice(0, 255) : null,
-                    val2: Number.isInteger(rawItem.val2) ? rawItem.val2 : parseInt(rawItem.val2, 10) || 0,
-                    size3: typeof rawItem.size3 === 'string' ? rawItem.size3.trim().slice(0, 255) : null,
-                    val3: Number.isInteger(rawItem.val3) ? rawItem.val3 : parseInt(rawItem.val3, 10) || 0,
-                    size4: typeof rawItem.size4 === 'string' ? rawItem.size4.trim().slice(0, 255) : null,
-                    val4: Number.isInteger(rawItem.val4) ? rawItem.val4 : parseInt(rawItem.val4, 10) || 0,
+                    ingredients: validatedItem.ingredients,
+                    halfer: validatedItem.halfer,
+                    arrs: validatedItem.arrs,
+                    size1: validatedItem.size1,
+                    val1: validatedItem.val1,
+                    size2: validatedItem.size2,
+                    val2: validatedItem.val2,
+                    size3: validatedItem.size3,
+                    val3: validatedItem.val3,
+                    size4: validatedItem.size4,
+                    val4: validatedItem.val4,
                     restaurant_id: itemRestaurantId,
                 });
             }

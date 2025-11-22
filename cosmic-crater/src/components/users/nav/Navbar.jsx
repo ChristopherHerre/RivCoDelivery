@@ -120,7 +120,16 @@ function Navbar(props) {
                         }
                     </div>
                     <div className="col-12 col-md-6">
-                        <button className="btn btn-secondary form-control mb-1" type="button" onClick={() => navigate(`/${cart[0].restaurant_id}/cart`)}>
+                        <button 
+                            className="btn btn-secondary form-control mb-1" 
+                            type="button" 
+                            onClick={() => {
+                                if (cart && cart.length > 0 && cart[0]?.restaurant_id) {
+                                    navigate(`/${cart[0].restaurant_id}/cart`);
+                                }
+                            }}
+                            disabled={!cart || cart.length === 0 || !cart[0]?.restaurant_id}
+                        >
                             <i className="bi bi-cart"> </i>
                             Cart
                             <span> </span>

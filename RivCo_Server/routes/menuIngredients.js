@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { ingredientBodySchema } = require('../utils/schemas');
+const { ingredientBodySchema, ingredientIdParamSchema, ingredientIdParamSchemaAlt } = require('../utils/schemas');
 
 function menuIngredientRoutes(app, pool, checkRole) {
     const router = require('express').Router();
@@ -9,10 +9,7 @@ function menuIngredientRoutes(app, pool, checkRole) {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
-        const paramSchema = z.object({
-            ingredient_id: z.coerce.number().int().positive("ingredient_id must be a positive integer"),
-        });
-        const parseResult = paramSchema.safeParse(req.params);
+        const parseResult = ingredientIdParamSchema.safeParse(req.params);
         if (!parseResult.success) {
             return res.status(400).json({ 
                 error: "Validation failed",
@@ -161,10 +158,7 @@ function menuIngredientRoutes(app, pool, checkRole) {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
-        const paramSchema = z.object({
-            id: z.coerce.number().int().positive("id must be a positive integer"),
-        });
-        const paramParseResult = paramSchema.safeParse(req.params);
+        const paramParseResult = ingredientIdParamSchemaAlt.safeParse(req.params);
         if (!paramParseResult.success) {
             return res.status(400).json({
                 error: "Validation failed",

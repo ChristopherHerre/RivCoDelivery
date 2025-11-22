@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { restaurantParamSchema, cartItemSchema, userAddressSchema, restaurantSchema } = require('../utils/schemas');
+const { selectedRestaurantParamSchema, cartItemSchema, userAddressSchema, restaurantSchema, checkoutUserInputSchema } = require('../utils/schemas');
 const { 
     haversine_dist, TAX_RATE, BASE_DELIVERY_FEE, MIN_BILLABLE_DISTANCE_MILES,
     toCents, centsToFixed, safeJsonParse, isSelectedIngredient,
@@ -19,21 +19,22 @@ function checkoutRoutes(app, pool, checkRole, orderLimiter) {
         const payloadArray = Array.isArray(req.body) ? req.body : [];
         const userInputData = payloadArray[0];
 
-        if (!Array.isArray(userInputData) || userInputData.length < 4) {
+        // Validate and sanitize user input data with length limits
+        const parseResult = checkoutUserInputSchema.safeParse(userInputData);
+        if (!parseResult.success) {
             console.error('Invalid checkout payload received for user:', googleId, userInputData);
-            return res.status(400).json({ error: 'Invalid checkout payload' });
+            return res.status(400).json({
+                error: 'Invalid checkout payload',
+                details: parseResult.error.flatten().fieldErrors,
+            });
         }
 
         const [
             clientAddress, // ignored in favor of server-built address
-            instructionsRaw = "",
-            businessTypeRaw = "",
-            knockTypeRaw = "",
-        ] = userInputData;
-
-        const instructions = typeof instructionsRaw === "string" ? instructionsRaw : "";
-        const businessType = typeof businessTypeRaw === "string" ? businessTypeRaw : "";
-        const knockType = typeof knockTypeRaw === "string" ? knockTypeRaw : "";
+            instructions,
+            businessType,
+            knockType,
+        ] = parseResult.data;
 
         const connection = await pool.getConnection();
         try {
@@ -364,13 +365,13 @@ function checkoutRoutes(app, pool, checkRole, orderLimiter) {
         }
     });
 
-    // GET /api/checkout-data/:selected_restaurant?
-    router.get("/checkout-data/:selected_restaurant?", async (req, res) => {
+    // GET /api/checkout-data/:selected_restaurant?0
+    router.get("/checkout-data/:selected_restaurant?", checkRole(0), async (req, res) => {
         const userId = req.session?.user?.sub;
         if (!userId) {
             return res.status(401).json({ error: "Unauthorized" });
         }
-        const paramCheck = restaurantParamSchema.safeParse(req.params);
+        const paramCheck = selectedRestaurantParamSchema.safeParse(req.params);
         if (!paramCheck.success) {
             return res.status(400).json({ error: paramCheck.error.flatten() });
         }

@@ -1,8 +1,16 @@
+const rateLimit = require('express-rate-limit');
+
 function authRoutes(app, pool, checkRole, orderLimiter, client, passport) {
     const router = require('express').Router();
 
+    const loginLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 5,
+        message: { error: 'Too many login attempts' }
+    });
+    
     // POST /api/google-login
-    router.post('/google-login', async (req, res) => {
+    router.post('/google-login', loginLimiter, async (req, res) => {
         const { token } = req.body;
         try {
             const ticket = await client.verifyIdToken({

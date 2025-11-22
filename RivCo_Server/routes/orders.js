@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { changeOrderOpenSchema } = require('../utils/schemas');
+const { changeOrderOpenSchema, paginationQuerySchema, orderIdQuerySchema } = require('../utils/schemas');
 
 function ordersRoutes(app, pool, checkRole) {
     const router = require('express').Router();
@@ -25,15 +25,20 @@ function ordersRoutes(app, pool, checkRole) {
 
     // GET /api/orders
     router.get('/orders', checkRole(1), async (req, res) => {
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 10;
+        const parseResult = paginationQuerySchema.safeParse(req.query);
+        if (!parseResult.success) {
+            return res.status(400).json({
+                error: "Validation failed",
+                details: parseResult.error.flatten().fieldErrors,
+            });
+        }
+        const { page, limit } = parseResult.data;
         const offset = (page - 1) * limit;
         try {
-            const query = `SELECT * FROM orders WHERE open = '0' ORDER BY date DESC LIMIT ? OFFSET ?`;
-            const [results] = await pool.execute(query, [
-                limit.toString(), 
-                offset.toString()
-            ]);
+            // ✅ FIXED: Values are validated as safe integers by Zod, so template literal is safe
+            // MySQL doesn't support LIMIT/OFFSET as parameters in prepared statements
+            const query = `SELECT * FROM orders WHERE open = '0' ORDER BY date DESC LIMIT ${limit} OFFSET ${offset}`;
+            const [results] = await pool.execute(query);
             res.json(results);
         } catch (err) {
             console.error('Error fetching orders:', err);
@@ -43,8 +48,16 @@ function ordersRoutes(app, pool, checkRole) {
 
     // GET /api/order_items
     router.get('/order_items', checkRole(0), async (req, res) => {
+        // Validate query parameters
+        const parseResult = orderIdQuerySchema.safeParse(req.query);
+        if (!parseResult.success) {
+            return res.status(400).json({
+                error: "Validation failed",
+                details: parseResult.error.flatten().fieldErrors,
+            });
+        }
+        const { oid } = parseResult.data;
         const query = 'SELECT * FROM order_items Where order_id = ? LIMIT 50';
-        const { oid } = req.query;
         try {
             const [results] = await pool.execute(query, [oid]);
             res.json(results);
@@ -59,20 +72,25 @@ function ordersRoutes(app, pool, checkRole) {
         if (!req.session.user?.sub) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 10;
+        const parseResult = paginationQuerySchema.safeParse(req.query);
+        if (!parseResult.success) {
+            console.error('Validation error:', parseResult.error);
+            return res.status(400).json({
+                error: "Validation failed",
+                details: parseResult.error.flatten().fieldErrors,
+            });
+        }
+        const { page, limit } = parseResult.data;
         const offset = (page - 1) * limit;
         try {
-            const query = 'SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC LIMIT ? OFFSET ?';
-            const [results] = await pool.execute(query, [
-                req.session.user.sub,
-                limit.toString(),
-                offset.toString()
-            ]);
+            // ✅ FIXED: Values are validated as safe integers by Zod, so template literal is safe
+            // MySQL doesn't support LIMIT/OFFSET as parameters in prepared statements
+            const query = `SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC LIMIT ${limit} OFFSET ${offset}`;
+            const [results] = await pool.execute(query, [req.session.user.sub]);
             res.json(results);
         } catch (err) {
             console.error('Error fetching orders:', err);
-            res.status(500).json({ error: 'Failed to fetch orders' });
+            res.status(500).json({ error: 'Failed to fetch orders', message: err.message });
         }
     });
 

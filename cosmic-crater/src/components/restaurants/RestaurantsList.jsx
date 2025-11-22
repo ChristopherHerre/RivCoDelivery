@@ -101,7 +101,7 @@ export default function RestaurantsList(props) {
             }
         };
         if (latitude && longitude)
-        {
+        {     
             fetchRestaurants();
         }
     }, [latitude, longitude, setRestaurants]);
@@ -153,14 +153,14 @@ export default function RestaurantsList(props) {
     });
     return (
         <>
-            {locLoaded ? (<Welcome
+            {showGetLocation ? (<Welcome
                 address={address}
                 setAddress={setAddress}
                 showGetLocation={showGetLocation}
                 setShowGetLocation={setShowGetLocation}
                 setLoadingApiKey={setLoadingApiKey}
                 loadingApiKey={loadingApiKey}
-            />) : ""
+            />) : null
             }
             {
                 !showGetLocation && loaded ?
