@@ -93,7 +93,7 @@ function Navbar(props) {
                     <div className="col-12 col-md-6">
                         {
                             !profile ? 
-                                <GoogleOAuthProvider className="btn btn-secondary form-control" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
+                                <GoogleOAuthProvider className="btn btn-secondary w-100" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
                                     {/* Custom GoogleLogin Component */}
                                     <GoogleLogin
                                         className="btn btn-secondary form-control"
@@ -103,7 +103,7 @@ function Navbar(props) {
                                         render={(props) => (
                                             <button
                                                 {...props}
-                                                className="google-login-btn btn form-control mb-1"
+                                                className="google-login-btn btn w-100 mb-1"
                                             >
                                                 <i className="bi bi-google google-icon"></i> Sign in with Google
                                             </button>

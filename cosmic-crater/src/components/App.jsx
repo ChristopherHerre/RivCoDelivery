@@ -20,7 +20,6 @@ import Users from './webmaster/Users';
 import Donate from './users/nav/Donate';
 import BottomNavbar from './users/nav/BottomNavbar';
 import Navbar from './users/nav/Navbar';
-import SRS from './webmaster/SRS';
 import TaxiFareCalculator from './users/address/TaxiFareCalculator';
 
 export const API_URL = false ?
@@ -203,10 +202,6 @@ export function App() {
 						<Route
 							path="donate"
 							element={<Donate cartAmount={cartAmount} />}
-						/>
-						<Route
-							path="srs"
-							element={<SRS cartAmount={cartAmount} />}
 						/>
 						<Route
 							path="taxi"

@@ -38,7 +38,6 @@ export default function RestaurantsList(props) {
     const [query, setQuery] = useState("");
     const result = groupBy(restaurants, r => r.category);
     const [loaded, setLoaded] = useState(false);
-    const [loadingApiKey, setLoadingApiKey] = useState(false);
     const [profile, setProfile] = useState(null);
     const navigate = useNavigate();
     const [locLoaded, setLocLoaded] = useState(false);
@@ -158,8 +157,6 @@ export default function RestaurantsList(props) {
                 setAddress={setAddress}
                 showGetLocation={showGetLocation}
                 setShowGetLocation={setShowGetLocation}
-                setLoadingApiKey={setLoadingApiKey}
-                loadingApiKey={loadingApiKey}
             />) : null
             }
             {

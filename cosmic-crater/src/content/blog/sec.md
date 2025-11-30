@@ -1,7 +1,7 @@
 ---
 title:  'Security Audit'
 description:  'Security audit'
-pubDate:  Nov 21, 2025'
+pubDate:  2025-11-26
 slug:  'audit'
 ---
 # Security Audit Report: Server-Side Route Vulnerabilities

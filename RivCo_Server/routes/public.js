@@ -9,16 +9,6 @@ function publicRoutes(app, pool, checkRole) {
         res.json({ status: 'ok' });
     });
 
-    // GET /api/maps-api-key
-    router.get('/maps-api-key', checkRole(0), (req, res) => {
-        console.log("API Key Request Received");
-        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-        if (!apiKey || apiKey == undefined || apiKey === undefined) {
-            return res.status(500).json({ error: "API key not found" });
-        }
-        res.json({ apiKey });
-    });
-
     // GET /api/restaurants/:latitude/:longitude
     router.get('/restaurants/:latitude/:longitude', checkRole(0), async (req, res) => {
         // Validate path parameters
