@@ -7,29 +7,23 @@
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",  
-    "client": "craco start",
-    "build": "craco build",
-    "test": "craco test",
-    "eject": "react-scripts eject",
-    "dev": "concurrently \"npm run client\" \"npm run start\""
+    "start": "node server.js"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.6",
     "cookie-session": "^2.1.0",
     "cors": "^2.8.5",
-    "css-loader": "^7.1.2",
+    "csurf": "^1.11.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-mysql-session": "^3.0.3",
+    "express-rate-limit": "^7.4.1",
     "express-session": "^1.18.1",
     "google-auth-library": "^9.15.0",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.11.5",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "axios": "^0.21.1"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2",
-    "craco": "^7.1.0",
-    "compression-webpack-plugin": "^11.1.0"
+    "zod": "^3.24.1"
   }
 }

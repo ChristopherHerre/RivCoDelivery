@@ -99,7 +99,7 @@ function DriverOrders() {
             setLoading(true);
             try {
                 console.log("@! " + e.target.value + " " + iid);
-                await dbPost2(e, [iid], "changeOrderOpen");
+                await dbPost2(e, { orderId: iid }, "changeOrderOpen");
                 setDriverOrderItems(prev => {
                     const updated = { ...prev };
                     delete updated[iid];

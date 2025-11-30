@@ -205,19 +205,11 @@ export default function CheckoutForm(props) {
 
 	async function placeOrder(googleId, users_table_address, cartClone, bt, kt) {
 		const userInputData = [
-            users_table_address,
-            textAreaValue,
-            bt,
-            kt,
-            cart.length,
-            restaurantName,
-			restaurantAddress,
-            roundedToFixed(deliveryFee, 2),
-            roundedToFixed(subtotal, 2),
-            roundedToFixed(distance, 1),
-            roundedToFixed(tax, 2),
-            roundedToFixed(total, 2),
-        ];
+			users_table_address,
+			textAreaValue,
+			bt,
+			kt,
+		];
 		console.log("Placing order with data:", {
 			userInputData,
 			cartClone,
@@ -231,13 +223,12 @@ export default function CheckoutForm(props) {
 				withCredentials: true
 			});
 			if (response.status === 201) {
-				await axios.post('/api/cart', { 
-					cart: [],
-					userId: googleId 
-				}).then(() => {
-					setCart([]);
-					navigate("/success");
+				await axios.delete('/api/cart', { 
+					data: { userId: googleId },
+					withCredentials: true
 				});
+				setCart([]);
+				navigate("/success");
 			} else {
 				console.error("Unexpected response status:", response.status);
 				navigate("/failure");

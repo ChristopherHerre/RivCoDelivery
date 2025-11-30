@@ -281,7 +281,7 @@ export function CartItemDetails(props) {
     console.log("cartItem: " + cartItem.ingredients);
     return (
         <div>
-            <h5>{cartItem.name}</h5>
+            <h5>{cartItem.display_name || cartItem.name}</h5>
             <b className="text-success">
                 {USDollar.format(cartItem.price)} x {cartItem.quantity} = {USDollar.format(roundedToFixed(cartItem.price * cartItem.quantity, 2))}
             </b>

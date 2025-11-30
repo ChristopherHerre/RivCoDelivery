@@ -38,9 +38,9 @@ export default function RestaurantsList(props) {
     const [query, setQuery] = useState("");
     const result = groupBy(restaurants, r => r.category);
     const [loaded, setLoaded] = useState(false);
-    const [loadingApiKey, setLoadingApiKey] = useState(false);
     const [profile, setProfile] = useState(null);
     const navigate = useNavigate();
+    const [locLoaded, setLocLoaded] = useState(false);
     useEffect(() => {
         const storedProfile = localStorage.getItem('profile');
         if (storedProfile) {
@@ -73,6 +73,7 @@ export default function RestaurantsList(props) {
                 if (res.data.address && res.data.address.streetNumber) {
                     setShowGetLocation(false);
                 }
+		setLocLoaded(true);
             } catch (err) {
                 console.error('Error fetching address:', err);
             }
@@ -99,7 +100,7 @@ export default function RestaurantsList(props) {
             }
         };
         if (latitude && longitude)
-        {
+        {     
             fetchRestaurants();
         }
     }, [latitude, longitude, setRestaurants]);
@@ -151,14 +152,13 @@ export default function RestaurantsList(props) {
     });
     return (
         <>
-            <Welcome
+            {showGetLocation ? (<Welcome
                 address={address}
                 setAddress={setAddress}
                 showGetLocation={showGetLocation}
                 setShowGetLocation={setShowGetLocation}
-                setLoadingApiKey={setLoadingApiKey}
-                loadingApiKey={loadingApiKey}
-            />
+            />) : null
+            }
             {
                 !showGetLocation && loaded ?
                     <div className="row">
@@ -184,57 +184,54 @@ export default function RestaurantsList(props) {
             }
             {!showGetLocation && loaded  ? 
                 Object.keys(result).map((category, categoryIndex) => (
-                    <div className="row" key={categoryIndex}>
-                        <div className="col-12">
-                            <h5 className="indent">
-                                {category}
-                            </h5>
-                        </div>
-                        {result[category].map((data, key) => {
-                            const h = haversine_dist(
-                                data.latitude, 
-                                data.longitude, 
-                                latitude, 
-                                longitude
-                            );
-                            const fee = 10 + (h < 1 ? 1 : h);
-                            const maxFee = 100;
-                            async function selectRestaurant(data) {       
-                                setRestaurant(data.id);
-                                setRestaurantName(data.name);
-                                setRestaurantAddress(data.address);
-                                setDeliveryFee(fee);
-                                setDistance(h);
-                                //await updateUserRestaurant(data.id);
-                                navigate(`/${data.id}/menu`);
-                                console.log("Restaurant selected:", data.id);
-                            
-                            }
-                            return (
-                                <div className="col-12 col-md-6 col-lg-4" key={key}>
-                                    <div className="m-1">
+                    <div key={categoryIndex}>
+                        <h5 className="indent">
+                            {category}
+                        </h5>
+                        <div className="restaurant-grid">
+                            {result[category].map((data, key) => {
+                                const h = haversine_dist(
+                                    data.latitude, 
+                                    data.longitude, 
+                                    latitude, 
+                                    longitude
+                                );
+                                const fee = 10 + (h < 1 ? 1 : h);
+                                const maxFee = 100;
+                                async function selectRestaurant(data) {       
+                                    setRestaurant(data.id);
+                                    setRestaurantName(data.name);
+                                    setRestaurantAddress(data.address);
+                                    setDeliveryFee(fee);
+                                    setDistance(h);
+                                    //await updateUserRestaurant(data.id);
+                                    navigate(`/${data.id}/menu`);
+                                    console.log("Restaurant selected:", data.id);
+                                }
+                                return (
+                                    <div className="restaurant-card" key={key}>
                                         <button
                                             className="btn btn-primary form-control"
                                             onClick={(e) => selectRestaurant(data)}>
-                                            <b>{data.name} </b>
+                                            <b>{data.name} 
+                                                <span className="badge bg-info text-dark ms-2">
+                                                    {h < 100 ? `${roundedToFixed(h, 1)} mi` : "--"}
+                                                </span>
+                                            </b>
                                             <small>
                                                 ({fee > maxFee ? "--" 
                                                     : USDollar.format(roundedToFixed(fee, 2))}
                                                     <span> Delivery Fee</span>)
                                             </small>
-                                                <div>
-                                                <span>{data.address} - </span>
-                                                <small>
-                                                    <span>
-                                                        {h < 100 ? roundedToFixed(h, 1) : "--"}
-                                                    </span> Miles
-                                                </small>
+                                            <div>
+                                                <span>{data.address} </span>
+                                                
                                             </div>
                                         </button>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
                 )) : (!showGetLocation ? <Spinner /> : "")
             }

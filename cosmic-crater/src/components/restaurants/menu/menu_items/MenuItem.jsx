@@ -30,6 +30,8 @@ export default function MenuItem(props) {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [loading2, setLoading2] = useState(true);
+    const [itemName, setItemName] = useState("");
+    const [sizeLabel, setSizeLabel] = useState("");
     useEffect(() => {
         const fetchMenuItem = async (attempt = 1) => {
             if (props.menuItem < 0) navigate("/");
@@ -37,8 +39,16 @@ export default function MenuItem(props) {
             try {
                 const res = await axios.get('/api/menu/item', { params: { menuItem: props.menuItem } });
                 setItemConfig(res.data);
-                if (res.data[0] != undefined)
-                    setPrice(res.data[0].price);
+                if (res.data[0] != undefined) {
+                    const menuItem = res.data[0];
+                    setPrice(menuItem.price);
+                    const defaultSize = menuItem.size1 && menuItem.size1.trim().length
+                        ? ` - ${menuItem.size1.trim()}`
+                        : "";
+                    setItemName(`${menuItem.name}${defaultSize}`);
+                    setSizeLabel(menuItem.size_display_name || "");
+                    
+                }
                 setLoading(false);
             } catch (err) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {
@@ -90,12 +100,13 @@ export default function MenuItem(props) {
                 const v = elements;
                 boxes.push([v.checked, customizer.value]);
                 boxes2.push([halfer.value]);
-            }
+            }0
         }
         if (!Array.isArray(boxes)) boxes = [];
         if (!Array.isArray(boxes2)) boxes2 = [];
         const cartItem = {
             name: item.name,
+            display_name: itemName,
             address: item.restaurantAddress,
             restaurant: restaurantName,
             restaurant_id: restaurant,
@@ -131,7 +142,8 @@ export default function MenuItem(props) {
                 size4: item.size4,
                 val4: item.val4,
                 halfer: item.halfer,
-                arrs: item.arrs
+                arrs: item.arrs,
+                restaurant_id: item.restaurant_id
             }));
             axios.post('/api/cart', { 
                 cart: cleanCart,
@@ -216,12 +228,23 @@ export default function MenuItem(props) {
                 useEffect(()=>{
                     itemTotal();
                 }, [val1, val2, val3, val4])
+
+                const resolveNameForSize = (menuItem, index) => {
+                    const sizeKey = `size${index}`;
+                    const sizeValue = menuItem[sizeKey];
+                    if (sizeValue && sizeValue.trim().length) {
+                        return `${menuItem.name} - ${sizeValue.trim()}`;
+                    }
+                    return menuItem.name;
+                };
+
                 function changeRadio1(e) {
                     setVal1(1);
                     setVal2(0);
                     setVal3(0);
                     setVal4(0);
                     calcItemTotal(1);
+                    setItemName(resolveNameForSize(item, 1));
                 }
                 function changeRadio2(e) {
                     setVal1(0);
@@ -229,6 +252,7 @@ export default function MenuItem(props) {
                     setVal3(0);
                     setVal4(0);
                     calcItemTotal(2);
+                    setItemName(resolveNameForSize(item, 2));
                 }
                 function changeRadio3(e) {
                     setVal1(0);
@@ -236,6 +260,7 @@ export default function MenuItem(props) {
                     setVal3(1);
                     setVal4(0);
                     calcItemTotal(3);
+                    setItemName(resolveNameForSize(item, 3));
                 }
                 function changeRadio4(e) {
                     setVal1(0);
@@ -243,12 +268,16 @@ export default function MenuItem(props) {
                     setVal3(0);
                     setVal4(1);
                     calcItemTotal(4);
+                    setItemName(resolveNameForSize(item, 4));
                 }
                 return (
                     <form key={key} onSubmit={(e) => addToCart(e, item)}>
                         <div className="row">
                             <div className="col-sm-12 text-center">
-                                <h2>{item.name}</h2>
+                                <h2>{itemName}</h2>
+                                {sizeLabel && (
+                                    <p className="text-muted mb-0">{sizeLabel}</p>
+                                )}
                                 <h3>
                                     <p>
                                         <b className="text-success">

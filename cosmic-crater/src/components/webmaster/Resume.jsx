@@ -84,7 +84,7 @@ const Skills = () => {
                 <div className="col-12">
                 <h5 className="border-bottom pb-1 mb-1">Objective</h5>
                 <p className="small mb-0 lh-sm">
-                    Seeking a full-time Full-Stack JavaScript Developer position where I can leverage my unique combination of technical skills and industry experience in food delivery and healthcare technology to build innovative, user-focused web applications. Particularly interested in opportunities that allow me to apply my expertise in React, Node.js, and database design to solve real-world business challenges.
+                    Seeking a full-time JavaScript Developer position where I can leverage my unique combination of technical skills and industry experience in food delivery and healthcare technology to build innovative, user-focused web applications. Particularly interested in opportunities that allow me to apply my expertise in React, Node.js, and database design to solve real-world business challenges.
                 </p>
                 </div>
             </div>
@@ -108,7 +108,7 @@ const Skills = () => {
                         Defined and implemented secure access workflows, designing Google OAuth integration and Express middleware for session management and role‑based authorization.
                         </li>
                         <li className="mb-0 lh-sm">
-                        Translated delivery network goals into a location‑aware service by integrating Google Maps/Places API and haversine distance calculations to optimize restaurant recommendations and dynamic delivery fees.
+                        Translated delivery network goals into a location‑aware service by integrating Google Maps/Places API to optimize restaurant recommendations and dynamic delivery fees.
                         </li>
                         <li className="mb-0 lh-sm">
                         Designed a flexible, revenue‑driving menu customization feature—complete with ingredient modifiers and real‑time price updates—to meet evolving restaurant business needs.
@@ -181,11 +181,34 @@ const Skills = () => {
                     <h5 className="border-bottom pb-1 mb-1">Experience</h5>
                     <div className="">
                         <div className="d-flex justify-content-between">
+                            <b className="small">7-11</b>
+                        </div>
+                        <div className="d-flex justify-content-between">
+                            <small className="text-muted fst-italic">Store Associate</small>
+                            <small className="text-muted">May 2025 - Present</small>
+                        </div>
+                        <ul className="small mb-0">
+                            <li className="mb-0 lh-sm">
+                                Scanning store merchandise at the register, verifying customer identification for age-restricted items, and processing cash and credit card transactions.
+                            </li>
+                            <li className="mb-0 lh-sm">
+                                Restocking shelves, cleaning store areas, and maintaining a clean and organized shopping environment.
+                            </li>
+                            <li className="mb-0 lh-sm">
+                                Providing excellent customer service to ensure a positive shopping experience.
+                            </li>
+                            <li className="mb-0 lh-sm">
+                                Receiving, verifying, and logging vendor deliveries from McLane, Monster Energy, Coca‑Cola, and other major brands.
+                            </li>
+                        </ul>
+                    </div>
+                    <div className="">
+                        <div className="d-flex justify-content-between">
                             <b className="small">Uber Eats</b>
                         </div>
                         <div className="d-flex justify-content-between">
                             <small className="text-muted fst-italic">Delivery Driver</small>
-                            <small className="text-muted">October 2019 - September 2024</small>
+                            <small className="text-muted">October 2019 - May 2025</small>
                         </div>
                         <ul className="small mb-0">
                             <li className="mb-0 lh-sm">

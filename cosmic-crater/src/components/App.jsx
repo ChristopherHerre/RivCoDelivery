@@ -20,7 +20,6 @@ import Users from './webmaster/Users';
 import Donate from './users/nav/Donate';
 import BottomNavbar from './users/nav/BottomNavbar';
 import Navbar from './users/nav/Navbar';
-import SRS from './webmaster/SRS';
 import TaxiFareCalculator from './users/address/TaxiFareCalculator';
 
 export const API_URL = false ?
@@ -79,19 +78,22 @@ export function App() {
 		setCartAmount(ca);
 	}, [cart]); // Only depend on cart changes for amount calculation
 
+	// 1. Load profile on mount
 	useEffect(() => {
-		console.log("useEffect App - Cart Loading");
-		// Load cart from backend when component mounts or profile changes
+		const storedProfile = localStorage.getItem('profile');
+		if (storedProfile) {
+			setProfile(JSON.parse(storedProfile));
+		}
+	}, []);
+
+	// 2. Load cart when profile changes
+	useEffect(() => {
 		const loadCartFromBackend = async () => {
-			const profile = JSON.parse(localStorage.getItem('profile'));
 			if (profile?.sub) {
 				try {
 					const response = await axios.get('/api/cart');
 					if (response.data && Array.isArray(response.data)) {
-						// Only update cart if it's different from current cart
-						if (JSON.stringify(response.data) !== JSON.stringify(cart)) {
-							setCart(response.data);
-						}
+						setCart(response.data);
 					}
 				} catch (error) {
 					console.error('Error loading cart:', error);
@@ -100,25 +102,9 @@ export function App() {
 				}
 			}
 		};
+		loadCartFromBackend();
+	}, [profile]);
 
-		// Only load cart on initial mount or when profile changes
-		const storedProfile = localStorage.getItem('profile');
-		if (storedProfile) {
-			const parsedProfile = JSON.parse(storedProfile);
-			if (JSON.stringify(parsedProfile) !== JSON.stringify(profile)) {
-				loadCartFromBackend();
-			}
-		}
-
-		const fetchProfile = async () => {
-			const storedProfile = localStorage.getItem('profile');
-			if (storedProfile) {
-				setProfile(JSON.parse(storedProfile));
-			}
-		};
-		fetchProfile().catch(error => 
-			 console.error('Error in fetchProfile:', error));
-	}, [setCart]); // Only depend on profile changes for cart loading
 	let USDollar = new Intl.NumberFormat('en-US', {
 		style: 'currency',
 		currency: 'USD',
@@ -216,10 +202,6 @@ export function App() {
 						<Route
 							path="donate"
 							element={<Donate cartAmount={cartAmount} />}
-						/>
-						<Route
-							path="srs"
-							element={<SRS cartAmount={cartAmount} />}
 						/>
 						<Route
 							path="taxi"

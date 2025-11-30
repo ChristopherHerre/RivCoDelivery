@@ -1,75 +1,73 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import axios from 'axios';
+
+// Generate a session token for billing optimization
+function generateSessionToken() {
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+}
 
 function PlaceAutocomplete({ onPlaceSelected, defaultValue = "", placeholder = "Enter address" }) {
     const inputRef = useRef(null);
     const [suggestions, setSuggestions] = useState([]);
-    const [autocompleteService, setAutocompleteService] = useState(null);
-    const [placesService, setPlacesService] = useState(null);
-    const [sessionToken, setSessionToken] = useState(null);
-    useEffect(() => {
-        const loadGoogleMapsScript = () => {
-            if (window.google && window.google.maps && window.google.maps.places) {
-                initializeServices();
-                return;
-            }
-            const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
-            if (existingScript) return;
-            const script = document.createElement("script");
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${window.yourApiKey}&libraries=places`;
-            script.async = true;
-            script.defer = true;
-            script.onload = initializeServices;
-            document.head.appendChild(script);
-        };
-        const initializeServices = () => {
-            const google = window.google;
-            setAutocompleteService(new google.maps.places.AutocompleteService());
-            setPlacesService(new google.maps.places.PlacesService(document.createElement("div")));
-            setSessionToken(new google.maps.places.AutocompleteSessionToken());
-        };
-        if (!window.yourApiKey) {
-            axios.get('/api/maps-api-key').then(res => {
-                window.yourApiKey = res.data.apiKey;
-                loadGoogleMapsScript();
-            });
-        } else {
-            loadGoogleMapsScript();
-        }
-    }, []);
-    const handleInputChange = (e) => {
+    const [sessionToken, setSessionToken] = useState(generateSessionToken());
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleInputChange = useCallback(async (e) => {
         const value = e.target.value;
-        if (value && autocompleteService && sessionToken) {
-            autocompleteService.getPlacePredictions(
-                {
+        if (!value || value.length < 2) {
+            setSuggestions([]);
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await axios.get('/places/autocomplete', {
+                params: {
                     input: value,
                     sessionToken: sessionToken,
-                    componentRestrictions: { country: 'us' },
+                    country: 'us',
                 },
-                (predictions, status) => {
-                    if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-                        setSuggestions(predictions);
-                    } else {
-                        setSuggestions([]);
-                    }
+            });
+
+            if (response.data.status === 'OK' && response.data.predictions) {
+                setSuggestions(response.data.predictions);
+            } else {
+                // Log non-OK responses for debugging
+                if (response.data.status !== 'ZERO_RESULTS') {
+                    console.error('[PlaceAutocomplete] Non-OK response status:', {
+                        status: response.data.status,
+                        error_message: response.data.error_message,
+                        input: value.substring(0, 50),
+                    });
                 }
-            );
-        } else {
+                setSuggestions([]);
+            }
+        } catch (error) {
+            console.error('Error fetching autocomplete suggestions:', error);
             setSuggestions([]);
+        } finally {
+            setIsLoading(false);
         }
-    };
-    const handleSelect = (placeId) => {
-        if (!placesService || !sessionToken) return;
-        placesService.getDetails(
-            {
-                placeId,
-                fields: ['formatted_address', 'geometry', 'address_components'],
-                sessionToken: sessionToken,
-            },
-            (place, status) => {
-                if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-                    const lat = place.geometry.location.lat();
-                    const lng = place.geometry.location.lng();
+    }, [sessionToken]);
+
+    const handleSelect = useCallback(async (placeId) => {
+        if (!placeId) return;
+
+        try {
+            const response = await axios.get('/places/details', {
+                params: {
+                    placeId: placeId,
+                    sessionToken: sessionToken,
+                    fields: 'formatted_address,geometry,address_components',
+                },
+            });
+
+            if (response.data.status === 'OK' && response.data.result) {
+                const place = response.data.result;
+                const lat = place.geometry?.location?.lat;
+                const lng = place.geometry?.location?.lng;
+                
+                if (lat !== undefined && lng !== undefined) {
                     const extractedAddress = extractAddress(place);
                     onPlaceSelected({
                         address: extractedAddress,
@@ -77,12 +75,24 @@ function PlaceAutocomplete({ onPlaceSelected, defaultValue = "", placeholder = "
                         longitude: lng,
                     });
                     setSuggestions([]);
-                    inputRef.current.value = place.formatted_address;
-                    setSessionToken(new window.google.maps.places.AutocompleteSessionToken());
+                    if (inputRef.current) {
+                        inputRef.current.value = place.formatted_address || '';
+                    }
+                    // Generate new session token for next autocomplete session
+                    setSessionToken(generateSessionToken());
                 }
+            } else {
+                // Log non-OK responses for place details
+                console.error('[PlaceAutocomplete] Place details non-OK response:', {
+                    status: response.data.status,
+                    error_message: response.data.error_message,
+                    placeId: placeId ? placeId.substring(0, 50) : 'undefined',
+                });
             }
-        );
-    };
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+        }
+    }, [sessionToken, onPlaceSelected]);
     const extractAddress = (place) => {
         const address = {
             streetNumber: "",
