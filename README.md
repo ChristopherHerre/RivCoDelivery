@@ -3,7 +3,7 @@ title: 'Software Requirements Specfication'
 description: 'srs'
 pubDate: 2024-12-12
 heroImage: '/hero.jpg'
-slug: 'srs'
+slug: 'software-requirements'
 ---
 # Software Requirements Specification (SRS)
 ## RivCoDelivery - Full-Stack Delivery Application
