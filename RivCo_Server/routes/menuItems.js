@@ -374,6 +374,30 @@ function menuItemRoutes(app, pool, checkRole) {
         }
     });
 
+    // PUBLIC: menu items for a restaurant, for SEO / SSR
+    // GET /api/public/menu-items?restaurant_id=1
+    router.get('/public/menu-items', async (req, res) => {
+        const restaurantId = Number(req.query.restaurant_id);
+        if (!Number.isInteger(restaurantId) || restaurantId <= 0) {
+            return res.status(400).json({ error: 'restaurant_id must be a positive integer' });
+        }
+        try {
+            const [rows] = await pool.execute(
+                `SELECT id, restaurant_id, name, size_display_name,
+                        price, size1, size2, size3, size4,
+                        price2, price3, price4, category, sort
+                 FROM menu_items
+                 WHERE restaurant_id = ?
+                 ORDER BY category, sort, name`,
+                [restaurantId]
+            );
+            res.json(rows);
+        } catch (err) {
+            console.error('Error fetching public menu items:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
     return router;
 }
 

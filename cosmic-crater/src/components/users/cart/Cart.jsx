@@ -1,8 +1,9 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { roundedToFixed } from '../../App';
 import axios from 'axios';
 import { fetchCart } from '../checkout/CheckoutForm';
+import { parseRestaurantId, getRestaurantMenuUrl, getRestaurantCheckoutUrl, slugify } from '../../../utils/restaurantUrls';
 
 export async function saveCartToBackend(cart, userId) {
     if (!userId) {
@@ -32,6 +33,9 @@ export default function Cart(props) {
     //const [cart, setLocalCart] = useState([]);
 	const [cartLoading, setCartLoading] = useState(true);
     const navigate = useNavigate();
+    const params = useParams();
+    const { restaurant: restaurantParam, city } = params;
+    const [restaurantData, setRestaurantData] = useState(null);
 
     // Get restaurant ID from the first cart item
     //const restaurant = cart.length > 0 ? cart[0].restaurant_id : null;
@@ -139,6 +143,12 @@ export default function Cart(props) {
         );
     }
     const getRestaurantId = () => {
+        // Try route params first (new format)
+        if (restaurantParam) {
+            const routeId = parseRestaurantId(restaurantParam);
+            if (routeId) return routeId;
+        }
+        // Fall back to cart
         if (!cart || cart.length === 0) return null;
         if (!cart[0].restaurant_id) {
             console.error('No restaurant_id found in cart item:', cart[0]);
@@ -146,6 +156,37 @@ export default function Cart(props) {
         }
         return cart[0].restaurant_id;
     };
+
+    // Fetch restaurant data for building URLs
+    useEffect(() => {
+        const restaurantId = getRestaurantId();
+        if (restaurantId && !restaurantData) {
+            axios.get(`/api/public/restaurants/${restaurantId}`)
+                .then(res => {
+                    setRestaurantData(res.data);
+                })
+                .catch(err => {
+                    console.error('Error fetching restaurant data:', err);
+                });
+        }
+    }, [restaurantParam, cart]);
+
+    const getMenuUrl = () => {
+        if (restaurantData && restaurantData.city_slug) {
+            return getRestaurantMenuUrl(restaurantData);
+        }
+        const restaurantId = getRestaurantId();
+        return restaurantId ? `/${restaurantId}/menu` : '/';
+    };
+
+    const getCheckoutUrl = () => {
+        if (restaurantData && restaurantData.city_slug) {
+            return getRestaurantCheckoutUrl(restaurantData);
+        }
+        const restaurantId = getRestaurantId();
+        return restaurantId ? `/${restaurantId}/checkout` : '/';
+    };
+
     // In Cart.jsx
     return (
         <div className="m-1">
@@ -153,7 +194,7 @@ export default function Cart(props) {
             {!cartLoading && cart.length > 0 && (
                 <button 
                     className="btn btn-secondary btn-lg" 
-                    onClick={() => navigate(`/${getRestaurantId()}/menu`)}
+                    onClick={() => navigate(getMenuUrl())}
                 >
                     <i className="bi bi-arrow-return-left"> </i>
                     Back
@@ -179,7 +220,7 @@ export default function Cart(props) {
                             className="btn btn-primary form-control" 
                             onClick={() => {
                                 //saveCartToBackend(cart, profile.sub);
-                                navigate(`/${getRestaurantId()}/checkout`);
+                                navigate(getCheckoutUrl());
                             }}
                         >
                             Checkout

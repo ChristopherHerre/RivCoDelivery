@@ -45,6 +45,9 @@ function Navbar(props) {
                 localStorage.setItem('profile', JSON.stringify(res.data));
                 setLoginLoading(false);
                 setShowGetLocation(true);
+                
+                // Dispatch custom event to notify SSR pages to show SPA
+                window.dispatchEvent(new Event('profile-changed'));
             } catch (err) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {
                     console.error('Error verifying token, retrying...', err);

@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios';
 import QuantitySelector from '../../../users/QuantitySelector';
 import currency from 'currency.js';
@@ -8,13 +8,41 @@ import Spinner from '../../../users/Spinner';
 import { groupBy } from '../../RestaurantsList';
 import { useParams } from 'react-router-dom';
 import { saveCartToBackend } from '../../../users/cart/Cart';
+import { parseRestaurantId, getRestaurantMenuUrl, slugify } from '../../../../utils/restaurantUrls';
+
 export default function MenuItem(props) {
-    const { restaurant } = useParams();
+    const params = useParams();
+    const [searchParams] = useSearchParams();
+    const { restaurant: restaurantParam, city } = params;
     const USDollar = props.USDollar;
-    const restaurantName = props.restaurantName;
     const debug = props.debug;
     const cart = props.cart;
     const setCart = props.setCart;
+    const [restaurantData, setRestaurantData] = useState(null);
+    const [restaurantName, setRestaurantName] = useState(props.restaurantName || "");
+    
+    // Get menuItem ID from query params or props (backward compatibility)
+    const menuItemId = React.useMemo(() => {
+        const itemParam = searchParams.get('item');
+        if (itemParam) {
+            const id = Number(itemParam);
+            if (!Number.isNaN(id)) return id;
+        }
+        // Fallback to props for backward compatibility
+        if (props.menuItem && props.menuItem > 0) return props.menuItem;
+        return -1;
+    }, [searchParams, props.menuItem]);
+    
+    // Parse restaurant ID from param or use prop
+    const restaurant = React.useMemo(() => {
+        if (props.restaurant && props.restaurant > 0) return props.restaurant;
+        if (restaurantParam) {
+            const numId = Number(restaurantParam);
+            if (!Number.isNaN(numId)) return numId;
+            return parseRestaurantId(restaurantParam);
+        }
+        return props.restaurant || -1;
+    }, [restaurantParam, props.restaurant]);
     const [itemConfig, setItemConfig] = useState([]);
     const [itemIngredients, setItemIngredients] = useState([]);
     const [val1, setVal1] = useState(1);
@@ -34,10 +62,13 @@ export default function MenuItem(props) {
     const [sizeLabel, setSizeLabel] = useState("");
     useEffect(() => {
         const fetchMenuItem = async (attempt = 1) => {
-            if (props.menuItem < 0) navigate("/");
-            console.log("menuItem: " + props.menuItem);
+            if (menuItemId < 0) {
+                navigate("/");
+                return;
+            }
+            console.log("menuItem: " + menuItemId);
             try {
-                const res = await axios.get('/api/menu/item', { params: { menuItem: props.menuItem } });
+                const res = await axios.get('/api/menu/item', { params: { menuItem: menuItemId } });
                 setItemConfig(res.data);
                 if (res.data[0] != undefined) {
                     const menuItem = res.data[0];
@@ -60,7 +91,7 @@ export default function MenuItem(props) {
         };
         const fetchMenuItemIngredients = async (attempt = 1) => {
             try {
-                const res = await axios.get('/api/menu/item/ingredients', { params: { menuItem: props.menuItem } });
+                const res = await axios.get('/api/menu/item/ingredients', { params: { menuItem: menuItemId } });
                 setItemIngredients(res.data);
                 const initialEnabled = res.data.map(ingredient => ingredient.selected || false);
                 setEnabled(initialEnabled);
@@ -74,9 +105,28 @@ export default function MenuItem(props) {
                 setLoading2(false);
             }
         };
-        fetchMenuItem();
-        fetchMenuItemIngredients();
-    }, [cart, setCart, setPrice, setEnabled, setHalfables, setCustoms, setVal1, setVal2, setVal3, setVal4]);
+        if (menuItemId > 0) {
+            fetchMenuItem();
+            fetchMenuItemIngredients();
+        }
+    }, [menuItemId, navigate, cart, setCart, setPrice, setEnabled, setHalfables, setCustoms, setVal1, setVal2, setVal3, setVal4]);
+
+    // Fetch restaurant data for building URLs
+    useEffect(() => {
+        if (restaurant && restaurant > 0 && !restaurantData) {
+            axios.get(`/api/public/restaurants/${restaurant}`)
+                .then(res => {
+                    const data = res.data;
+                    setRestaurantData(data);
+                    if (data.name) {
+                        setRestaurantName(data.name);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching restaurant data:', err);
+                });
+        }
+    }, [restaurant, restaurantData]);
 
     async function addToCart(e, item) {
         e.preventDefault();
@@ -153,7 +203,14 @@ export default function MenuItem(props) {
             });
         }
         await saveCartToBackend(cart, profile.sub).then(() => {
-            navigate(`/${restaurant}/menu`);
+            // Use new URL format if we have restaurant data
+            if (restaurantData && restaurantData.city_slug) {
+                const restaurantSlug = slugify(restaurantData.name || '');
+                navigate(`/restaurants/${restaurantData.city_slug}/${restaurant}-${restaurantSlug}`);
+            } else {
+                // Fallback to old format
+                navigate(`/${restaurant}/menu`);
+            }
         });
     }
     const ingredientsData = [];
@@ -524,7 +581,16 @@ export default function MenuItem(props) {
     }
     return (
         <>
-            <button className="btn btn-secondary btn-lg m-1" onClick={(e) => navigate(`/${restaurant}/menu`)}>
+            <button className="btn btn-secondary btn-lg m-1" onClick={(e) => {
+                // Use new URL format if we have restaurant data
+                if (restaurantData && restaurantData.city_slug) {
+                    const restaurantSlug = slugify(restaurantData.name || '');
+                    navigate(`/restaurants/${restaurantData.city_slug}/${restaurant}-${restaurantSlug}`);
+                } else {
+                    // Fallback to old format
+                    navigate(`/${restaurant}/menu`);
+                }
+            }}>
                 <i className="bi bi-arrow-return-left"></i> {restaurantName != undefined ? restaurantName : "Back"}
             </button>
             {loading ? (

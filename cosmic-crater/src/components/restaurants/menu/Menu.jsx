@@ -5,28 +5,54 @@ import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../../users/Spinner';
 import { groupBy } from '../RestaurantsList';
 import { useParams } from 'react-router-dom';
+import { parseRestaurantId, getRestaurantMenuItemUrl, slugify } from '../../../utils/restaurantUrls';
 
 export default function Menu(props) {
-    const { restaurant } = useParams();
+    const params = useParams();
+    const { restaurant: restaurantParam, city } = params;
     const menuItem = props.menuItem;
     const setMenuItem = props.setMenuItem;
-    const restaurantName = props.restaurantName;
+    const [restaurantName, setRestaurantName] = useState(props.restaurantName || "");
+    const [restaurantData, setRestaurantData] = useState(null);
     const [menu, setMenu] = useState([]);
     const navigate = useNavigate();
     const result = groupBy(menu, r => r.category);
     const [loaded, setLoaded] = useState(false);
 
+    // Parse restaurant ID from param (could be just ID or "id-slug" format)
+    const restaurantId = React.useMemo(() => {
+        if (!restaurantParam) return null;
+        // If it's a number, use it directly (backward compatibility)
+        const numId = Number(restaurantParam);
+        if (!Number.isNaN(numId)) return numId;
+        // Otherwise parse from slug format like "37-krispy-kream"
+        return parseRestaurantId(restaurantParam);
+    }, [restaurantParam]);
+
     useEffect(() => {
-        const fetchMenu = async (attempt = 1) => {
-            if (props.restaurant < 0) navigate("/");
+        const fetchRestaurantAndMenu = async (attempt = 1) => {
+            if (!restaurantId) {
+                navigate("/");
+                return;
+            }
+
             try {
-                const res = await axios.get(`/api/restaurants2/${restaurant}/menu`);
-                console.log(res.data);
-                setMenu(res.data);
+                // Fetch restaurant data to get name and city_slug
+                const restaurantRes = await axios.get(`/api/public/restaurants/${restaurantId}`);
+                const restaurant = restaurantRes.data;
+                setRestaurantData(restaurant);
+                if (restaurant.name) {
+                    setRestaurantName(restaurant.name);
+                }
+
+                // Fetch menu
+                const menuRes = await axios.get(`/api/restaurants2/${restaurantId}/menu`);
+                console.log(menuRes.data);
+                setMenu(menuRes.data);
                 setLoaded(true);
             } catch (err) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {
-                    fetchMenu(attempt + 1);
+                    fetchRestaurantAndMenu(attempt + 1);
                 } else {
                     console.error('Error fetching menu:', err);
                    // window.location.href = '/404-page.html';
@@ -34,13 +60,20 @@ export default function Menu(props) {
             }
         };
 
-        fetchMenu();
-    }, [restaurant, navigate]);
+        fetchRestaurantAndMenu();
+    }, [restaurantId, navigate]);
 
     function changeMenuItem(m) {
         setMenuItem(m.id);
         console.log("menu = " + menuItem);
-        navigate(`/${restaurant}/menu/item`);
+        // Use new URL format if we have restaurant data
+        if (restaurantData && restaurantData.city_slug) {
+            const restaurantSlug = slugify(restaurantData.name || '');
+            navigate(`/restaurants/${restaurantData.city_slug}/${restaurantId}-${restaurantSlug}/menu/item?item=${m.id}`);
+        } else {
+            // Fallback to old format
+            navigate(`/${restaurantId}/menu/item?item=${m.id}`);
+        }
     }
 
     let lastCategory = "";

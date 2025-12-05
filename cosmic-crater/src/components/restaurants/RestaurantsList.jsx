@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../App';
 import Spinner from '../users/Spinner';
 import Welcome from '../users/address/Welcome';
+import { getRestaurantMenuUrl } from '../../utils/restaurantUrls';
 
 export function groupBy(array, keyFn) {
     return array.reduce((acc, item) => {
@@ -41,6 +42,7 @@ export default function RestaurantsList(props) {
     const [profile, setProfile] = useState(null);
     const navigate = useNavigate();
     const [locLoaded, setLocLoaded] = useState(false);
+
     useEffect(() => {
         const storedProfile = localStorage.getItem('profile');
         if (storedProfile) {
@@ -61,27 +63,36 @@ export default function RestaurantsList(props) {
         }
     };
 
+    // On first load, determine from the backend whether the user already has
+    // a saved address. Only *after* this runs do we decide whether to show
+    // the welcome / get-location screen.
     useEffect(() => {
         const fetchAddress = async () => {
             try {
                 const res = await axios.get(`/api/user/address`, {
                     withCredentials: true
                 });
+
                 setAddress(res.data.address);
                 setLatitude(res.data.latitude);
                 setLongitude(res.data.longitude);
+
                 if (res.data.address && res.data.address.streetNumber) {
+                    // Address exists – do NOT show the welcome component.
                     setShowGetLocation(false);
+                } else {
+                    // No saved address – show welcome / get-location.
+                    setShowGetLocation(true);
                 }
-		setLocLoaded(true);
             } catch (err) {
                 console.error('Error fetching address:', err);
+            } finally {
+                setLocLoaded(true);
             }
         };
-        if (!showGetLocation) {
-            fetchAddress();
-        }
-    }, [showGetLocation]);
+
+        fetchAddress();
+    }, []);
 
     useEffect(() => {
         const fetchRestaurants = async (attempt = 1) => {
@@ -152,7 +163,7 @@ export default function RestaurantsList(props) {
     });
     return (
         <>
-            {showGetLocation ? (<Welcome
+            {locLoaded && showGetLocation ? (<Welcome
                 address={address}
                 setAddress={setAddress}
                 showGetLocation={showGetLocation}
@@ -205,7 +216,9 @@ export default function RestaurantsList(props) {
                                     setDeliveryFee(fee);
                                     setDistance(h);
                                     //await updateUserRestaurant(data.id);
-                                    navigate(`/${data.id}/menu`);
+                                    // Use new URL format matching SSR pages
+                                    const menuUrl = getRestaurantMenuUrl(data);
+                                    navigate(menuUrl);
                                     console.log("Restaurant selected:", data.id);
                                 }
                                 return (

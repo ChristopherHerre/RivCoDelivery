@@ -1,16 +1,16 @@
 ---
 title: 'Software Requirements Specfication'
-description: 'srs'
+description: 'Describes functional/non-functional requirements and route end-points for the RivCoDelivery project.'
 pubDate: 2024-12-12
 heroImage: '/hero.jpg'
-slug: 'srs'
+slug: 'software-requirements'
 ---
 # Software Requirements Specification (SRS)
 ## RivCoDelivery - Full-Stack Delivery Application
 
 **Version:** 1.0  
 **Date:** 2024  
-**Document Status:** Final
+**Document Status:** Pending
 
 ---
 

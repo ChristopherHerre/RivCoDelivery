@@ -3,7 +3,9 @@ import {
 	BrowserRouter, 
 	Routes, 
 	Route,
-	Outlet } from 'react-router-dom';
+	Outlet,
+	useLocation,
+	useNavigate } from 'react-router-dom';
 import Menu from './restaurants/menu/Menu';
 import MenuItem from './restaurants/menu/menu_items/MenuItem';
 import RestaurantsList from './restaurants/RestaurantsList';
@@ -21,6 +23,8 @@ import Donate from './users/nav/Donate';
 import BottomNavbar from './users/nav/BottomNavbar';
 import Navbar from './users/nav/Navbar';
 import TaxiFareCalculator from './users/address/TaxiFareCalculator';
+import RedirectToNewUrl from './RedirectToNewUrl';
+import { parseRestaurantId, getRestaurantMenuUrl } from '../utils/restaurantUrls';
 
 export const API_URL = false ?
 	"http://localhost:8080"
@@ -60,7 +64,11 @@ export function App() {
 	const [restaurantAddress, setRestaurantAddress] = useState("");
 	const [deliveryFee, setDeliveryFee] = useState(0.00);
 	const [menuItem, setMenuItem] = useState(-1);
-	const [showGetLocation, setShowGetLocation] = useState(true);
+	// When the app first loads, we haven't yet checked whether the user has
+	// an address saved in the backend. Start with "not showing" the welcome
+	// screen; the address check in RestaurantsList will turn it on only if
+	// there is no saved address.
+	const [showGetLocation, setShowGetLocation] = useState(false);
 	const [address, setAddress] = useState("");
 	const [debug, setDebug] = useState(false);
 	const [distance, setDistance] = useState(0);
@@ -77,6 +85,46 @@ export function App() {
 		}
 		setCartAmount(ca);
 	}, [cart]); // Only depend on cart changes for amount calculation
+
+	function DeepLinkHandler() {
+		const location = useLocation();
+		const navigate = useNavigate();
+		const handledRef = useRef(false);
+
+		useEffect(() => {
+			if (handledRef.current) return;
+
+			const params = new URLSearchParams(location.search);
+			const view = params.get('view');
+			const restaurantParam = params.get('restaurant');
+
+			if (view === 'menu' && restaurantParam) {
+				const idNum = Number(restaurantParam);
+				if (!Number.isNaN(idNum) && idNum > 0) {
+					setRestaurant(idNum);
+					handledRef.current = true;
+					// Fetch restaurant data to build the correct URL
+					axios.get(`/api/public/restaurants/${idNum}`)
+						.then(res => {
+							const restaurantData = res.data;
+							if (restaurantData) {
+								navigate(getRestaurantMenuUrl(restaurantData), { replace: true });
+							} else {
+								// Fallback to old format if restaurant data not available
+								navigate(`/${idNum}/menu`, { replace: true });
+							}
+						})
+						.catch(err => {
+							console.error('Error fetching restaurant data:', err);
+							// Fallback to old format on error
+							navigate(`/${idNum}/menu`, { replace: true });
+						});
+				}
+			}
+		}, [location.search, navigate]);
+
+		return null;
+	}
 
 	// 1. Load profile on mount
 	useEffect(() => {
@@ -123,6 +171,7 @@ export function App() {
 	function WhiteArea() {
 		return (
 			<BrowserRouter>
+				<DeepLinkHandler />
 				<Routes>
 					<Route
 						path="/"
@@ -207,12 +256,11 @@ export function App() {
 							path="taxi"
 							element={<TaxiFareCalculator cartAmount={cartAmount} />}
 						/>
+						{/* New routes matching SSR format: /restaurants/:city/:restaurant */}
 						<Route
-							path=":restaurant/menu"
+							path="restaurants/:city/:restaurant"
 							element={
 								<Menu
-									restaurantName={restaurantName}
-									restaurant={restaurant}
 									menuItem={menuItem}
 									setMenuItem={setMenuItem}
 									cartAmount={cartAmount}
@@ -220,16 +268,12 @@ export function App() {
 							}
 						/>
 						<Route
-							path=":restaurant/menu/item"
+							path="restaurants/:city/:restaurant/menu/item"
 							element={
 								<MenuItem
 									USDollar={USDollar}
 									cartAmount={cartAmount}
 									setCartAmount={setCartAmount}
-									restaurant={restaurant}
-									restaurantName={restaurantName}
-									restaurantAddress={restaurantAddress}
-									menuItem={menuItem}
 									debug={debug}
 									cart={cart}
 									setCart={setCart}
@@ -237,10 +281,9 @@ export function App() {
 							}
 						/>
 						<Route
-							path=":restaurant/cart"
+							path="restaurants/:city/:restaurant/cart"
 							element={
 								<Cart
-									restaurant={restaurant}
 									showGetLocation={showGetLocation}
 									setShowGetLocation={setShowGetLocation}
 									address={address}
@@ -253,13 +296,12 @@ export function App() {
 							}
 						/>
 						<Route
-							path=":restaurant/checkout"
+							path="restaurants/:city/:restaurant/checkout"
 							element={
 								<Checkout
 									USDollar={USDollar}
 									address={address}
 									setAddress={setAddress}
-									restaurant={restaurant}
 									restaurantAddress={restaurantAddress}
 									setRestaurantAddress={setRestaurantAddress}
 									deliveryFee={deliveryFee}
@@ -270,6 +312,23 @@ export function App() {
 									cartLoading={cartLoading}
 								/>
 							}
+						/>
+						{/* Backward compatibility: redirect old format to new format */}
+						<Route
+							path=":restaurant/menu"
+							element={<RedirectToNewUrl />}
+						/>
+						<Route
+							path=":restaurant/menu/item"
+							element={<RedirectToNewUrl />}
+						/>
+						<Route
+							path=":restaurant/cart"
+							element={<RedirectToNewUrl />}
+						/>
+						<Route
+							path=":restaurant/checkout"
+							element={<RedirectToNewUrl />}
 						/>
 						<Route
 							path="*"
