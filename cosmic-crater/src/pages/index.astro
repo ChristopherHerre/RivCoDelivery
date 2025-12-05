@@ -4,21 +4,108 @@ import '../components/index.css'
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
-import App from "../components/App.jsx";
-import ReactDOM from 'react-dom/client';
-import { createPopper } from "@popperjs/core";
+import App from '../components/App.jsx';
+import ReactDOM from 'react-dom-client'
+import {createPopper} from '@popperjs/core';
+import { checkAuthentication } from '../utils/authCheck';
+
+// Always show SSR initially - client will check auth and mount SPA if needed
+const showSpa = false;
+
+let cities = [];
+// Always fetch cities for SSR (they'll be replaced if SPA mounts)
+const apiBase = Astro.url.origin;
+const res = await fetch(`${apiBase}/api/restaurant-cities`, {
+	method: 'GET',
+	headers: { accept: 'application/json' }
+});
+
+if (!res.ok) {
+	throw new Error(`Failed to load restaurant cities: ${res.status}`);
+}
+
+cities = await res.json();
 ---
 <!doctype html>
 <html lang="en">
 	<head>
-		<meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
-
-		<BaseHead title={SITE_TITLE} description= />
+		<BaseHead
+			title="Restaurants by city | RivCoDelivery"
+			description="Browse restaurants available on RivCoDelivery organized by city."
+		/>
 	</head>
 	<body>
 		<Header />
-		<App client:only />
-		<Footer />
+		<!-- SSR content - will be hidden if user is logged in -->
+		<div id="ssr-content">
+			<main class="container mx-auto px-4 py-5 max-w-6xl">
+				<h1 class="mb-3 text-2xl font-semibold">Restaurants by City</h1>
+				<p class="text-gray-600 mb-4 text-base">
+					Choose a city to see restaurants available for delivery with RivCoDelivery.
+				</p>
+
+				{cities.length === 0 ? (
+					<p class="text-gray-600">No cities found yet.</p>
+				) : (
+					<ul class="list-none p-0 m-0">
+						{cities.map((city) => (
+							<li class="border border-gray-300 border-t-0 first:border-t first:rounded-t last:rounded-b bg-white hover:bg-gray-50 transition-colors" key={city.city_slug}>
+								<a href={`/restaurants/${city.city_slug}`} class="block px-4 py-3 text-gray-900 no-underline hover:text-blue-600 hover:bg-gray-50">
+									{city.city_name}
+								</a>
+							</li>
+						))}
+					</ul>
+				)}
+			</main>
+			<Footer />
+		</div>
+		
+		<!-- SPA container - hidden initially, shown if user is logged in -->
+		<div id="spa-container" style="display: none;">
+			<App client:only="react" />
+		</div>
+		
+		<!-- Client-side auth check -->
+		<script>
+			function checkAuthAndShowSPA() {
+				// Check if user is authenticated via localStorage (same as SPA does)
+				const profile = localStorage.getItem('profile');
+				if (profile) {
+					// User is logged in - verify session is still valid
+					fetch('/api/session', {
+						credentials: 'include'
+					})
+					.then(res => {
+						if (res.status === 200) {
+							// Session is valid - hide SSR, show SPA
+							const ssrContent = document.getElementById('ssr-content');
+							const spaContainer = document.getElementById('spa-container');
+							if (ssrContent) ssrContent.style.display = 'none';
+							if (spaContainer) spaContainer.style.display = 'block';
+						}
+					})
+					.catch(err => {
+						console.error('Error checking session:', err);
+					});
+				} else {
+					// User is not logged in - show SSR, hide SPA
+					const ssrContent = document.getElementById('ssr-content');
+					const spaContainer = document.getElementById('spa-container');
+					if (ssrContent) ssrContent.style.display = 'block';
+					if (spaContainer) spaContainer.style.display = 'none';
+				}
+			}
+			
+			// Check on initial page load
+			checkAuthAndShowSPA();
+			
+			// Listen for custom event dispatched after login
+			window.addEventListener('profile-changed', () => {
+				checkAuthAndShowSPA();
+			});
+		</script>
 	</body>
 </html>
+
+

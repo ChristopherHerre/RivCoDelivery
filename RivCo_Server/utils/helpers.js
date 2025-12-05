@@ -79,6 +79,40 @@ const formatIngredientSummary = (ingredientsRows, selections, halfSelections) =>
     return summary.trim();
 };
 
+/**
+ * Best-effort extraction of a city name from a free-form address string.
+ * This is intentionally conservative: it only parses when the address
+ * clearly contains a "street, City, ST ZIP" style pattern.
+ *
+ * Examples:
+ *  - "2915 Van Buren Boulevard, Riverside, CA 92503" -> "Riverside"
+ *  - "1205 Magnolia Ave, Corona, CA 92879" -> "Corona"
+ */
+const extractCityFromAddressString = (address) => {
+    if (!address || typeof address !== "string") return null;
+    const parts = address.split(",").map(p => p.trim()).filter(Boolean);
+    // Expect at least: [street, City, State/Zip]
+    if (parts.length < 2) return null;
+    // Use the second segment as the city ("Riverside", "Corona", etc.)
+    const cityCandidate = parts[1];
+    if (!cityCandidate) return null;
+    return cityCandidate;
+};
+
+/**
+ * Normalize a city name into a URL-safe slug, e.g. "Riverside" -> "riverside-ca".
+ * For now we suffix "-ca" because the service is Riverside County focused.
+ */
+const toCitySlug = (cityName) => {
+    if (!cityName || typeof cityName !== "string") return null;
+    const base = cityName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+    if (!base) return null;
+    return `${base}-ca`;
+};
+
 const buildUserAddress = (userRow) => {
     const streetNumber = userRow?.address_street_number ? String(userRow.address_street_number).trim() : "";
     const streetName = userRow?.address_street ? String(userRow.address_street).trim() : "";
@@ -108,6 +142,8 @@ module.exports = {
     safeJsonParse,
     isSelectedIngredient,
     formatIngredientSummary,
-    buildUserAddress
+    buildUserAddress,
+    extractCityFromAddressString,
+    toCitySlug
 };
 

@@ -1,0 +1,138 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import App from '../../components/App.jsx';
+
+const { city } = Astro.params;
+
+// Always show SSR initially - client will check auth and mount SPA if needed
+const showSpa = false;
+
+let restaurants = [];
+let cityName = 'this area';
+
+// Always fetch restaurants for SSR (they'll be replaced if SPA mounts)
+const apiBase = Astro.url.origin;
+const res = await fetch(
+	`${apiBase}/api/restaurants-by-city?city_slug=${encodeURIComponent(city)}`,
+	{
+		method: 'GET',
+		headers: { accept: 'application/json' }
+	}
+);
+
+if (!res.ok) {
+	throw new Error(`Failed to load restaurants for city: ${res.status}`);
+}
+
+restaurants = await res.json();
+cityName = restaurants[0]?.city_name ?? 'this area';
+
+const slugify = (name) =>
+	name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/(^-|-$)/g, '');
+---
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Restaurants in ${cityName} | RivCoDelivery`}
+			description={`Discover restaurants in ${cityName} available for delivery with RivCoDelivery.`}
+		/>
+	</head>
+	<body>
+		<!-- SSR content - will be hidden if user is logged in -->
+		<div id="ssr-content">
+			<Header />
+			<main class="container mx-auto px-4 py-5 max-w-6xl">
+				<h1 class="mb-3 text-2xl font-semibold">Restaurants in {cityName}</h1>
+
+				{restaurants.length === 0 ? (
+					<p class="text-gray-600">No restaurants found in this city yet.</p>
+				) : (
+					<div class="row flex flex-wrap -mx-3">
+						{restaurants.map((r) => {
+							const slug = slugify(r.name);
+							return (
+								<div class="w-full md:w-1/2 px-3 mb-3" key={r.id}>
+									<article class="border border-gray-300 rounded-lg shadow-sm bg-white h-full flex flex-col">
+										<div class="p-4 flex-1 flex flex-col">
+											<h2 class="text-lg font-semibold mb-2">
+												<a href={`/restaurants/${city}/${r.id}-${slug}`} class="text-gray-900 no-underline hover:text-blue-600">
+													{r.name}
+												</a>
+											</h2>
+											<p class="mb-1 text-base">
+												<strong class="font-semibold">{r.category}</strong>
+											</p>
+											<p class="mb-2 text-base text-gray-700">{r.address}</p>
+											<div class="mt-auto">
+												<a
+													href={`/restaurants/${city}/${r.id}-${slug}`}
+													class="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline"
+												>
+													View menu
+												</a>
+											</div>
+										</div>
+									</article>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</main>
+			<Footer />
+		</div>
+		
+		<!-- SPA container - hidden initially, shown if user is logged in -->
+		<div id="spa-container" style="display: none;">
+			<App client:only="react" />
+		</div>
+		
+		<!-- Client-side auth check -->
+		<script>
+			function checkAuthAndShowSPA() {
+				// Check if user is authenticated via localStorage (same as SPA does)
+				const profile = localStorage.getItem('profile');
+				if (profile) {
+					// User is logged in - verify session is still valid
+					fetch('/api/session', {
+						credentials: 'include'
+					})
+					.then(res => {
+						if (res.status === 200) {
+							// Session is valid - hide SSR, show SPA
+							const ssrContent = document.getElementById('ssr-content');
+							const spaContainer = document.getElementById('spa-container');
+							if (ssrContent) ssrContent.style.display = 'none';
+							if (spaContainer) spaContainer.style.display = 'block';
+						}
+					})
+					.catch(err => {
+						console.error('Error checking session:', err);
+					});
+				} else {
+					// User is not logged in - show SSR, hide SPA
+					const ssrContent = document.getElementById('ssr-content');
+					const spaContainer = document.getElementById('spa-container');
+					if (ssrContent) ssrContent.style.display = 'block';
+					if (spaContainer) spaContainer.style.display = 'none';
+				}
+			}
+			
+			// Check on initial page load
+			checkAuthAndShowSPA();
+			
+			// Listen for custom event dispatched after login
+			window.addEventListener('profile-changed', () => {
+				checkAuthAndShowSPA();
+			});
+		</script>
+	</body>
+</html>
+
+

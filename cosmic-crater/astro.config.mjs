@@ -4,8 +4,12 @@ import node from '@astrojs/node';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import react from "@astrojs/react";
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import tailwindcss from '@tailwindcss/vite';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
@@ -18,5 +22,10 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
   },
 });

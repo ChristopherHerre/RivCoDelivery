@@ -45,7 +45,11 @@ function authRoutes(app, pool, checkRole, orderLimiter, client, passport) {
     // GET /api/session
     router.get('/session', (req, res) => {
         console.log('Retrieving session...');
+        console.log('Cookies received:', req.headers.cookie);
+        console.log('Parsed cookies:', req.cookies);
+        console.log('Session ID:', req.sessionID);
         console.log('Session in /api/session:', req.session);
+        console.log('Session user:', req.session?.user);
         if (req.session.user) {
             res.json(req.session.user);
         } else {

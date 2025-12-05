@@ -1,9 +1,16 @@
 import { Link } from 'react-router-dom';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { useEffect } from 'react';
 
 const AdminDropdown = (props) => {
     const full = props.full;
     const profile = props.profile;
+    
+    useEffect(() => {
+        // Only load Bootstrap JS on the client side
+        if (typeof window !== 'undefined') {
+            import('bootstrap/dist/js/bootstrap.bundle.min.js');
+        }
+    }, []);
     return (
         <div className="dropdown">
             {profile ? (

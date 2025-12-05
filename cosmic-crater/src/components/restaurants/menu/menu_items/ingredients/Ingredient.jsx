@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Spinner from '../../../../users/Spinner';
 import { isNumericField, getTooltip } from './NewIngredient';
-import * as bootstrap from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 function Ingredient(props) {
     const index = props.index;
     const sortedFields = props.sortedFields;
@@ -13,16 +12,35 @@ function Ingredient(props) {
     const [error, setError] = useState("");
     const [error2, setError2] = useState("");
     useEffect(() => {
-        // Initialize tooltips
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+        // Only import and use Bootstrap on the client side
+        if (typeof window === 'undefined') return;
+        
+        let bootstrapModule = null;
+        let tooltipInstances = [];
+        
+        const initTooltips = async () => {
+            try {
+                bootstrapModule = await import('bootstrap/dist/js/bootstrap.bundle.min.js');
+                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltipTriggerList.forEach(el => {
+                    const tooltip = new bootstrapModule.Tooltip(el);
+                    tooltipInstances.push(tooltip);
+                });
+            } catch (error) {
+                console.error('Error loading Bootstrap:', error);
+            }
+        };
+        
+        initTooltips();
         
         // Cleanup function
         return () => {
-            tooltipTriggerList.forEach(el => {
-                const tooltip = bootstrap.Tooltip.getInstance(el);
-                if (tooltip) tooltip.dispose();
-            });
+            if (typeof window !== 'undefined') {
+                tooltipInstances.forEach(tooltip => {
+                    if (tooltip) tooltip.dispose();
+                });
+                tooltipInstances = [];
+            }
         };
     }, []);
     const handleChange = useCallback((id, key, value) => {
