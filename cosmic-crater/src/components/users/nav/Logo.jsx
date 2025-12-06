@@ -8,7 +8,7 @@ function Logo(props) {
     const address = props.address;
     const setAddress = props.setAddress;
     return (
-        <div className="col-12 col-lg-6">
+        <div className="w-full lg:w-1/2">
             <Link to="/">
                 <button 
                         className="removebutton align-text-bottom" 
@@ -17,7 +17,7 @@ function Logo(props) {
                     <span className="logofont">DELIVERY</span>
                 </button>
             </Link>
-            <div className="col-12">
+            <div className="w-full">
                 {profile ? <DeliveryAddress 
                     showGetLocation={showGetLocation} 
                     setShowGetLocation={setShowGetLocation} 
@@ -26,7 +26,7 @@ function Logo(props) {
                 /> : 
                 <div>
                     <label>
-                        <u className="text-danger">
+                        <u className="text-red-600">
                             You must sign in to place an order!
                         </u>
                     </label>

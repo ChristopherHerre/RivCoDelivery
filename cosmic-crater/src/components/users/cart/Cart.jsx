@@ -104,8 +104,8 @@ export default function Cart(props) {
         const cart = props.cart;
         return (
             <div>
-                <div className="row">
-                    <div className="col-sm-12">
+                <div className="flex">
+                    <div className="w-full">
                         <span className="p-3">
                             { cart.length === 0 ? "Empty." : ""}
                         </span>
@@ -118,17 +118,17 @@ export default function Cart(props) {
                                 <CartItemDetails
                                     USDollar={USDollar}
                                     cartItem={cartItem} />
-                                <div className="row text-sm-end">
-                                    <div className="col-sm-6">
+                                <div className="flex flex-wrap items-end justify-end sm:justify-end gap-2 mt-2">
+                                    <div className="w-full sm:w-auto">
                                         <QuantitySelector 
                                             key2={key} 
                                             cartItem={cartItem} 
                                             setCart={setCart} 
                                         />
                                     </div>
-                                    <div className="col-sm-6 float-sm-right">
+                                    <div className="w-full sm:w-auto">
                                         <button
-                                            className="btn btn-danger btn-sm form-control"
+                                            className="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 transition-colors text-sm w-full sm:w-auto"
                                             onClick={(e) => removeFromCart(key)}>
                                                 <i className="bi bi-trash3"> </i>
                                                 Remove
@@ -193,7 +193,7 @@ export default function Cart(props) {
             {/* Add loading check and null check for cart */}
             {!cartLoading && cart.length > 0 && (
                 <button 
-                    className="btn btn-secondary btn-lg" 
+                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-lg" 
                     onClick={() => navigate(getMenuUrl())}
                 >
                     <i className="bi bi-arrow-return-left"> </i>
@@ -201,15 +201,15 @@ export default function Cart(props) {
                 </button>
             )}
             <h1>Shopping Cart</h1>
-            <div className="row">
-                <div className="col-sm-7">
+            <div className="flex flex-wrap">
+                <div className="w-full sm:w-7/12">
                     {cartLoading ? (
                         <div>Loading cart...</div>
                     ) : (
                         <CartItems cart={cart} />
                     )}
                 </div>
-                <div className="col-sm-5">
+                <div className="w-full sm:w-5/12">
                     <Subtotal
                         USDollar={USDollar}
                         subtotal={subtotal} 
@@ -217,7 +217,7 @@ export default function Cart(props) {
                     {/* Add loading check and null check for cart */}
                     {!cartLoading && cart.length > 0 && (
                         <button 
-                            className="btn btn-primary form-control" 
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full" 
                             onClick={() => {
                                 //saveCartToBackend(cart, profile.sub);
                                 navigate(getCheckoutUrl());
@@ -266,22 +266,22 @@ export function QuantitySelector(props) {
         });
     }
     return (
-        <span className="input-group mb-1">
+        <span className="flex items-center gap-1 mb-1">
             <button
                 type="button"
-                className="btn btn-primary btn-sm btn-outline-secondary text-white form-control"
+                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
                 onClick={(e) => decrement(key, setCart)}>
                 <i className="bi bi-dash-lg"></i>
             </button>
             <input
-                className={"input-number text-center"}
+                className={"input-number text-center w-12"}
                 disabled="disabled"
                 type="textparse"
                 value={cartItem.quantity}
                 size="2" />
             <button
                 type="button"
-                className="btn btn-primary btn-sm btn-outline-secondary text-white form-control"
+                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
                 onClick={(e) => increment(key, setCart)}>
                 <i className="bi bi-plus-lg"></i>
             </button>
@@ -323,7 +323,7 @@ export function CartItemDetails(props) {
     return (
         <div>
             <h5>{cartItem.display_name || cartItem.name}</h5>
-            <b className="text-success">
+            <b className="text-green-600">
                 {USDollar.format(cartItem.price)} x {cartItem.quantity} = {USDollar.format(roundedToFixed(cartItem.price * cartItem.quantity, 2))}
             </b>
             <div>
@@ -353,7 +353,7 @@ export function Subtotal(props) {
     return (
         <h4 className="currency-item">
             <span>Subtotal: </span>
-            <b className="amount text-success">
+            <b className="amount text-green-600">
                 {USDollar.format(subtotal)}
             </b>
         </h4>

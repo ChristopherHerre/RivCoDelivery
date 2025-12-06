@@ -9,7 +9,7 @@ export default function Admin(props) {
     const [loading, setLoading] = useState(false);
     const [loading2, setLoading2] = useState(false);
     return (
-        <div className="container-fluid p-3">
+        <div className="w-full p-3">
             <h2 className="mb-4">Admin Panel</h2>
             <ManageRestaurant 
                 setLoading={setLoading}

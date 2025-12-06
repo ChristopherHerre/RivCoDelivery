@@ -129,7 +129,7 @@ export default function CheckoutForm(props) {
 	return (cartLoading || deliveryFee == null ? <Spinner /> : cart.length > 0 ? (
 		<form onSubmit={(e) => submit(e)}>
 			<h1>Checkout</h1>
-			<div className="row">
+			<div className="flex flex-wrap">
 				<DeliveryInstructions 
 					setTextAreaValue={setTextAreaValue} 
 				/>
@@ -281,14 +281,14 @@ export function KnockTypes(props) {
   	const knockType3 = props.knockType3;
   	const setLeave = props.setLeave;
 	return (
-		<div className="col-md-6">
+		<div className="w-full md:w-1/2">
 			<h5 className="m-1">
-				<span className="text-danger">
+				<span className="text-red-600">
 					*
 				</span>
 				Drop-off type
 			</h5>
-			<div className="text-bg-dark p-3 m-1 rounded">
+			<div className="bg-gray-900 text-white p-3 m-1 rounded">
 				<label>
 					<input 
 						required 
@@ -299,7 +299,7 @@ export function KnockTypes(props) {
 					/> Knock on door
 				</label>
 			</div>
-			<div className="text-bg-dark p-3 m-1 rounded">
+			<div className="bg-gray-900 text-white p-3 m-1 rounded">
 				<label>
 					<input 
 						required 
@@ -310,7 +310,7 @@ export function KnockTypes(props) {
 					/> Ring doorbell
 				</label>
 			</div>
-			<div className="text-bg-dark p-3 m-1 rounded">
+			<div className="bg-gray-900 text-white p-3 m-1 rounded">
 				<label>
 					<input 
 						required 
@@ -333,14 +333,14 @@ export function BusinessTypes(props) {
   	const businessType3 = props.businessType3;
   	const setBusiness = props.setBusiness;
 	return (
-		<div className="col-md-6">
+		<div className="w-full md:w-1/2">
 			<h5 className="m-1">
-				<span className="text-danger">
+				<span className="text-red-600">
 					*
 				</span>
 				Destination type
 			</h5>
-			<div className="text-bg-dark p-3 m-1 rounded">
+			<div className="bg-gray-900 text-white p-3 m-1 rounded">
 				<label>
 					<input 
 						required 
@@ -351,7 +351,7 @@ export function BusinessTypes(props) {
 					/> Home
 				</label>
 			</div>
-			<div className="text-bg-dark p-3 m-1 rounded">
+			<div className="bg-gray-900 text-white p-3 m-1 rounded">
 				<label>
 					<input 
 						required 
@@ -362,7 +362,7 @@ export function BusinessTypes(props) {
 					/> Apartment
 				</label>
 			</div>
-			<div className="text-bg-dark p-3 m-1 rounded">
+			<div className="bg-gray-900 text-white p-3 m-1 rounded">
 				<label>
 					<input 
 						required 
@@ -380,14 +380,14 @@ export function BusinessTypes(props) {
 export function DeliveryInstructions(props) {
 	const setTextAreaValue = props.setTextAreaValue;
 	return (
-		<div className="col-md-12">
-			<div className="text-bg-dark p-3 m-1 rounded">
+		<div className="w-full">
+			<div className="bg-gray-900 text-white p-3 m-1 rounded">
 				<h4 className="text-white">Delivery Instructions:</h4>
 				<textarea
 					onChange={(e) => setTextAreaValue(e.target.value)}
 					rows="2" 
 					placeholder="Enter delivery instructions here..." 
-					className="form-control text-bg-dark " 
+					className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
 				/>
 			</div>
 		</div>

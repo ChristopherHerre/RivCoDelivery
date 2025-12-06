@@ -3,16 +3,16 @@ import AdminDropdown from '../../restaurants/AdminDropdown';
 function BottomNavbar(props) {
     const profile = props.profile;
     return (
-        <div id="bottom-navbar" className="row">
-            <div className="col-12 d-md-none">
+        <div id="bottom-navbar" className="flex flex-wrap">
+            <div className="w-full md:hidden">
                 <AdminDropdown 
                     className="mr-1" 
                     profile={profile} 
                     full={1}
                 />
             </div>
-            <div class="dropdown-divider"></div>
-            <div className="col-6 d-none d-md-block">
+            <div className="w-full md:hidden border-t border-gray-300 my-2"></div>
+            <div className="w-1/2 hidden md:block">
                 <AdminDropdown
                     className="mr-1"
                     profile={profile}

@@ -41,15 +41,15 @@ export default function TaxiFareCalculator() {
     const fareDetails = calculateFare();
 
     return (
-        <div className="row p-1 bg-dark text-white">
-            <h3 className="text-white mb-4">🚕 Taxi Fare Calculator</h3>
+        <div className="flex flex-wrap p-1 bg-gray-900 text-white">
+            <h3 className="text-white mb-4 w-full">🚕 Taxi Fare Calculator</h3>
 
-            <div className="col-12 col-md-6 mb-3">
+            <div className="w-full md:w-1/2 mb-3">
                 <label><strong>From:</strong></label>
                 <PlaceAutocomplete onPlaceSelected={handleFromSelect} />
             </div>
 
-            <div className="col-12 col-md-6 mb-3">
+            <div className="w-full md:w-1/2 mb-3">
                 <label><strong>To:</strong></label>
                 <PlaceAutocomplete onPlaceSelected={handleToSelect} />
             </div>

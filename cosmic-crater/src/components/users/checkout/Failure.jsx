@@ -3,7 +3,7 @@ function Failure() {
     return (
         <div className="text-center">
             <h1>
-                <span className="text-danger">
+                <span className="text-red-600">
                     <i className="bi bi-exclamation-triangle"> </i>
                     There was an error! Your order was not placed.
                 </span>

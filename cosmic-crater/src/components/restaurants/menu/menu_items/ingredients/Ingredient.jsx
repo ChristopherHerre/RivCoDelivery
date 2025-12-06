@@ -11,38 +11,6 @@ function Ingredient(props) {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
     const [error2, setError2] = useState("");
-    useEffect(() => {
-        // Only import and use Bootstrap on the client side
-        if (typeof window === 'undefined') return;
-        
-        let bootstrapModule = null;
-        let tooltipInstances = [];
-        
-        const initTooltips = async () => {
-            try {
-                bootstrapModule = await import('bootstrap/dist/js/bootstrap.bundle.min.js');
-                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-                tooltipTriggerList.forEach(el => {
-                    const tooltip = new bootstrapModule.Tooltip(el);
-                    tooltipInstances.push(tooltip);
-                });
-            } catch (error) {
-                console.error('Error loading Bootstrap:', error);
-            }
-        };
-        
-        initTooltips();
-        
-        // Cleanup function
-        return () => {
-            if (typeof window !== 'undefined') {
-                tooltipInstances.forEach(tooltip => {
-                    if (tooltip) tooltip.dispose();
-                });
-                tooltipInstances = [];
-            }
-        };
-    }, []);
     const handleChange = useCallback((id, key, value) => {
         setIngredients(prevItems =>
             prevItems.map(item =>
@@ -90,58 +58,65 @@ function Ingredient(props) {
     };
     console.log("sortedFields2: " + sortedFields);
     return (
-        <div key={ingredient.id} className={`row pb-4 ${index % 2 === 0 ? 'bg-white' : 'bg-secondary-subtle'}`}>
+        <div key={ingredient.id} className={`flex flex-wrap pb-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
             {
                 sortedFields.map((field) => {
+                    const tooltipText = getTooltip(field);
                     return (
-                        <div key={field} className="col-12 col-md-3">
+                        <div key={field} className="w-full md:w-1/4">
                             <b>{field}:</b>
-                            <input
-                                {...(isNumericField(field) && ['inputType', 'halfable', 'customize', 'selected'].includes(field) ? {min: "0", max: "1"} : {})}
-                                {...(isNumericField(field) && field === 'sort_order' ? {min: "0"} : {})}
-                                {...(isNumericField(field) && field.includes('price') ? {min: "0", step: "0.01"} : {})}
-                                data-bs-toggle="tooltip"
-                                title={getTooltip(field)}
-                                type={isNumericField(field) ? "number" : "text"}
-                                defaultValue={ingredient[field] ?? ""}
-                                onChange={(e) => handleChange(ingredient.id, field, e.target.value)}
-                                className="form-control bg-dark text-white"
-                            />
+                            <div className="group relative">
+                                <input
+                                    {...(isNumericField(field) && ['inputType', 'halfable', 'customize', 'selected'].includes(field) ? {min: "0", max: "1"} : {})}
+                                    {...(isNumericField(field) && field === 'sort_order' ? {min: "0"} : {})}
+                                    {...(isNumericField(field) && field.includes('price') ? {min: "0", step: "0.01"} : {})}
+                                    type={isNumericField(field) ? "number" : "text"}
+                                    defaultValue={ingredient[field] ?? ""}
+                                    onChange={(e) => handleChange(ingredient.id, field, e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                                {tooltipText && (
+                                    <div className="absolute z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
+                                        {tooltipText}
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )
                 })
             }
-            <div className="col-12 col-md-3">
+            <div className="w-full md:w-1/4">
                 <br />
-                <button onClick={() => handleSave(ingredient.id)} className="btn btn-primary form-control">
+                <button onClick={() => handleSave(ingredient.id)} className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
                     <i className="bi bi-pencil-square"> </i>Save
                 </button>
                 
             </div>
-            <div className="col-12 col-md-3">
+            <div className="w-full md:w-1/4">
                 <br />
-                <button onClick={() => handleDelete(ingredient.id)} className="btn btn-danger form-control">
+                <button onClick={() => handleDelete(ingredient.id)} className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
                     <i className="bi bi-trash"> </i>Delete
                 </button>
             </div>
-            <div className="col-12">
+            <div className="w-full">
             {success ? (
-                    <p className="text-success">
+                    <p className="text-green-600">
                         <i className="bi bi-check-circle-fill"> </i>
                         Ingredient updated successfully.
                     </p>) : ""
                 }
                 {error && (
-                    <p className="text-danger mt-2">
+                    <p className="text-red-600 mt-2">
                         <i class="bi bi-exclamation-triangle"> </i>
                         {error.length > 0 ? error : ""}
                     </p>
                 )
             }
             </div>
-            <div className="col-12">
+            <div className="w-full">
                 {error2 && (
-                    <p className="text-danger mt-2">
+                    <p className="text-red-600 mt-2">
                         <i class="bi bi-exclamation-triangle"> </i>
                         {error2.length > 0 ? error2 : ""}
                     </p>

@@ -19,7 +19,7 @@ const EditIngredients = React.memo(function EditIngredients(props) {
             {ingredients.length <= 0 &&
                 (<p>No ingredients found.</p>)}
             {ingredients.length > 0 && (
-                <div className="row fw-bold">
+                <div className="flex flex-wrap font-bold">
                     <h3 className="text-xl font-bold">
                         Edit Ingredients
                     </h3>
@@ -49,8 +49,8 @@ const EditIngredients = React.memo(function EditIngredients(props) {
                     />
                 );
             })}
-            <div className="row bg-dark text-white">
-                <div className="col-12">
+            <div className="flex flex-wrap bg-gray-900 text-white">
+                <div className="w-full">
                     <NewIngredient
                         menuItem={menuItem}
                         setIngredients={setIngredients}

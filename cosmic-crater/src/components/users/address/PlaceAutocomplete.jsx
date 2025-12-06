@@ -6,7 +6,7 @@ function generateSessionToken() {
     return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
-function PlaceAutocomplete({ onPlaceSelected, defaultValue = "", placeholder = "Enter address" }) {
+function PlaceAutocomplete({ onPlaceSelected, defaultValue = "", placeholder = "Enter delivery address" }) {
     const inputRef = useRef(null);
     const [suggestions, setSuggestions] = useState([]);
     const [sessionToken, setSessionToken] = useState(generateSessionToken());
@@ -113,25 +113,24 @@ function PlaceAutocomplete({ onPlaceSelected, defaultValue = "", placeholder = "
         return address;
     };
     return (
-        <div className="form-group position-relative">
+        <div className="relative">
             <input
                 type="text"
                 ref={inputRef}
                 defaultValue={defaultValue}
                 onChange={handleInputChange}
-                className="form-control bg-dark text-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={placeholder}
                 autoComplete="off"
                 required
             />
             {suggestions.length > 0 && (
-                <ul className="list-group position-absolute w-100 shadow-sm z-10" style={{ top: '100%', zIndex: 999 }}>
+                <ul className="absolute w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 z-50 max-h-60 overflow-y-auto">
                     {suggestions.map((s) => (
                         <li
                             key={s.place_id}
-                            className="list-group-item list-group-item-action"
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0"
                             onClick={() => handleSelect(s.place_id)}
-                            style={{ cursor: 'pointer' }}
                         >
                             {s.description}
                         </li>

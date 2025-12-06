@@ -60,8 +60,13 @@ export default function Menu(props) {
             }
         };
 
-        fetchRestaurantAndMenu();
-    }, [restaurantId, navigate]);
+        // Only fetch if we have a valid restaurantId
+        if (restaurantId) {
+            fetchRestaurantAndMenu();
+        } else {
+            setLoaded(true); // Set loaded if no restaurantId to stop spinner
+        }
+    }, [restaurantId, navigate]); // Keep existing dependencies
 
     function changeMenuItem(m) {
         setMenuItem(m.id);
@@ -93,7 +98,7 @@ export default function Menu(props) {
     return (
         <>
             <Link to="/">
-                <button className="btn btn-secondary btn-lg m-1">
+                <button className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition-colors text-lg m-1">
                     <i className="bi bi-arrow-return-left"></i> Back
                 </button>
             </Link>
@@ -101,7 +106,7 @@ export default function Menu(props) {
             {
                 loaded ? Object.keys(result).map((category, categoryIndex) => (
                     <span key={categoryIndex}>
-                        <div className="row">
+                        <div className="flex flex-wrap">
                             {result[category].map((data, key) => {
                                 const isNewCategory = data.category != null && lastCategory != data.category;
                                 if (isNewCategory) {
@@ -110,33 +115,33 @@ export default function Menu(props) {
                                 return (
                                     <React.Fragment key={data.id}>
                                         {isNewCategory &&
-                                        <h5 className="indent">
+                                        <h5 className="pl-4">
                                             {data.category}
                                         </h5>}
-                                        <div className={"col-12 col-md-6 col-xxl-4"} key={data.id}>
+                                        <div className={"w-full md:w-1/2 xl:w-1/3"} key={data.id}>
                                             <div className="m-1">
                                                 <button
-                                                        className="btn btn-primary form-control"
+                                                        className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
                                                         onClick={(e) => changeMenuItem(data)}>
                                                     {data.name}
                                                     <span> - $</span>
                                                     {data.price != null && data.price > 0 &&
-                                                    <span className="fw-bold">
+                                                    <span className="font-bold">
                                                         {data.price}
                                                     </span>}
                                                     {data.price2 != null && data.price2 > 0 && <span> - $</span>}
                                                     {data.price2 != null && data.price2 > 0 &&
-                                                    <span className="fw-bold">
+                                                    <span className="font-bold">
                                                         {data.price2}
                                                     </span>}
                                                     {data.price3 != null && data.price3 > 0 && <span> - $</span>}
                                                     {data.price3 != null && data.price3 > 0 &&
-                                                    <span className="fw-bold">
+                                                    <span className="font-bold">
                                                         {data.price3}
                                                     </span>}
                                                     {data.price4 != null && data.price4 > 0 && <span> - $</span>}
                                                     {data.price4 != null && data.price4 > 0 &&
-                                                    <span className="fw-bold">
+                                                    <span className="font-bold">
                                                         {data.price4}
                                                     </span>}
                                                 </button>

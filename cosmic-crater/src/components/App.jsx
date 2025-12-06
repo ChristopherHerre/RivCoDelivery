@@ -48,6 +48,21 @@ function Layout(props) {
 				setShowGetLocation={props.setShowGetLocation}
 				cartAmount={props.cartAmount}
 			/>
+			{/* Display error message if present */}
+			{props.errorMessage && (
+				<div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+					<div className="flex items-center justify-between">
+						<p className="text-red-700 font-medium">{props.errorMessage}</p>
+						<button
+							onClick={() => props.setErrorMessage(null)}
+							className="text-red-500 hover:text-red-700 ml-4 text-xl font-bold"
+							aria-label="Dismiss error"
+						>
+							×
+						</button>
+					</div>
+				</div>
+			)}
 			<div id="white-area" className="blackborder">
 				<Outlet />
 			</div>
@@ -77,11 +92,22 @@ export function App() {
 	const [profile, setProfile] = useState(null);
 	const [loginLoading, setLoginLoading] = useState(false);
 	const [cartLoading, setCartLoading] = useState(true);
+	const [errorMessage, setErrorMessage] = useState(null);
+	
+	// Use a ref to store the latest setErrorMessage function
+	const setErrorMessageRef = useRef(setErrorMessage);
+	
+	// Update the ref whenever setErrorMessage changes
+	useEffect(() => {
+		setErrorMessageRef.current = setErrorMessage;
+	}, [setErrorMessage]);
+
+	// Calculate cartAmount from cart
 	useEffect(() => {
 		console.log("useEffect App - Cart Amount");
 		let ca = 0;
-		for (const item in cart) {
-			ca += cart[item].quantity;
+		for (const item of cart) {
+			ca += item.quantity || 0;
 		}
 		setCartAmount(ca);
 	}, [cart]); // Only depend on cart changes for amount calculation
@@ -126,12 +152,26 @@ export function App() {
 		return null;
 	}
 
-	// 1. Load profile on mount
+	// 1. Load profile on mount and listen for profile changes
 	useEffect(() => {
-		const storedProfile = localStorage.getItem('profile');
-		if (storedProfile) {
-			setProfile(JSON.parse(storedProfile));
-		}
+		const loadProfile = () => {
+			const storedProfile = localStorage.getItem('profile');
+			if (storedProfile) {
+				setProfile(JSON.parse(storedProfile));
+			} else {
+				setProfile(null);
+			}
+		};
+		
+		// Load profile on mount
+		loadProfile();
+		
+		// Listen for profile changes (e.g., from SSR sign-in)
+		window.addEventListener('profile-changed', loadProfile);
+		
+		return () => {
+			window.removeEventListener('profile-changed', loadProfile);
+		};
 	}, []);
 
 	// 2. Load cart when profile changes
@@ -157,17 +197,38 @@ export function App() {
 		style: 'currency',
 		currency: 'USD',
 	});
-	axios.defaults.withCredentials = true;
-	axios.interceptors.response.use(
-		res => res,
-		err => {
-			if (err.response?.status === 401 && localStorage.getItem("profile") != null) {
-				localStorage.removeItem('profile');
-				window.location.href = '/';
+	
+	// Set up axios interceptor in useEffect
+	useEffect(() => {
+		axios.defaults.withCredentials = true;
+		
+		const interceptorId = axios.interceptors.response.use(
+			res => res,
+			err => {
+				if (err.response?.status === 401 && localStorage.getItem("profile") != null) {
+					localStorage.removeItem('profile');
+					window.location.href = '/';
+				}
+				// Handle 429 Too Many Requests errors
+				if (err.response?.status === 429) {
+					const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Too many requests. Please wait a moment and try again.';
+					// Use the ref to access the latest setErrorMessage
+					setErrorMessageRef.current(errorMsg);
+					// Clear error after 5 seconds
+					setTimeout(() => {
+						setErrorMessageRef.current(null);
+					}, 5000);
+				}
+				return Promise.reject(err);
 			}
-			return Promise.reject(err);
-		}
-	);
+		);
+		
+		// Cleanup: remove interceptor on unmount
+		return () => {
+			axios.interceptors.response.eject(interceptorId);
+		};
+	}, []); // Empty dependency array - only set up once
+
 	function WhiteArea() {
 		return (
 			<BrowserRouter>
@@ -187,6 +248,8 @@ export function App() {
 								showGetLocation={showGetLocation}
 								setShowGetLocation={setShowGetLocation}
 								cartAmount={cartAmount}
+								errorMessage={errorMessage}
+								setErrorMessage={setErrorMessage}
 							/>
 						}
 					>

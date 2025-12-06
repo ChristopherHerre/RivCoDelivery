@@ -14,8 +14,8 @@ const Donate = (props) => {
 		);
 	};
     return (<>
-        <div className="row">
-            <div className="col-12 col-md-6">
+        <div className="flex flex-wrap">
+            <div className="w-full md:w-1/2">
                 <h1>Donate today to support continued development!</h1>
                 <p>Donating even a small amount will help me in developing:</p>
                 <ol>
@@ -26,14 +26,14 @@ const Donate = (props) => {
                 </ol>
                 <p>Additionally, I am raising money to pay for hosting for this website and other expenses related to this project.</p>
             </div>
-            <div className="col-12 col-md-6 text-end">
+            <div className="w-full md:w-1/2 text-right">
                 <GoFundMeEmbed />
             </div>
         </div>
-        <div className="row bg-dark text-white p-5 m-1">
-            <div className="col-12 text-center mx-auto">
+        <div className="flex flex-wrap bg-gray-900 text-white p-5 m-1">
+            <div className="w-full text-center mx-auto">
                 <a href="https://github.com/ChristopherHerre/RivCoDelivery">
-                    <button className="btn btn-lg btn-primary">
+                    <button className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors text-lg">
                         <i className="bi bi-github"> </i>
                         Download Project From GitHub
                     </button>
