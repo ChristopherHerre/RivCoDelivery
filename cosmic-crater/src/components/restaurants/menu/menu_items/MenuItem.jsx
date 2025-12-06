@@ -329,30 +329,30 @@ export default function MenuItem(props) {
                 }
                 return (
                     <form key={key} onSubmit={(e) => addToCart(e, item)}>
-                        <div className="row">
-                            <div className="col-sm-12 text-center">
+                        <div className="flex flex-wrap">
+                            <div className="w-full text-center">
                                 <h2>{itemName}</h2>
                                 {sizeLabel && (
-                                    <p className="text-muted mb-0">{sizeLabel}</p>
+                                    <p className="text-gray-500 mb-0">{sizeLabel}</p>
                                 )}
                                 <h3>
                                     <p>
-                                        <b className="text-success">
+                                        <b className="text-green-600">
                                             {USDollar.format(price)}
                                         </b>
                                     </p>
                                 </h3>
                             </div>
                         </div>
-                        <div className="row">
-                            <div className="col-md-6">
+                        <div className="flex flex-wrap">
+                            <div className="w-full md:w-1/2">
                                 <div>
                                     <h5 className="m-1">
-                                        <span className="text-danger">*</span>
+                                        <span className="text-red-600">*</span>
                                         Size
                                     </h5>
                                     {(item.size1 != null && item.size1 != "") ? (
-                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                        <div className="p-3 m-1 bg-gray-900 text-white rounded">
                                             <label>
                                                 <input
                                                     required
@@ -369,7 +369,7 @@ export default function MenuItem(props) {
                                         ""
                                     )}
                                     {(item.size2 != null && item.size2 != "") ? (
-                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                        <div className="p-3 m-1 bg-gray-900 text-white rounded">
                                             <label>
                                                 <input
                                                     type="radio"
@@ -385,7 +385,7 @@ export default function MenuItem(props) {
                                         ""
                                     )}
                                     {(item.size3 != null && item.size3 != "") ? (
-                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                        <div className="p-3 m-1 bg-gray-900 text-white rounded">
                                             <label>
                                                 <input
                                                     type="radio"
@@ -401,7 +401,7 @@ export default function MenuItem(props) {
                                         ""
                                     )}
                                     {(item.size4 != null && item.size4 != "") ? (
-                                        <div className="p-3 m-1 text-bg-dark rounded">
+                                        <div className="p-3 m-1 bg-gray-900 text-white rounded">
                                             <label>
                                                 <input
                                                     type="radio"
@@ -418,7 +418,7 @@ export default function MenuItem(props) {
                                     )}
                                 </div>
                             </div>
-                            <div className="col-md-6">
+                            <div className="w-full md:w-1/2">
                                 {console.log(ingredientsData)}
                                 {!loading2 ? (
                                     ingredientsData.map((q, key) => {
@@ -466,7 +466,7 @@ export default function MenuItem(props) {
                                                 {lastCategory != q['type'] ? (
                                                     <h5 className="m-1">
                                                         {q['inputType'] == 1 ? (
-                                                            <span className="text-danger">*</span>
+                                                            <span className="text-red-600">*</span>
                                                         ) : (
                                                             ""
                                                         )}
@@ -476,9 +476,9 @@ export default function MenuItem(props) {
                                                     ""
                                                 )}
                                                 {setLastCategoryPrinted(q['type'])}
-                                                <div className="p-3 m-1 text-bg-dark rounded">
-                                                    <div className="row">
-                                                        <div className="col-lg-6">
+                                                <div className="p-3 m-1 bg-gray-900 text-white rounded">
+                                                    <div className="flex flex-wrap">
+                                                        <div className="w-full lg:w-1/2">
                                                             {q['inputType'] == 0 ? (
                                                                 <label>
                                                                     <input
@@ -506,7 +506,7 @@ export default function MenuItem(props) {
                                                                 </label>
                                                             )}
                                                         </div>
-                                                        <div className="col-lg-6 text-end">
+                                                        <div className="w-full lg:w-1/2 text-right">
                                                             <div>
                                                                 <select
                                                                     disabled={enabled[key] == false ? "disabled" : null}
@@ -554,21 +554,21 @@ export default function MenuItem(props) {
                                 ) : (
                                     <Spinner />
                                 )}
-                                <div className="col-lg-4 m-1">
+                                <div className="w-full lg:w-1/3 m-1">
                                     <h5 className="">
-                                        <span className="text-danger">*</span>
+                                        <span className="text-red-600">*</span>
                                         Quantity
                                     </h5>
                                     <QuantitySelector
-                                        className="form-control"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         inputValue={quantity}
                                         onInputValueChange={setQuantity}
                                     />
                                 </div>
-                                <div className="col-lg-8 m-1">
+                                <div className="w-full lg:w-2/3 m-1">
                                     <input
                                         type="submit"
-                                        className="btn btn-primary form-control"
+                                        className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
                                         value={"Add " + quantity + " to cart"}
                                     />
                                 </div>
@@ -581,7 +581,7 @@ export default function MenuItem(props) {
     }
     return (
         <>
-            <button className="btn btn-secondary btn-lg m-1" onClick={(e) => {
+            <button className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition-colors text-lg m-1" onClick={(e) => {
                 // Use new URL format if we have restaurant data
                 if (restaurantData && restaurantData.city_slug) {
                     const restaurantSlug = slugify(restaurantData.name || '');
@@ -594,8 +594,8 @@ export default function MenuItem(props) {
                 <i className="bi bi-arrow-return-left"></i> {restaurantName != undefined ? restaurantName : "Back"}
             </button>
             {loading ? (
-                <div className="row text-center">
-                    <div className="col-12">
+                <div className="flex flex-wrap text-center">
+                    <div className="w-full">
                         <Spinner />
                     </div>
                 </div>

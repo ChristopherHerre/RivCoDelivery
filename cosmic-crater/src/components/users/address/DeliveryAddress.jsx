@@ -106,7 +106,7 @@ function DeliveryAddress(props) {
                     {!showGetLocation ? (
                         <mark>{fullAddress}</mark>
                     ) : (
-                        <u className="text-danger">
+                        <u className="text-red-600">
                             Address Required!
                         </u>
                     )}

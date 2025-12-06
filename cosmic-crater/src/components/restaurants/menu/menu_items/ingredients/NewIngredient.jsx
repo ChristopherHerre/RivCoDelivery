@@ -51,38 +51,6 @@ function NewIngredient(props) {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
     
-    useEffect(() => {
-        // Only import and use Bootstrap on the client side
-        if (typeof window === 'undefined') return;
-        
-        let bootstrapModule = null;
-        let tooltipInstances = [];
-        
-        const initTooltips = async () => {
-            try {
-                bootstrapModule = await import('bootstrap/dist/js/bootstrap.bundle.min.js');
-                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-                tooltipTriggerList.forEach(el => {
-                    const tooltip = new bootstrapModule.Tooltip(el);
-                    tooltipInstances.push(tooltip);
-                });
-            } catch (error) {
-                console.error('Error loading Bootstrap:', error);
-            }
-        };
-        
-        initTooltips();
-        
-        // Cleanup function
-        return () => {
-            if (typeof window !== 'undefined') {
-                tooltipInstances.forEach(tooltip => {
-                    if (tooltip) tooltip.dispose();
-                });
-                tooltipInstances = [];
-            }
-        };
-    }, []);
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -137,7 +105,7 @@ function NewIngredient(props) {
             </h3>
             {loading ? <Spinner /> :
                 <form onSubmit={handleSubmit}>
-                    <div className="row">
+                    <div className="flex flex-wrap">
                         {Object.keys(formData).sort((a, b) => {
                             const order = ["id", "type", "ingredients_name", "price", "easy_price", "extra_price", "customize", "halfable", "selected", "sort_order"];
                             const indexA = order.indexOf(a);
@@ -146,26 +114,35 @@ function NewIngredient(props) {
                             if (indexA === -1) return 1;
                             if (indexB === -1) return -1;
                             return indexA - indexB;
-                        }).map((key) => (
-                            <div className="col-12 col-md-3" key={key}>
-                                <strong>{key}:</strong>
-                                <input
-                                    {...(isNumericField(key) && ['inputType', 'halfable', 'customize', 'selected'].includes(key) ? {min: "0", max: "1"} : {})}
-                                    {...(isNumericField(key) && key === 'sort_order' ? {min: "0"} : {})}
-                                    {...(isNumericField(key) && key.includes('price') ? {min: "0", step: "0.01"} : {})}
-                                    data-bs-toggle="tooltip"
-                                    title={getTooltip(key)}
-                                    type={isNumericField(key) ? 'number' : 'text'}
-                                    name={key} 
-                                    value={formData[key]} 
-                                    onChange={handleChange}
-                                    className="form-control bg-dark text-white" 
-                                />
-                            </div>
-                        ))}
-                        <div className='col-12 col-md-3'>
+                        }).map((key) => {
+                            const tooltipText = getTooltip(key);
+                            return (
+                                <div className="w-full md:w-1/4" key={key}>
+                                    <strong>{key}:</strong>
+                                    <div className="group relative">
+                                        <input
+                                            {...(isNumericField(key) && ['inputType', 'halfable', 'customize', 'selected'].includes(key) ? {min: "0", max: "1"} : {})}
+                                            {...(isNumericField(key) && key === 'sort_order' ? {min: "0"} : {})}
+                                            {...(isNumericField(key) && key.includes('price') ? {min: "0", step: "0.01"} : {})}
+                                            type={isNumericField(key) ? 'number' : 'text'}
+                                            name={key} 
+                                            value={formData[key]} 
+                                            onChange={handleChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                        />
+                                        {tooltipText && (
+                                            <div className="absolute z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
+                                                {tooltipText}
+                                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        <div className='w-full md:w-1/4'>
                             <br />
-                            <button type="submit" className="btn btn-primary form-control">
+                            <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
                                 <i class="bi bi-plus-lg"> </i>
                                 Add Ingredient
                             </button>
@@ -175,13 +152,13 @@ function NewIngredient(props) {
                 </form>
             }
             {success &&
-                <p className="text-success">
+                <p className="text-green-600">
                     <i className="bi bi-check-circle-fill"> </i>
                     Ingredient added successfully!
                 </p>
             }
             {error && (
-                <p className="text-danger mt-2">
+                <p className="text-red-600 mt-2">
                     <i class="bi bi-exclamation-triangle"> </i>
                     {error.length > 0 ? error : ""}
                 </p>

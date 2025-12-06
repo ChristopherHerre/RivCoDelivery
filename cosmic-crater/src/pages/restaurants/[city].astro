@@ -1,8 +1,9 @@
 ---
+import '@/components/index.css';
 import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import App from '../../components/App.jsx';
+import SSRAppWrapper from '../../components/SSRAppWrapper.jsx';
 
 const { city } = Astro.params;
 
@@ -44,9 +45,9 @@ const slugify = (name) =>
 		/>
 	</head>
 	<body>
+		<Header />
 		<!-- SSR content - will be hidden if user is logged in -->
 		<div id="ssr-content">
-			<Header />
 			<main class="container mx-auto px-4 py-5 max-w-6xl">
 				<h1 class="mb-3 text-2xl font-semibold">Restaurants in {cityName}</h1>
 
@@ -85,27 +86,25 @@ const slugify = (name) =>
 					</div>
 				)}
 			</main>
-			<Footer />
 		</div>
 		
-		<!-- SPA container - hidden initially, shown if user is logged in -->
+		<!-- SPA container - wrapper checks auth before rendering App -->
 		<div id="spa-container" style="display: none;">
-			<App client:only="react" />
+			<SSRAppWrapper client:only="react" />
 		</div>
+		
+		<Footer />
 		
 		<!-- Client-side auth check -->
 		<script>
 			function checkAuthAndShowSPA() {
-				// Check if user is authenticated via localStorage (same as SPA does)
 				const profile = localStorage.getItem('profile');
 				if (profile) {
-					// User is logged in - verify session is still valid
 					fetch('/api/session', {
 						credentials: 'include'
 					})
 					.then(res => {
 						if (res.status === 200) {
-							// Session is valid - hide SSR, show SPA
 							const ssrContent = document.getElementById('ssr-content');
 							const spaContainer = document.getElementById('spa-container');
 							if (ssrContent) ssrContent.style.display = 'none';
@@ -116,7 +115,6 @@ const slugify = (name) =>
 						console.error('Error checking session:', err);
 					});
 				} else {
-					// User is not logged in - show SSR, hide SPA
 					const ssrContent = document.getElementById('ssr-content');
 					const spaContainer = document.getElementById('spa-container');
 					if (ssrContent) ssrContent.style.display = 'block';

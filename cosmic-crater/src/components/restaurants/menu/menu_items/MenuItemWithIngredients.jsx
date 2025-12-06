@@ -9,9 +9,9 @@ function MenuItemWithIngredients(props) {
     const loading3 = props.loading3;
     const setLoading3 = props.setLoading3;
     return (
-        <div key={item.id} className="col-12 mt-3 shadow-lg">
-            <div className="row">
-                <div className='col-12 col-xl-3 bg-primary-subtle'>
+        <div key={item.id} className="w-full mt-3 shadow-lg">
+            <div className="flex flex-wrap">
+                <div className='w-full xl:w-1/4 bg-blue-50'>
                     <EditItem
                         key={item.id}
                         item={item}
@@ -21,7 +21,7 @@ function MenuItemWithIngredients(props) {
                         setLoading3={setLoading3}
                     /> 
                 </div>
-                <div className='col-12 col-xl-9'>
+                <div className='w-full xl:w-3/4'>
                     <EditIngredients menuItem={item.id} />
                 </div>
             </div>

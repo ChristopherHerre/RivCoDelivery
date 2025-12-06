@@ -16,15 +16,15 @@ const MenuUpdate = () => {
     }, [loading3]);
     return (
         <>
-            <div className="row">
-                <div className="col-12">
+            <div className="flex flex-wrap">
+                <div className="w-full">
                     <NewMenuItem
                         setLoading3={setLoading3}
                         setMenuItems={setMenuItems}
                     />
                 </div>
             </div>
-            <div className="row">
+            <div className="flex flex-wrap">
                 {Array.isArray(menuItems) && menuItems?.map(item => (
                     <MenuItemWithIngredients 
                         key={item.id} 

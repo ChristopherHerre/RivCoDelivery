@@ -13,7 +13,7 @@ function Success() {
     , []);
     return (
         <div className="text-center">
-            <h1 className="text-success">
+            <h1 className="text-green-600">
                 <i className="bi bi-check-circle-fill"> </i>
                 Your order has been received!
             </h1>
@@ -23,7 +23,7 @@ function Success() {
             </ol>
             <button
                 onClick={(e)=>homeButton(e)} 
-                className="btn btn-primary mt-2">
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mt-2">
                     Return to Restaurants list
             </button>
         </div>

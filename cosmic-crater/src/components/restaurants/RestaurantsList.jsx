@@ -50,6 +50,18 @@ export default function RestaurantsList(props) {
         }
     }, []);
 
+    // Add this: Listen for profile changes
+    useEffect(() => {
+        const handleProfileChange = () => {
+            const storedProfile = localStorage.getItem('profile');
+            if (storedProfile) {
+                setProfile(JSON.parse(storedProfile));
+            }
+        };
+        window.addEventListener('profile-changed', handleProfileChange);
+        return () => window.removeEventListener('profile-changed', handleProfileChange);
+    }, []);
+
     const updateUserRestaurant = async (restaurantId) => {
         if (!profile?.sub) return;
         try {
@@ -68,6 +80,13 @@ export default function RestaurantsList(props) {
     // the welcome / get-location screen.
     useEffect(() => {
         const fetchAddress = async () => {
+            // Only fetch if user is logged in
+            const storedProfile = localStorage.getItem('profile');
+            if (!storedProfile) {
+                setLocLoaded(true);
+                return;
+            }
+            
             try {
                 const res = await axios.get(`/api/user/address`, {
                     withCredentials: true
@@ -92,7 +111,7 @@ export default function RestaurantsList(props) {
         };
 
         fetchAddress();
-    }, []);
+    }, [profile]); // Add profile as dependency
 
     useEffect(() => {
         const fetchRestaurants = async (attempt = 1) => {
@@ -170,84 +189,103 @@ export default function RestaurantsList(props) {
                 setShowGetLocation={setShowGetLocation}
             />) : null
             }
-            {
-                !showGetLocation && loaded ?
-                    <div className="row">
-                        <div className="col-12 col-md-4 mb-1">
+            {!showGetLocation && loaded ? (
+                <main className="container mx-auto px-4 py-5 max-w-6xl">
+                    {/* Search and Taxi Button */}
+                    <div className="flex flex-wrap gap-3 mb-4">
+                        <div className="w-full md:w-auto flex-1 md:flex-initial">
                             <input 
                                 placeholder="Search for item..." 
-                                className="form-control text-bg-dark rounded" 
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                 value={query} 
                                 onChange={(e) => handleSearch(e)} 
                                 type="text" 
                             />
                         </div>
-                        <div className="col-12 col-md-4">
+                        <div className="w-full md:w-auto">
                             <Link to={"/taxi"}>
-                                <button className="btn btn-dark form-control">
-                                    <i className="bi bi-taxi-front-fill"> </i>
+                                <button className="w-full md:w-auto px-4 py-2 bg-gray-900 text-white text-sm font-normal rounded-lg hover:bg-gray-800 active:bg-gray-700 transition-colors flex items-center gap-2">
+                                    <i className="bi bi-taxi-front-fill"></i>
                                     Taxi Ride
                                 </button>
                             </Link>
                         </div>
                     </div>
-                : ""
-            }
-            {!showGetLocation && loaded  ? 
-                Object.keys(result).map((category, categoryIndex) => (
-                    <div key={categoryIndex}>
-                        <h5 className="indent">
-                            {category}
-                        </h5>
-                        <div className="restaurant-grid">
-                            {result[category].map((data, key) => {
-                                const h = haversine_dist(
-                                    data.latitude, 
-                                    data.longitude, 
-                                    latitude, 
-                                    longitude
-                                );
-                                const fee = 10 + (h < 1 ? 1 : h);
-                                const maxFee = 100;
-                                async function selectRestaurant(data) {       
-                                    setRestaurant(data.id);
-                                    setRestaurantName(data.name);
-                                    setRestaurantAddress(data.address);
-                                    setDeliveryFee(fee);
-                                    setDistance(h);
-                                    //await updateUserRestaurant(data.id);
-                                    // Use new URL format matching SSR pages
-                                    const menuUrl = getRestaurantMenuUrl(data);
-                                    navigate(menuUrl);
-                                    console.log("Restaurant selected:", data.id);
-                                }
-                                return (
-                                    <div className="restaurant-card" key={key}>
-                                        <button
-                                            className="btn btn-primary form-control"
-                                            onClick={(e) => selectRestaurant(data)}>
-                                            <b>{data.name} 
-                                                <span className="badge bg-info text-dark ms-2">
-                                                    {h < 100 ? `${roundedToFixed(h, 1)} mi` : "--"}
-                                                </span>
-                                            </b>
-                                            <small>
-                                                ({fee > maxFee ? "--" 
-                                                    : USDollar.format(roundedToFixed(fee, 2))}
-                                                    <span> Delivery Fee</span>)
-                                            </small>
-                                            <div>
-                                                <span>{data.address} </span>
-                                                
+
+                    {/* Restaurants by Category */}
+                    {restaurants.length === 0 ? (
+                        <p className="text-gray-600">No restaurants found in this area yet.</p>
+                    ) : (
+                        Object.keys(result).map((category, categoryIndex) => (
+                            <div key={categoryIndex} className="mb-6">
+                                <h2 className="text-xl font-semibold mb-3">{category}</h2>
+                                <div className="flex flex-wrap -mx-3">
+                                    {result[category].map((data, key) => {
+                                        const h = haversine_dist(
+                                            data.latitude, 
+                                            data.longitude, 
+                                            latitude, 
+                                            longitude
+                                        );
+                                        const fee = 10 + (h < 1 ? 1 : h);
+                                        const maxFee = 100;
+                                        async function selectRestaurant(data) {       
+                                            setRestaurant(data.id);
+                                            setRestaurantName(data.name);
+                                            setRestaurantAddress(data.address);
+                                            setDeliveryFee(fee);
+                                            setDistance(h);
+                                            //await updateUserRestaurant(data.id);
+                                            // Use new URL format matching SSR pages
+                                            const menuUrl = getRestaurantMenuUrl(data);
+                                            navigate(menuUrl);
+                                            console.log("Restaurant selected:", data.id);
+                                        }
+                                        return (
+                                            <div className="w-full md:w-1/2 px-3 mb-3" key={key}>
+                                                <article className="border border-gray-300 rounded-lg shadow-sm bg-white h-full flex flex-col">
+                                                    <div className="p-4 flex-1 flex flex-col">
+                                                        <h3 className="text-lg font-semibold mb-2">
+                                                            <button
+                                                                onClick={(e) => selectRestaurant(data)}
+                                                                className="text-gray-900 no-underline hover:text-blue-600 text-left bg-transparent border-none p-0 cursor-pointer"
+                                                            >
+                                                                {data.name}
+                                                            </button>
+                                                        </h3>
+                                                        <p className="mb-1 text-base">
+                                                            <strong className="font-semibold">{data.category}</strong>
+                                                        </p>
+                                                        <p className="mb-2 text-base text-gray-700">{data.address}</p>
+                                                        {h < 100 && (
+                                                            <p className="mb-2 text-sm text-gray-600">
+                                                                Distance: {roundedToFixed(h, 1)} mi
+                                                                {fee <= maxFee && (
+                                                                    <span className="ml-2">
+                                                                        • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
+                                                                    </span>
+                                                                )}
+                                                            </p>
+                                                        )}
+                                                        <div className="mt-auto">
+                                                            <button
+                                                                onClick={(e) => selectRestaurant(data)}
+                                                                className="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer"
+                                                            >
+                                                                View menu
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </article>
                                             </div>
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )) : (!showGetLocation ? <Spinner /> : "")
-            }
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </main>
+            ) : (!showGetLocation ? <Spinner /> : null)}
         </>
     );
 }

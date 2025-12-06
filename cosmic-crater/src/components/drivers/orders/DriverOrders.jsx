@@ -76,16 +76,16 @@ function DriverOrders() {
             setPage(prevPage => Math.max(prevPage - 1, 1));
         };
         return (
-            <div className="pagination">
+            <div className="flex items-center justify-center gap-4 my-4">
                 <button 
-                        className="btn btn-secondary"
+                        className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handlePreviousPage} 
                         disabled={page === 1}>
                     Previous
                 </button>
                 <b>Page {page}</b>
                 <button 
-                        className="btn btn-secondary"
+                        className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
                         onClick={handleNextPage}>
                     Next
                 </button>
@@ -126,13 +126,13 @@ function DriverOrders() {
                     {driverOrders.length > 0 ? <Pages /> : ""}
                     {driverOrders.length > 0 ? (
                         driverOrders.map(order => (
-                            <div key={order.id} className="row mb-4">
-                                <div className="col-12">
-                                    <h5 className="text-bg-dark text-center p-1">
+                            <div key={order.id} className="flex flex-wrap mb-4">
+                                <div className="w-full">
+                                    <h5 className="bg-gray-900 text-white text-center p-1">
                                         {order.restaurant} - {order.restaurant_address}
                                     </h5>
                                 </div>
-                                <div className="col-lg-6">
+                                <div className="w-full lg:w-1/2">
                                     <div className="currency-item">
                                         <b className="label">Date: </b>
                                         <span className="amount">
@@ -201,7 +201,7 @@ function DriverOrders() {
                                         <b className="label">Status: </b>
                                         <select 
                                             onChange={(e) => changeOrderOpen(e, order.id)}
-                                            className="form-control text-bg-dark m-1" 
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white m-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                             defaultValue={order.open == 0 ? "open" : "closed" } 
                                         >
                                             <option value="open">Open</option>
@@ -209,26 +209,26 @@ function DriverOrders() {
                                         </select>
                                     </div>
                                 </div>
-                                <div className="col-lg-6">
-                                    <table className="table table-striped">
+                                <div className="w-full lg:w-1/2">
+                                    <table className="w-full border-collapse border border-gray-300">
                                         <thead>
-                                            <tr>
-                                                <th>Item</th>
-                                                <th>Quantity</th>
-                                                <th>Price</th>
+                                            <tr className="bg-gray-200">
+                                                <th className="border border-gray-300 p-2">Item</th>
+                                                <th className="border border-gray-300 p-2">Quantity</th>
+                                                <th className="border border-gray-300 p-2">Price</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {driverOrderItems[order.id] ? driverOrderItems[order.id].map(item => (
                                                 <>
-                                                    <tr key={item.id}>
-                                                        <td>{item.name}</td>
-                                                        <td>{item.quantity}</td>
-                                                        <td>{USDollar.format(item.price)}</td>
+                                                    <tr key={item.id} className="even:bg-gray-100">
+                                                        <td className="border border-gray-300 p-2">{item.name}</td>
+                                                        <td className="border border-gray-300 p-2">{item.quantity}</td>
+                                                        <td className="border border-gray-300 p-2">{USDollar.format(item.price)}</td>
                                                     </tr>
                                                     {item.ingredients && item.ingredients.trim() !== '' ? (
                                                         <tr>
-                                                            <td>
+                                                            <td className="border border-gray-300 p-2">
                                                                 {item.ingredients
                                                                     .trim()
                                                                     .replace(/^\[+|\]+$/g, '')
@@ -237,8 +237,8 @@ function DriverOrders() {
                                                                         <div key={index}>[{part}]</div>
                                                                     ))}
                                                             </td>
-                                                            <td></td>
-                                                            <td></td>
+                                                            <td className="border border-gray-300 p-2"></td>
+                                                            <td className="border border-gray-300 p-2"></td>
                                                         </tr>
                                                     ) : null}
                                                 </>

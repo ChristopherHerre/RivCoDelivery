@@ -2,21 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&family=Work+Sans:wght@200&display=swap');
 @import 'bootstrap-icons/font/bootstrap-icons.css';
-#wr h2,
-#wr h3,
-#wr h4,
-#wr h5,
-#wr h6,
-#wr input[type="text"],
-#wr label, 
-#wr button,
-#wr .btn,
-#wr small,
-#wr p,
-#wr span,
-#wr Link {
-    font-family: 'Open Sans', sans-serif;
-}
+
 #wr {
     padding: 1.5em;
     background-size: cover;
@@ -165,6 +151,19 @@
 }
 #wr code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Ensure Tailwind text color utilities work properly within #wr */
+#wr .text-white {
+    color: #ffffff !important;
+}
+
+#wr .text-red-600 {
+    color: #dc2626 !important;
+}
+
+#wr .text-green-600 {
+    color: #16a34a !important;
 }
 
 /* Restaurant Grid Layout - Responsive CSS Grid */

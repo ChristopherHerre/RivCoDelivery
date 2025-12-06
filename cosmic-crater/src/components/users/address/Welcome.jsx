@@ -12,12 +12,12 @@ function Welcome(props) {
     } = props;
 
     return showGetLocation ? (
-        <div className="row search p-5">
+        <div className="flex flex-wrap search p-5">
             <h2>Welcome to Riverside County Delivery!</h2>
             <h1>We deliver items and we provide rides <mark>locally</mark>.</h1>
             <br />
-            <div className="row">
-                <div className="col-12">
+            <div className="flex flex-wrap">
+                <div className="w-full">
                     <DeliveryAddress
                         showGetLocation={showGetLocation}
                         setShowGetLocation={setShowGetLocation}

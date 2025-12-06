@@ -72,36 +72,36 @@ function ManageRestaurant(props) {
     }
     return (loading ? <Spinner /> :
         <form onSubmit={(e) => submitRestaurant(e)}>
-            <div className="row p-2 shadow-lg">
-                <div className="col-12">
+            <div className="flex flex-wrap p-2 shadow-lg">
+                <div className="w-full">
                     <h3>
                         {hasRestaurant ? "Edit Restaurant" : "Add Restaurant"}
                     </h3>
                 </div>
-                <div className="col-12 col-md-4">
+                <div className="w-full md:w-1/3">
                     <b>Name: </b>
                     <input
-                        className="bg-dark text-white form-control"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         name="name"
                         type="text"
                         defaultValue={restaurantData?.name || ""}
                         required
                     />
                 </div>
-                <div className="col-12 col-md-4">
+                <div className="w-full md:w-1/3">
                     <b>Category: </b>
                     <input
-                        className="bg-dark text-white form-control"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         name="category"
                         type="text"
                         defaultValue={restaurantData?.category || ""}
                         required
                     />
                 </div>
-                <div className="col-12 col-md-8">
+                <div className="w-full md:w-2/3">
                     <b>Address: </b>
                     <PlaceAutocomplete
-                        className="bg-dark text-white"
+                        className="bg-gray-900 text-white"
                         defaultValue={restaurantData?.address}
                         onPlaceSelected={({ address, latitude, longitude }) => {
                             document.querySelector('[name="address"]').value = `${address.streetNumber} ${address.street}, ${address.city}, ${address.state} ${address.zip}`;
@@ -113,9 +113,9 @@ function ManageRestaurant(props) {
                 <input type="hidden" value={restaurantData.address} name="address" />
                 <input type="hidden" value={restaurantData.latitude} name="latitude" />
                 <input type="hidden" value={restaurantData.longitude}name="longitude" />
-                <div className="col-12 col-md-4">
+                <div className="w-full md:w-1/3">
                     <br />
-                    <button type="submit" className="form-control btn btn-primary">
+                    <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
                         {hasRestaurant ? (
                             <>
                                 <i className="bi bi-pencil-square me-2"> </i>
@@ -131,13 +131,13 @@ function ManageRestaurant(props) {
                 </div>
                 {loading2 ? <Spinner /> : ""}
                 {success ? (
-                    <p className="text-success">
+                    <p className="text-green-600">
                         <i className="bi bi-check-circle-fill"> </i>
                         {hasRestaurant ? "Restaurant updated successfully." : "Restaurant added successfully."}
                     </p>
                 ) : ""}
                 {error && (
-                    <p className="text-danger mt-2">
+                    <p className="text-red-600 mt-2">
                         <i className="bi bi-exclamation-triangle"> </i>
                         {error.length > 0 ? error : ""}
                     </p>

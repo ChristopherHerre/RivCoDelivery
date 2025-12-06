@@ -1,13 +1,9 @@
 ---
-import "bootstrap/dist/css/bootstrap.min.css";
 import '../components/index.css'
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import App from '../components/App.jsx';
-import ReactDOM from 'react-dom-client'
-import {createPopper} from '@popperjs/core';
-import { checkAuthentication } from '../utils/authCheck';
+import SSRAppWrapper from '../components/SSRAppWrapper.jsx';
 
 // Always show SSR initially - client will check auth and mount SPA if needed
 const showSpa = false;
@@ -58,27 +54,25 @@ cities = await res.json();
 					</ul>
 				)}
 			</main>
-			<Footer />
 		</div>
 		
-		<!-- SPA container - hidden initially, shown if user is logged in -->
+		<!-- SPA container - wrapper checks auth before rendering App -->
 		<div id="spa-container" style="display: none;">
-			<App client:only="react" />
+			<SSRAppWrapper client:only="react" />
 		</div>
+		
+		<Footer />
 		
 		<!-- Client-side auth check -->
 		<script>
 			function checkAuthAndShowSPA() {
-				// Check if user is authenticated via localStorage (same as SPA does)
 				const profile = localStorage.getItem('profile');
 				if (profile) {
-					// User is logged in - verify session is still valid
 					fetch('/api/session', {
 						credentials: 'include'
 					})
 					.then(res => {
 						if (res.status === 200) {
-							// Session is valid - hide SSR, show SPA
 							const ssrContent = document.getElementById('ssr-content');
 							const spaContainer = document.getElementById('spa-container');
 							if (ssrContent) ssrContent.style.display = 'none';
@@ -89,7 +83,6 @@ cities = await res.json();
 						console.error('Error checking session:', err);
 					});
 				} else {
-					// User is not logged in - show SSR, hide SPA
 					const ssrContent = document.getElementById('ssr-content');
 					const spaContainer = document.getElementById('spa-container');
 					if (ssrContent) ssrContent.style.display = 'block';

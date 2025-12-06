@@ -14,15 +14,15 @@ export default function QuantitySelector(props) {
             : props.onInputValueChange(1);
     }
     return (
-        <span className="input-group">
+        <span className="flex items-center gap-1">
             <button
                 type="button"
-                className="btn btn-primary btn-sm btn-outline-secondary text-white form-control"
+                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
                 onClick={(e) => decrement(e)}>
                 <i className="bi bi-dash-lg"></i>
             </button>
             <input
-                className={"input-number text-center"}
+                className={"input-number text-center w-12"}
                 disabled="disabled"
                 type="text"
                 value={quantity}
@@ -31,7 +31,7 @@ export default function QuantitySelector(props) {
                 max="10" />
             <button
                 type="button"
-                className="btn btn-primary btn-sm btn-outline-secondary text-white form-control"
+                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
                 onClick={(e) => increment(e)}>
                 <i className="bi bi-plus-lg"></i>
             </button>

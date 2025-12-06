@@ -8,6 +8,7 @@ function Users() {
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [query, setQuery] = useState(""); // Add state for search query
+    const [restaurantNames, setRestaurantNames] = useState({}); // Add this state
 
     useEffect(() => {
         const fetchUsers = async (attempt = 1) => {
@@ -19,6 +20,30 @@ function Users() {
                 });
                 console.log('Users:', res.data);
                 setUsers(res.data);
+                
+                // Fetch restaurant names for users with restaurant_id
+                const restaurantIds = [...new Set(res.data
+                    .filter(user => user.restaurant_id)
+                    .map(user => user.restaurant_id)
+                )];
+                
+                // Fetch restaurant names
+                const restaurantPromises = restaurantIds.map(async (id) => {
+                    try {
+                        const restaurantRes = await axios.get(`/api/public/restaurants/${id}`);
+                        return { id, name: restaurantRes.data.name };
+                    } catch (err) {
+                        console.error(`Error fetching restaurant ${id}:`, err);
+                        return { id, name: 'Unknown' };
+                    }
+                });
+                
+                const restaurants = await Promise.all(restaurantPromises);
+                const namesMap = restaurants.reduce((acc, r) => {
+                    acc[r.id] = r.name;
+                    return acc;
+                }, {});
+                setRestaurantNames(namesMap);
             } catch (err) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {
                     fetchUsers(attempt + 1);
@@ -33,18 +58,17 @@ function Users() {
     }, [page, query]); // Add query to dependency array
 
     function Pages() {
-        // ...existing code...
         return (
-            <div className="pagination">
+            <div className="flex items-center justify-center gap-4 my-4">
                 <button
-                    className="btn btn-secondary"
+                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => setPage(prevPage => Math.max(prevPage - 1, 1))}
                     disabled={page === 1}>
                     Previous
                 </button>
                 <b>Page {page}</b>
                 <button
-                    className="btn btn-secondary"
+                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
                     onClick={() => setPage(prevPage => prevPage + 1)}>
                     Next
                 </button>
@@ -105,14 +129,13 @@ function Users() {
         };
 
         return loading ? (<Spinner />) : (
-            // ...existing code...
-            <div key={user.id} className="col-md-6 col-lg-4 mb-3">
-                <div className="card p-3 shadow-sm bg-dark text-white">
-                    <h5 className="card-title">{user.name}</h5>
-                    <p className="card-text">
+            <div key={user.id} className="w-full md:w-1/2 lg:w-1/3 px-2 mb-3">
+                <div className="border border-gray-300 rounded-lg p-3 shadow-sm bg-gray-900 text-white h-full">
+                    <h5 className="text-lg font-semibold mb-2 text-white">{user.name}</h5>
+                    <p className="mb-2">
                         <strong>Email:</strong> {user.email}
                     </p>
-                    <p className="card-text">
+                    <p className="mb-2">
                         <strong>Address: </strong>
                         <span>{user.address_street_number} </span>
                         <span>{user.address_street}, </span>
@@ -120,22 +143,21 @@ function Users() {
                         <span>{user.address_state} </span>
                         <span>{user.address_zip}</span>
                     </p>
-                    <p className="card-text">
+                    <p className="mb-2">
                         <strong>Latitude: </strong>
                         {user.address_latitude}
                     </p>
-                    <p className="card-text">
+                    <p className="mb-2">
                         <strong>Longitude: </strong>
                         {user.address_longitude}
                     </p>
-                    <p className="card-text">
+                    <p className="mb-2">
                         <strong>Role: </strong>
                         <form>
-                            {/* Typo corrected: clasName -> className */}
-                            <div className="form-group">
+                            <div className="mb-2">
                                 <input
                                     type="range"
-                                    className="form-range"
+                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                                     id="roleRange"
                                     min="0"
                                     max="2"
@@ -143,28 +165,32 @@ function Users() {
                                     defaultValue={user.role}
                                     onChange={(e) => handleChange(e, user.id)}
                                 />
-                                <div className="d-flex justify-content-between">
+                                <div className="flex justify-between text-sm mt-1">
                                     <span>Basic</span>
                                     <span>Driver</span>
                                     <span>Restaurant</span>
                                 </div>
-                                <small className="form-text text-white">
+                                <small className="text-white text-sm">
                                     Current role: <strong>{user.role}</strong>
                                 </small>
                             </div>
                         </form>
                     </p>
-                    <p className="card-text">
-                        {/* Typo corrected: Restauraunt -> Restaurant */}
+                    <p className="mb-2">
                         <strong>Restaurant ID: </strong>
                         <input
                             type="number"
-                            className="bg-dark text-white form-control"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             defaultValue={user.restaurant_id}
                             onChange={(e) => handleRestaurantIdChange(e, user.id)}
                         />
+                        {user.restaurant_id && restaurantNames[user.restaurant_id] && (
+                            <small className="text-gray-400 block mt-1">
+                                {restaurantNames[user.restaurant_id]}
+                            </small>
+                        )}
                     </p>
-                    <p className="card-text">
+                    <p className="mb-2">
                         <strong>Created At: </strong>
                         {new Date(user.created_at).toLocaleString()}
                     </p>
@@ -176,11 +202,11 @@ function Users() {
         <div className="m-1">
             <h1>Users List</h1>
             {/* Add Search Input Field */}
-            <div className="row mb-3">
-                <div className="col-12 col-md-6">
+            <div className="flex flex-wrap mb-3">
+                <div className="w-full md:w-1/2">
                     <input
                         type="text"
-                        className="form-control bg-dark text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Search users by name or email..."
                         value={query}
                         onChange={handleSearchChange}
@@ -193,7 +219,7 @@ function Users() {
                 <>
                     {users?.length > 0 ? <Pages /> : ""}
                     {users?.length > 0 ? (
-                        <div className="row">
+                        <div className="flex flex-wrap -mx-2">
                             {users?.map(user => (
                                 <User user={user} key={user.id} />
                             ))}

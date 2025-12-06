@@ -19,18 +19,18 @@ export default function OrderReview(props) {
   }, [deliveryFee, subtotal]);
 
   return (
-    <div className="row m-1">
-      <div className="col-md-12 text-center p-1">
+    <div className="flex flex-wrap m-1">
+      <div className="w-full text-center p-1">
         <h3>Order Review</h3>
       </div>
-      <div className="col-md-7">
+      <div className="w-full md:w-7/12">
         {cart.map((ci, key) => (
           <div key={key} className="cartitem p-3">
             <CartItemDetails USDollar={USDollar} cartItem={ci} />
           </div>
         ))}
       </div>
-      <div className="col-md-5">
+      <div className="w-full md:w-5/12">
         <Subtotal USDollar={USDollar} subtotal={subtotal} />
         <h4 className="currency-item">
           <span className="label">Service Fee:</span>
@@ -44,7 +44,7 @@ export default function OrderReview(props) {
           <span className="label">Total:</span>
           <b className="amount">{USDollar.format(total)}</b>
         </h4>
-        <button className="btn btn-primary form-control">Place order</button>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full">Place order</button>
       </div>
     </div>
   );

@@ -82,7 +82,7 @@ function Navbar(props) {
     }
 
     return (
-        <div id="navbar" className="row">
+        <div id="navbar" className="flex flex-wrap">
             <Logo
                 profile={profile}
                 address={address}
@@ -90,23 +90,23 @@ function Navbar(props) {
                 showGetLocation={showGetLocation}
                 setShowGetLocation={setShowGetLocation}
             />
-            <div className="col-12 col-lg-6">
+            <div className="w-full lg:w-1/2">
                 {profile ? <ShowGoogleUserInfo profile={profile} /> : ""}
-                <div className="row">
-                    <div className="col-12 col-md-6">
+                <div className="flex flex-wrap">
+                    <div className="w-full md:w-1/2">
                         {
                             !profile ? 
-                                <GoogleOAuthProvider className="btn btn-secondary w-100" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
+                                <GoogleOAuthProvider className="w-full" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
                                     {/* Custom GoogleLogin Component */}
                                     <GoogleLogin
-                                        className="btn btn-secondary form-control"
+                                        className="w-full"
                                         onSuccess={handleGoogleLoginSuccess}
                                         onFailure={handleGoogleLoginFailure}
                                         useOneTap
                                         render={(props) => (
                                             <button
                                                 {...props}
-                                                className="google-login-btn btn w-100 mb-1"
+                                                className="google-login-btn bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full mb-1"
                                             >
                                                 <i className="bi bi-google google-icon"></i> Sign in with Google
                                             </button>
@@ -117,14 +117,14 @@ function Navbar(props) {
                         }
                         {profile && loginLoading ? <Spinner /> : ""}
                         {profile ? 
-                            <button className="btn btn-secondary form-control mb-1" type="button" onClick={() => navigate('/user-orders')}>
+                            <button className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full mb-1" type="button" onClick={() => navigate('/user-orders')}>
                                 <i className="bi bi-list"></i> My Orders
                             </button> : ""
                         }
                     </div>
-                    <div className="col-12 col-md-6">
+                    <div className="w-full md:w-1/2">
                         <button 
-                            className="btn btn-secondary form-control mb-1" 
+                            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full mb-1 disabled:opacity-50 disabled:cursor-not-allowed" 
                             type="button" 
                             onClick={() => {
                                 if (cart && cart.length > 0 && cart[0]?.restaurant_id) {
@@ -134,9 +134,10 @@ function Navbar(props) {
                             disabled={!cart || cart.length === 0 || !cart[0]?.restaurant_id}
                         >
                             <i className="bi bi-cart"> </i>
-                            Cart
-                            <span> </span>
-                            <Badge cartAmount={cartAmount} />
+                            <span className="inline-block">
+                                Cart
+                                <Badge cartAmount={cartAmount} />
+                            </span>
                         </button>
                     </div>
                 </div>
