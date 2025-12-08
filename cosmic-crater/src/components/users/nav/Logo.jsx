@@ -13,14 +13,14 @@ function Logo(props) {
                         // Font didn't load, ensure fallback is visible
                         const logoElements = document.querySelectorAll('.logofont');
                         logoElements.forEach(el => {
-                            el.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Arial Black", "Helvetica Neue", Helvetica, Arial, sans-serif';
+                            el.style.fontFamily = 'Arial, "Arial Black", sans-serif';
                         });
                     }
                 } catch (e) {
                     // If font loading API fails, ensure fallback shows
                     const logoElements = document.querySelectorAll('.logofont');
                     logoElements.forEach(el => {
-                        el.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Arial Black", "Helvetica Neue", Helvetica, Arial, sans-serif';
+                        el.style.fontFamily = 'Arial, "Arial Black", sans-serif';
                     });
                 }
             };
@@ -40,7 +40,7 @@ function Logo(props) {
         <div className="w-full lg:w-auto flex items-center">
             <Link to="/">
                 <button 
-                        className="removebutton align-text-bottom whitespace-nowrap" 
+                        className="removebutton whitespace-nowrap flex items-center" 
                         type="button">
                     <span className="logofont2">RivCo</span>
                     <span className="logofont">DELIVERY</span>

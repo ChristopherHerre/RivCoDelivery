@@ -87,10 +87,10 @@ function Navbar(props) {
 
     return (
         <div id="navbar" className="flex flex-wrap lg:flex-nowrap items-center gap-4 mb-4 w-full">
-            <div className="flex-none lg:min-w-[230px] lg:max-w-[260px]">
+            <div className="flex-none lg:w-[260px]">
                 <Logo />
             </div>
-            <div className="w-full lg:flex-1 lg:max-w-[36%]">
+            <div className="w-full lg:flex-1">
                 <div className="w-full mb-2">
                     {profile ? <DeliveryAddress 
                         showGetLocation={showGetLocation} 
@@ -107,9 +107,9 @@ function Navbar(props) {
                     </div>}
                 </div>
                 {profile && (
-                    <div className="w-full flex">
-                        <Link to={"/taxi"} className="w-full">
-                            <button className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full flex items-center justify-center gap-2 min-h-[52px]">
+                    <div className="w-full flex justify-start">
+                        <Link to={"/taxi"} className="w-full lg:max-w-[200px]">
+                            <button className="bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors w-full flex items-center justify-center gap-2 text-sm">
                                 <i className="bi bi-taxi-front-fill"></i>
                                 Taxi Ride
                             </button>
@@ -117,10 +117,10 @@ function Navbar(props) {
                     </div>
                 )}
             </div>
-            <div className="w-full lg:flex-1 lg:max-w-[40%]">
+            <div className="w-full lg:flex-1">
                 {profile ? <ShowGoogleUserInfo profile={profile} /> : ""}
-                <div className="flex flex-col md:flex-row gap-2 w-full">
-                    <div className="flex-1 flex flex-col gap-2 min-w-0">
+                <div className="flex flex-col md:flex-row gap-2 w-full items-stretch">
+                    <div className="flex-1 flex flex-col min-w-0">
                         {
                             !profile ? 
                                 <GoogleOAuthProvider className="w-full" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
@@ -133,7 +133,7 @@ function Navbar(props) {
                                         render={(props) => (
                                             <button
                                                 {...props}
-                                                className="google-login-btn bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full min-h-[52px]"
+                                                className="google-login-btn bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors w-full text-sm flex items-center justify-center gap-2"
                                             >
                                                 <i className="bi bi-google google-icon"></i> Sign in with Google
                                             </button>
@@ -144,14 +144,14 @@ function Navbar(props) {
                         }
                         {profile && loginLoading ? <Spinner /> : ""}
                         {profile ? 
-                            <button className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full min-h-[52px]" type="button" onClick={() => navigate('/user-orders')}>
+                            <button className="bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors w-full text-sm flex items-center justify-center gap-2 h-full" type="button" onClick={() => navigate('/user-orders')}>
                                 <i className="bi bi-list"></i> My Orders
                             </button> : ""
                         }
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 flex">
                         <button 
-                            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full min-h-[52px] disabled:opacity-50 disabled:cursor-not-allowed" 
+                            className="bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors w-full text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed h-full" 
                             type="button" 
                             onClick={() => {
                                 if (cart && cart.length > 0 && cart[0]?.restaurant_id) {
@@ -160,7 +160,7 @@ function Navbar(props) {
                             }}
                             disabled={!cart || cart.length === 0 || !cart[0]?.restaurant_id}
                         >
-                            <i className="bi bi-cart"> </i>
+                            <i className="bi bi-cart"></i>
                             <span className="inline-block">
                                 Cart
                                 <Badge cartAmount={cartAmount} />

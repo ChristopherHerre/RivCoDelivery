@@ -132,7 +132,7 @@ function DriverOrders() {
                                         {order.restaurant} - {order.restaurant_address}
                                     </h5>
                                 </div>
-                                <div className="w-full lg:w-1/2">
+                                <div className="w-full lg:w-1/2 lg:pr-4">
                                     <div className="currency-item">
                                         <b className="label">Date: </b>
                                         <span className="amount">

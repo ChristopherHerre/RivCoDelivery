@@ -60,7 +60,7 @@ function NewMenuItem(props) {
     }
     return (
         <form onSubmit={submitMenuItem} className="flex flex-wrap shadow-lg rounded-2xl bg-gray-900 text-white mt-3 p-2">
-            <h3 className="text-white">Add New Menu Item</h3>
+            <h3 className="text-white w-full mb-4">Add New Menu Item</h3>
             <div className="w-full md:w-1/4">
                 <b>Name:</b>
                 <div className="group relative">

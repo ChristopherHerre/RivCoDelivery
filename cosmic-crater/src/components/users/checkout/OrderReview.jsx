@@ -23,7 +23,7 @@ export default function OrderReview(props) {
       <div className="w-full text-center p-1">
         <h3>Order Review</h3>
       </div>
-      <div className="w-full md:w-7/12">
+      <div className="w-full md:w-7/12 md:pr-4">
         {cart.map((ci, key) => (
           <div key={key} className="cartitem p-3">
             <CartItemDetails USDollar={USDollar} cartItem={ci} />
