@@ -127,8 +127,9 @@ export default function CheckoutForm(props) {
 		: null;
 
 	return (cartLoading || deliveryFee == null ? <Spinner /> : cart.length > 0 ? (
-		<form onSubmit={(e) => submit(e)}>
-			<h1>Checkout</h1>
+		<div className="mx-auto">
+			<form onSubmit={(e) => submit(e)}>
+				<h1>Checkout</h1>
 			<div className="flex flex-wrap">
 				<DeliveryInstructions 
 					setTextAreaValue={setTextAreaValue} 
@@ -162,7 +163,8 @@ export default function CheckoutForm(props) {
 				loading={loading}
 			/>
 			{loading && <Spinner />}
-		</form>) : <h1>Error: You cannot view this page right now.</h1>
+			</form>
+		</div>) : <h1>Error: You cannot view this page right now.</h1>
 	);
 
 	async function submit(e) {

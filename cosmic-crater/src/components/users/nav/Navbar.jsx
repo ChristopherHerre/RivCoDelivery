@@ -3,6 +3,8 @@ import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Badge from '../cart/Badge';
 import Logo from './Logo';
 import Spinner from '../Spinner';
+import DeliveryAddress from '../address/DeliveryAddress';
+import { Link } from 'react-router-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -23,11 +25,13 @@ function Navbar(props) {
         const { profile } = props;
         return (
             profile && (
-                <div>
-                    <h6>Welcome, <img className="google-profile-icon" src={profile.picture} /> 
-                        <b>{profile.name} </b>
+                <div className="mb-2">
+                    <small className="flex items-center gap-2 flex-wrap">
+                        <span>Welcome,</span>
+                        <img className="google-profile-icon" src={profile.picture} alt={profile.name} /> 
+                        <b>{profile.name}</b>
                         <a href="#" onClick={handleLogout}>Logout</a>
-                    </h6>
+                    </small>
                 </div>
             )
         );
@@ -82,18 +86,41 @@ function Navbar(props) {
     }
 
     return (
-        <div id="navbar" className="flex flex-wrap">
-            <Logo
-                profile={profile}
-                address={address}
-                setAddress={setAddress}
-                showGetLocation={showGetLocation}
-                setShowGetLocation={setShowGetLocation}
-            />
-            <div className="w-full lg:w-1/2">
+        <div id="navbar" className="flex flex-wrap lg:flex-nowrap items-center gap-4 mb-4 w-full">
+            <div className="flex-none lg:w-[260px]">
+                <Logo />
+            </div>
+            <div className="w-full lg:flex-1">
+                <div className="w-full mb-2">
+                    {profile ? <DeliveryAddress 
+                        showGetLocation={showGetLocation} 
+                        setShowGetLocation={setShowGetLocation} 
+                        address={address} 
+                        setAddress={setAddress}
+                    /> : 
+                    <div>
+                        <label>
+                            <u className="text-red-600">
+                                You must sign in to place an order!
+                            </u>
+                        </label>
+                    </div>}
+                </div>
+                {profile && (
+                    <div className="w-full flex justify-start">
+                        <Link to={"/taxi"} className="w-full lg:max-w-[200px]">
+                            <button className="bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors w-full flex items-center justify-center gap-2 text-sm">
+                                <i className="bi bi-taxi-front-fill"></i>
+                                Taxi Ride
+                            </button>
+                        </Link>
+                    </div>
+                )}
+            </div>
+            <div className="w-full lg:flex-1">
                 {profile ? <ShowGoogleUserInfo profile={profile} /> : ""}
-                <div className="flex flex-wrap">
-                    <div className="w-full md:w-1/2">
+                <div className="flex flex-col md:flex-row gap-2 w-full items-stretch">
+                    <div className="flex-1 flex flex-col min-w-0">
                         {
                             !profile ? 
                                 <GoogleOAuthProvider className="w-full" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
@@ -106,7 +133,7 @@ function Navbar(props) {
                                         render={(props) => (
                                             <button
                                                 {...props}
-                                                className="google-login-btn bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full mb-1"
+                                                className="google-login-btn bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors w-full text-sm flex items-center justify-center gap-2"
                                             >
                                                 <i className="bi bi-google google-icon"></i> Sign in with Google
                                             </button>
@@ -117,14 +144,14 @@ function Navbar(props) {
                         }
                         {profile && loginLoading ? <Spinner /> : ""}
                         {profile ? 
-                            <button className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full mb-1" type="button" onClick={() => navigate('/user-orders')}>
+                            <button className="bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors w-full text-sm flex items-center justify-center gap-2 h-full" type="button" onClick={() => navigate('/user-orders')}>
                                 <i className="bi bi-list"></i> My Orders
                             </button> : ""
                         }
                     </div>
-                    <div className="w-full md:w-1/2">
+                    <div className="flex-1 min-w-0 flex">
                         <button 
-                            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full mb-1 disabled:opacity-50 disabled:cursor-not-allowed" 
+                            className="bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors w-full text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed h-full" 
                             type="button" 
                             onClick={() => {
                                 if (cart && cart.length > 0 && cart[0]?.restaurant_id) {
@@ -133,7 +160,7 @@ function Navbar(props) {
                             }}
                             disabled={!cart || cart.length === 0 || !cart[0]?.restaurant_id}
                         >
-                            <i className="bi bi-cart"> </i>
+                            <i className="bi bi-cart"></i>
                             <span className="inline-block">
                                 Cart
                                 <Badge cartAmount={cartAmount} />

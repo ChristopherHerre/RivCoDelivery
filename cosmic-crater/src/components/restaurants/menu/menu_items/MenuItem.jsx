@@ -554,23 +554,21 @@ export default function MenuItem(props) {
                                 ) : (
                                     <Spinner />
                                 )}
-                                <div className="w-full lg:w-1/3 m-1">
-                                    <h5 className="">
-                                        <span className="text-red-600">*</span>
-                                        Quantity
-                                    </h5>
-                                    <QuantitySelector
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        inputValue={quantity}
-                                        onInputValueChange={setQuantity}
-                                    />
-                                </div>
-                                <div className="w-full lg:w-2/3 m-1">
-                                    <input
-                                        type="submit"
-                                        className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                                        value={"Add " + quantity + " to cart"}
-                                    />
+                                <div className="w-full flex flex-col md:flex-row gap-2 justify-center items-center m-1">
+                                    <div className="flex justify-center">
+                                        <QuantitySelector
+                                            className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            inputValue={quantity}
+                                            onInputValueChange={setQuantity}
+                                        />
+                                    </div>
+                                    <div className="flex justify-center">
+                                        <input
+                                            type="submit"
+                                            className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors text-lg font-semibold"
+                                            value={"Add " + quantity + " to cart"}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -580,8 +578,8 @@ export default function MenuItem(props) {
         )
     }
     return (
-        <>
-            <button className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition-colors text-lg m-1" onClick={(e) => {
+        <div className="mx-auto">
+            <button className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition-colors text-lg mb-4" onClick={(e) => {
                 // Use new URL format if we have restaurant data
                 if (restaurantData && restaurantData.city_slug) {
                     const restaurantSlug = slugify(restaurantData.name || '');
@@ -602,6 +600,6 @@ export default function MenuItem(props) {
             ) : (
                 <MI />
             )}
-        </>
+        </div>
     );
 }

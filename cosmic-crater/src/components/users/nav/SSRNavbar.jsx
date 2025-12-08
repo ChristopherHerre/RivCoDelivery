@@ -83,12 +83,12 @@ function SSRNavbar() {
     function ShowGoogleUserInfo() {
         return (
             profile && (
-                <div>
-                    <h6>Welcome, <img className="google-profile-icon" src={profile.picture} alt={profile.name} /> 
-                        <b>{profile.name} </b>
-                        <a href="#" onClick={handleLogout}>Logout</a>
-                    </h6>
-                </div>
+                <h6 className="flex items-center gap-2 flex-wrap">
+                    <span>Welcome,</span>
+                    <img className="google-profile-icon" src={profile.picture} alt={profile.name} /> 
+                    <b>{profile.name}</b>
+                    <a href="#" onClick={handleLogout}>Logout</a>
+                </h6>
             )
         );
     }

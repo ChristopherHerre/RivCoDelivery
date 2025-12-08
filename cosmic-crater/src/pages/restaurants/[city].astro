@@ -1,5 +1,6 @@
 ---
 import '@/components/index.css';
+import '@/components/index-ios.css';
 import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
@@ -43,12 +44,18 @@ const slugify = (name) =>
 			title={`Restaurants in ${cityName} | RivCoDelivery`}
 			description={`Discover restaurants in ${cityName} available for delivery with RivCoDelivery.`}
 		/>
+		<style>
+			#ssr-content main {
+				max-width: 100%;
+				width: 100%;
+			}
+		</style>
 	</head>
 	<body>
 		<Header />
-		<!-- SSR content - will be hidden if user is logged in -->
+		<!-- SSR content - visible by default for SEO, hidden if user is logged in -->
 		<div id="ssr-content">
-			<main class="container mx-auto px-4 py-5 max-w-6xl">
+			<main class="mx-auto px-4 py-5">
 				<h1 class="mb-3 text-2xl font-semibold">Restaurants in {cityName}</h1>
 
 				{restaurants.length === 0 ? (
@@ -59,17 +66,17 @@ const slugify = (name) =>
 							const slug = slugify(r.name);
 							return (
 								<div class="w-full md:w-1/2 px-3 mb-3" key={r.id}>
-									<article class="border border-gray-300 rounded-lg shadow-sm bg-white h-full flex flex-col">
+									<article class="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full flex flex-col hover:shadow-md transition-shadow">
 										<div class="p-4 flex-1 flex flex-col">
 											<h2 class="text-lg font-semibold mb-2">
-												<a href={`/restaurants/${city}/${r.id}-${slug}`} class="text-gray-900 no-underline hover:text-blue-600">
+												<a href={`/restaurants/${city}/${r.id}-${slug}`} class="text-white no-underline hover:text-blue-400 transition-colors">
 													{r.name}
 												</a>
 											</h2>
 											<p class="mb-1 text-base">
-												<strong class="font-semibold">{r.category}</strong>
+												<strong class="font-semibold text-white">{r.category}</strong>
 											</p>
-											<p class="mb-2 text-base text-gray-700">{r.address}</p>
+											<p class="mb-2 text-base text-gray-300">{r.address}</p>
 											<div class="mt-auto">
 												<a
 													href={`/restaurants/${city}/${r.id}-${slug}`}
@@ -99,31 +106,50 @@ const slugify = (name) =>
 		<script>
 			function checkAuthAndShowSPA() {
 				const profile = localStorage.getItem('profile');
+				const ssrContent = document.getElementById('ssr-content');
+				const spaContainer = document.getElementById('spa-container');
+				
+				// SSR content is visible by default (good for SEO crawlers)
+				// Only hide it if user is definitely logged in
+				
 				if (profile) {
+					// User might be logged in - verify session first
+					// Hide SSR and show SPA immediately to prevent flicker
+					if (ssrContent) ssrContent.style.display = 'none';
+					if (spaContainer) spaContainer.style.display = 'block';
+					
+					// Then verify session
 					fetch('/api/session', {
 						credentials: 'include'
 					})
 					.then(res => {
-						if (res.status === 200) {
-							const ssrContent = document.getElementById('ssr-content');
-							const spaContainer = document.getElementById('spa-container');
-							if (ssrContent) ssrContent.style.display = 'none';
-							if (spaContainer) spaContainer.style.display = 'block';
+						if (res.status !== 200) {
+							// Session invalid - show SSR (user sees SSR content)
+							if (ssrContent) ssrContent.style.display = 'block';
+							if (spaContainer) spaContainer.style.display = 'none';
 						}
+						// If session is valid, SSR stays hidden, SPA stays visible
 					})
 					.catch(err => {
 						console.error('Error checking session:', err);
+						// On error, show SSR (safer default)
+						if (ssrContent) ssrContent.style.display = 'block';
+						if (spaContainer) spaContainer.style.display = 'none';
 					});
 				} else {
-					const ssrContent = document.getElementById('ssr-content');
-					const spaContainer = document.getElementById('spa-container');
-					if (ssrContent) ssrContent.style.display = 'block';
+					// No profile - SSR content is already visible (default state)
+					// Just make sure SPA is hidden
 					if (spaContainer) spaContainer.style.display = 'none';
+					// SSR content doesn't need to be explicitly shown - it's visible by default
 				}
 			}
 			
-			// Check on initial page load
-			checkAuthAndShowSPA();
+			// Check immediately on page load (before DOM fully renders)
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', checkAuthAndShowSPA);
+			} else {
+				checkAuthAndShowSPA();
+			}
 			
 			// Listen for custom event dispatched after login
 			window.addEventListener('profile-changed', () => {

@@ -56,7 +56,7 @@ const Skills = () => {
             {/* Header */}
             <div className="flex flex-wrap mb-2">
                 <div className="w-full text-center">
-                <h1 className="text-2xl mb-0"><b>Christopher Kenneth Herre</b></h1>
+                <h1 className="text-2xl mb-0" style={{ fontFamily: "'Times New Roman', Times, serif" }}><b>Christopher Kenneth Herre</b></h1>
                 <p className="text-lg text-gray-600 mb-0 text-base">Full-Stack JavaScript Developer</p>
                 <p className="text-sm mb-0">
                     Riverside, California |{" "}
