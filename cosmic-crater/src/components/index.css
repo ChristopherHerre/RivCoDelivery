@@ -85,6 +85,28 @@
     cursor: pointer;
     outline: inherit;
 }
+#wr button.removebutton .logofont,
+button.removebutton .logofont,
+button .logofont,
+#wr button .logofont {
+    font-family: 'Bungee Spice', -apple-system, BlinkMacSystemFont, 'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-size: 20pt !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em;
+    display: inline-block;
+    color: inherit !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+#wr button.removebutton .logofont2,
+button.removebutton .logofont2,
+button .logofont2,
+#wr button .logofont2 {
+    font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-size: 20pt !important;
+    font-weight: 200 !important;
+    display: inline-block;
+}
 #wr .input-group {
     text-align: center;
 }
@@ -95,7 +117,22 @@
     object-fit: cover; 
     border: 1px solid #ccc;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    vertical-align: middle;
 }
+
+/* Address edit button should match profile icon size and alignment */
+#wr small b a {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 30px;
+}
+
+#wr small b a i {
+    font-size: 1em;
+    vertical-align: middle;
+}
+
 #wr input[type=checkbox], 
 #wr input[type=radio]
 {
@@ -116,19 +153,31 @@
     text-decoration: underline;
     text-shadow: 0.3px 0.3px;
 }
-#wr .logofont {
-    font-family: 'Bungee Spice', sans-serif;
-    font-size: 20pt;
+#wr .logofont,
+.logofont {
+    font-family: 'Bungee Spice', -apple-system, BlinkMacSystemFont, 'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-size: 20pt !important;
     margin: 0;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em;
+    display: inline-block;
+    color: inherit !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
-#wr .logofont2 {
-    font-family: 'Work Sans', sans-serif;
-    font-size: 20pt;
+#wr .logofont2,
+.logofont2 {
+    font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-size: 20pt !important;
     margin: 0;
+    font-weight: 200 !important;
+    display: inline-block;
 }
 #wr .blackborder {
     border: 2px solid black;
     background:#fff;
+    padding: 1.25rem 1rem;
+    margin: 0;
 }
 #wr .rounded {
     border-radius: 10px;
@@ -163,6 +212,35 @@
 }
 
 #wr .text-green-600 {
+    color: #16a34a !important;
+}
+
+/* Make hover:text-blue-400 links show underline on hover for better link visibility */
+#wr button.hover\:text-blue-400:hover,
+#wr a.hover\:text-blue-400:hover {
+    text-decoration: underline;
+}
+
+/* Navbar should match white-area outer width - extend to same edges as white-area */
+#wr #navbar {
+    margin-left: -1.5em;
+    margin-right: -1.5em;
+    width: calc(100% + 3em);
+    padding-left: calc(1.5em + 1rem);
+    padding-right: calc(1.5em + 1rem);
+    box-sizing: border-box;
+}
+
+/* Ensure Tailwind text color utilities work properly within #ssr-content */
+#ssr-content .text-white {
+    color: #ffffff !important;
+}
+
+#ssr-content .text-red-600 {
+    color: #dc2626 !important;
+}
+
+#ssr-content .text-green-600 {
     color: #16a34a !important;
 }
 

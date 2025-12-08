@@ -81,82 +81,103 @@ export default function Menu(props) {
         }
     }
 
-    let lastCategory = "";
-    function setLastCategoryPrinted(v) {
-        lastCategory = v;
-    }
-
-    const menuData = [];
-    function populateMenuData() {
-        for (const j in result) {
-            for (const i in result[j]) {
-                menuData.push(result[j][i]);
-            }
-        }
-    }
-    populateMenuData();
+    
+    // Format price display
+    const formatPrice = (price) => {
+        if (price == null || price <= 0) return null;
+        return Number(price).toFixed(2);
+    };
+    
+    const getPriceDisplay = (item) => {
+        const prices = [
+            formatPrice(item.price),
+            formatPrice(item.price2),
+            formatPrice(item.price3),
+            formatPrice(item.price4)
+        ].filter(p => p !== null);
+        
+        if (prices.length === 0) return null;
+        if (prices.length === 1) return `$${prices[0]}`;
+        return prices.map(p => `$${p}`).join(' - ');
+    };
+    
     return (
-        <>
-            <Link to="/">
-                <button className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition-colors text-lg m-1">
-                    <i className="bi bi-arrow-return-left"></i> Back
-                </button>
-            </Link>
-            {loaded ? <h2 className="m-1">{restaurantName} Menu</h2> : ""}
+        <div className="mx-auto">
+            {loaded && (
+                <header className="mb-6">
+                    <Link to="/">
+                        <button className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition-colors text-lg mb-4">
+                            <i className="bi bi-arrow-return-left"></i> Back
+                        </button>
+                    </Link>
+                    {restaurantData ? (
+                        <>
+                            <h1 className="mb-2 text-2xl font-semibold text-gray-900">{restaurantData.name || restaurantName}</h1>
+                            {restaurantData.category && (
+                                <p className="mb-1 text-base">
+                                    <strong className="font-semibold text-gray-900">{restaurantData.category}</strong>
+                                </p>
+                            )}
+                            {restaurantData.address && (
+                                <p className="mb-1 text-base text-gray-700">{restaurantData.address}</p>
+                            )}
+                            {restaurantData.city_name && (
+                                <p className="text-gray-600 mb-4 text-base">{restaurantData.city_name}</p>
+                            )}
+                        </>
+                    ) : (
+                        <h2 className="mb-4 text-2xl font-semibold text-gray-900">{restaurantName} Menu</h2>
+                    )}
+                </header>
+            )}
+            
             {
                 loaded ? Object.keys(result).map((category, categoryIndex) => (
-                    <span key={categoryIndex}>
-                        <div className="flex flex-wrap">
+                    <section className="mb-6" key={categoryIndex}>
+                        <h2 className="text-xl font-semibold mb-3 text-gray-900">{category}</h2>
+                        <div className="flex flex-wrap -mx-3">
                             {result[category].map((data, key) => {
-                                const isNewCategory = data.category != null && lastCategory != data.category;
-                                if (isNewCategory) {
-                                    setLastCategoryPrinted(data.category);
-                                }
+                                const priceDisplay = getPriceDisplay(data);
                                 return (
-                                    <React.Fragment key={data.id}>
-                                        {isNewCategory &&
-                                        <h5 className="pl-4">
-                                            {data.category}
-                                        </h5>}
-                                        <div className={"w-full md:w-1/2 xl:w-1/3"} key={data.id}>
-                                            <div className="m-1">
-                                                <button
-                                                        className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                                                        onClick={(e) => changeMenuItem(data)}>
-                                                    {data.name}
-                                                    <span> - $</span>
-                                                    {data.price != null && data.price > 0 &&
-                                                    <span className="font-bold">
-                                                        {data.price}
-                                                    </span>}
-                                                    {data.price2 != null && data.price2 > 0 && <span> - $</span>}
-                                                    {data.price2 != null && data.price2 > 0 &&
-                                                    <span className="font-bold">
-                                                        {data.price2}
-                                                    </span>}
-                                                    {data.price3 != null && data.price3 > 0 && <span> - $</span>}
-                                                    {data.price3 != null && data.price3 > 0 &&
-                                                    <span className="font-bold">
-                                                        {data.price3}
-                                                    </span>}
-                                                    {data.price4 != null && data.price4 > 0 && <span> - $</span>}
-                                                    {data.price4 != null && data.price4 > 0 &&
-                                                    <span className="font-bold">
-                                                        {data.price4}
-                                                    </span>}
-                                                </button>
+                                    <div className="w-full md:w-1/2 px-3 mb-3" key={data.id}>
+                                        <article className="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full flex flex-col hover:shadow-md transition-shadow">
+                                            <div className="p-4 flex-1 flex flex-col">
+                                                <h3 className="text-lg font-semibold mb-1">
+                                                    <button
+                                                        onClick={(e) => changeMenuItem(data)}
+                                                        className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
+                                                    >
+                                                        {data.name}
+                                                    </button>
+                                                </h3>
+                                                {data.size_display_name && (
+                                                    <p className="text-sm text-gray-300 mb-2">{data.size_display_name}</p>
+                                                )}
+                                                {priceDisplay && (
+                                                    <div className="mt-auto pt-2 border-t border-gray-700 flex justify-between items-center">
+                                                        <span className="font-bold text-lg text-white">
+                                                            {priceDisplay}
+                                                        </span>
+                                                        <button
+                                                            onClick={(e) => changeMenuItem(data)}
+                                                            className="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer"
+                                                        >
+                                                            View details
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    </React.Fragment>
+                                        </article>
+                                    </div>
                                 );
                             })}
                         </div>
-                    </span>
+                    </section>
                 ))
                 : 
                 (<Spinner />)
             }
-        </>
+        </div>
     );
 }
 

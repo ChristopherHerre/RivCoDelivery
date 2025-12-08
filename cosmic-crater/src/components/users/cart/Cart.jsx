@@ -189,7 +189,7 @@ export default function Cart(props) {
 
     // In Cart.jsx
     return (
-        <div className="m-1">
+        <div className="mx-auto">
             {/* Add loading check and null check for cart */}
             {!cartLoading && cart.length > 0 && (
                 <button 
@@ -202,7 +202,7 @@ export default function Cart(props) {
             )}
             <h1>Shopping Cart</h1>
             <div className="flex flex-wrap">
-                <div className="w-full sm:w-7/12">
+                <div className="w-full sm:w-7/12 sm:pr-4">
                     {cartLoading ? (
                         <div>Loading cart...</div>
                     ) : (

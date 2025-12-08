@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 function Failure() {
     return (
-        <div className="text-center">
-            <h1>
+        <div className="text-center p-6">
+            <h1 className="mb-4">
                 <span className="text-red-600">
                     <i className="bi bi-exclamation-triangle"> </i>
                     There was an error! Your order was not placed.
                 </span>
             </h1>
-            <h2>Troubleshooting</h2>
-            <ol>
+            <h2 className="mb-4">Troubleshooting</h2>
+            <ol className="mb-4">
                 <li>
                     Return to your <b><i className="bi bi-cart"> </i>Cart </b>
                     to try again.

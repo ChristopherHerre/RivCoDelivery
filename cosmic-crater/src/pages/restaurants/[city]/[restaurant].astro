@@ -61,8 +61,8 @@ grouped = menuItems.reduce((acc, item) => {
 <html lang="en">
 	<head>
 		<BaseHead
-			title={r ? `${r.name} menu in ${r.city_name} | RivCoDelivery` : `Restaurant Menu | RivCoDelivery`}
-			description={r ? `Browse the menu for ${r.name} in ${r.city_name}. Order delivery with RivCoDelivery.` : `Browse restaurant menu and order delivery with RivCoDelivery.`}
+			title={r ? `${r.name} | ${r.city_name} Delivery | RivCoDelivery` : `Restaurant Menu | RivCoDelivery`}
+			description={r ? `Order delivery from ${r.name} in ${r.city_name}. Browse menu items and place your order with RivCoDelivery.` : `Browse restaurant menu and order delivery with RivCoDelivery.`}
 		/>
 		{r && (
 			<script type="application/ld+json">
@@ -70,55 +70,84 @@ grouped = menuItems.reduce((acc, item) => {
 					'@context': 'https://schema.org',
 					'@type': 'Restaurant',
 					name: r.name,
-					address: r.address,
+					address: {
+						'@type': 'PostalAddress',
+						streetAddress: r.address,
+						addressLocality: r.city_name || '',
+						addressRegion: r.address.match(/,\s*([A-Z]{2})\s*\d/)?.[1] || '',
+						addressCountry: 'US'
+					},
 					geo: {
 						'@type': 'GeoCoordinates',
 						latitude: r.latitude,
 						longitude: r.longitude
-					}
+					},
+					servesCuisine: r.category,
+					url: `${Astro.url.origin}/restaurants/${city}/${restaurant}`,
+					priceRange: '$'
 				})}
 			</script>
 		)}
+		<style>
+			#ssr-content main {
+				max-width: 100%;
+				width: 100%;
+			}
+		</style>
 	</head>
 	<body>
 		<Header />
-		<!-- SSR content - will be hidden if user is logged in -->
+		<!-- SSR content - visible by default for SEO, hidden if user is logged in -->
 		{r && (
 			<div id="ssr-content">
 				
-				<main class="container mx-auto px-4 py-5 max-w-6xl">
-					<header class="mb-4">
-						<h1 class="mb-1 text-2xl font-semibold">{r.name}</h1>
+				<main class="mx-auto px-4 py-5">
+					<header class="mb-6">
+						<h1 class="mb-2 text-2xl font-semibold text-gray-900">{r.name}</h1>
 						<p class="mb-1 text-base">
-							<strong class="font-semibold">{r.category}</strong>
+							<strong class="font-semibold text-gray-900">{r.category}</strong>
 						</p>
 						<p class="mb-1 text-base text-gray-700">{r.address}</p>
-						{r.city_name && <p class="text-gray-600 mb-3 text-base">{r.city_name}</p>}
+						{r.city_name && <p class="text-gray-600 mb-4 text-base">{r.city_name}</p>}
 
-						<OrderButtonWithAuth restaurantId={r.id} client:only="react" />
+						<div class="mb-4">
+							<OrderButtonWithAuth restaurantId={r.id} client:only="react" />
+						</div>
 					</header>
 
 					{Object.entries(grouped).map(([category, items]) => (
-						<section class="mb-4" key={category}>
-							<h2 class="text-xl font-semibold mb-2">{category}</h2>
-							<div class="list-none p-0 m-0">
+						<section class="mb-6" key={category}>
+							<h2 class="text-xl font-semibold mb-3 text-gray-900">{category}</h2>
+							<div class="flex flex-wrap -mx-3">
 								{items.map((item) => (
-									<article
-										class="border border-gray-300 border-t-0 first:border-t first:rounded-t last:rounded-b bg-white flex justify-between items-start px-4 py-3 hover:bg-gray-50 transition-colors"
-										key={item.id}
-									>
-										<div class="flex-1">
-											<h3 class="text-base font-semibold mb-1">{item.name}</h3>
-											{item.size_display_name && (
-												<p class="text-sm text-gray-600 mb-0">{item.size_display_name}</p>
-											)}
-										</div>
-										<div class="ml-3">
-											<span class="font-bold text-base">
-												${Number(item.price).toFixed(2)}
-											</span>
-										</div>
-									</article>
+									<div class="w-full md:w-1/2 px-3 mb-3" key={item.id}>
+										<article class="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full flex flex-col hover:shadow-md transition-shadow">
+											<div class="p-4 flex-1 flex flex-col">
+												<h3 class="text-lg font-semibold mb-1">
+													<a 
+														href={`/restaurants/${city}/${restaurant}/menu/item?item=${item.id}`}
+														class="text-white no-underline hover:text-blue-400 transition-colors"
+													>
+														{item.name}
+													</a>
+												</h3>
+												{item.size_display_name && (
+													<p class="text-sm text-gray-300 mb-2">{item.size_display_name}</p>
+												)}
+												<div class="mt-auto pt-2 border-t border-gray-700 flex justify-between items-center">
+													<span class="font-bold text-lg text-white">
+														${Number(item.price).toFixed(2)}
+													</span>
+													<a 
+														href={`/restaurants/${city}/${restaurant}/menu/item?item=${item.id}`}
+														class="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline"
+													>
+														View details
+													</a>
+												</div>
+											</div>
+										</article>
+									</div>
 								))}
 							</div>
 						</section>
@@ -237,31 +266,50 @@ grouped = menuItems.reduce((acc, item) => {
 			
 			function checkAuthAndShowSPA() {
 				const profile = localStorage.getItem('profile');
+				const ssrContent = document.getElementById('ssr-content');
+				const spaContainer = document.getElementById('spa-container');
+				
+				// SSR content is visible by default (good for SEO crawlers)
+				// Only hide it if user is definitely logged in
+				
 				if (profile) {
+					// User might be logged in - verify session first
+					// Hide SSR and show SPA immediately to prevent flicker
+					if (ssrContent) ssrContent.style.display = 'none';
+					if (spaContainer) spaContainer.style.display = 'block';
+					
+					// Then verify session
 					fetch('/api/session', {
 						credentials: 'include'
 					})
 					.then(res => {
-						if (res.status === 200) {
-							const ssrContent = document.getElementById('ssr-content');
-							const spaContainer = document.getElementById('spa-container');
-							if (ssrContent) ssrContent.style.display = 'none';
-							if (spaContainer) spaContainer.style.display = 'block';
+						if (res.status !== 200) {
+							// Session invalid - show SSR (user sees SSR content)
+							if (ssrContent) ssrContent.style.display = 'block';
+							if (spaContainer) spaContainer.style.display = 'none';
 						}
+						// If session is valid, SSR stays hidden, SPA stays visible
 					})
 					.catch(err => {
 						console.error('Error checking session:', err);
+						// On error, show SSR (safer default)
+						if (ssrContent) ssrContent.style.display = 'block';
+						if (spaContainer) spaContainer.style.display = 'none';
 					});
 				} else {
-					const ssrContent = document.getElementById('ssr-content');
-					const spaContainer = document.getElementById('spa-container');
-					if (ssrContent) ssrContent.style.display = 'block';
+					// No profile - SSR content is already visible (default state)
+					// Just make sure SPA is hidden
 					if (spaContainer) spaContainer.style.display = 'none';
+					// SSR content doesn't need to be explicitly shown - it's visible by default
 				}
 			}
 			
-			// Check on initial page load
-			checkAuthAndShowSPA();
+			// Check immediately on page load (before DOM fully renders)
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', checkAuthAndShowSPA);
+			} else {
+				checkAuthAndShowSPA();
+			}
 			
 			// Listen for custom event dispatched after login
 			window.addEventListener('profile-changed', () => {
