@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../../users/Spinner';
 import { groupBy } from '../RestaurantsList';
@@ -16,8 +16,22 @@ export default function Menu(props) {
     const [restaurantData, setRestaurantData] = useState(null);
     const [menu, setMenu] = useState([]);
     const navigate = useNavigate();
+    const location = useLocation();
     const result = groupBy(menu, r => r.category);
     const [loaded, setLoaded] = useState(false);
+    
+    // Check if we're actually on a menu item page (shouldn't render Menu component)
+    // This prevents Menu from rendering when React Router incorrectly matches the route
+    React.useEffect(() => {
+        const currentPath = location.pathname;
+        // If the path contains /menu/ followed by something that's not "item", we're on a menu item page
+        // In that case, this component shouldn't have rendered - let React Router handle it
+        if (currentPath.includes('/menu/') && !currentPath.endsWith('/menu/item')) {
+            // We're on a menu item page, but Menu component rendered - this shouldn't happen
+            // Don't do anything - let the RouteSyncHandler fix the route matching
+            console.warn('[Menu] Component rendered on menu item page:', currentPath);
+        }
+    }, [location.pathname]);
 
     // Parse restaurant ID from param (could be just ID or "id-slug" format)
     const restaurantId = React.useMemo(() => {
@@ -74,7 +88,9 @@ export default function Menu(props) {
         // Use new URL format if we have restaurant data
         if (restaurantData && restaurantData.city_slug) {
             const restaurantSlug = slugify(restaurantData.name || '');
-            navigate(`/restaurants/${restaurantData.city_slug}/${restaurantId}-${restaurantSlug}/menu/item?item=${m.id}`);
+            const itemSlug = slugify(m.name || '');
+            // Use new slug-based format: /restaurants/:city/:restaurant/menu/:item-slug-id
+            navigate(`/restaurants/${restaurantData.city_slug}/${restaurantId}-${restaurantSlug}/menu/${itemSlug}-${m.id}`);
         } else {
             // Fallback to old format
             navigate(`/${restaurantId}/menu/item?item=${m.id}`);

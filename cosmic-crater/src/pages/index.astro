@@ -5,6 +5,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SSRAppWrapper from '../components/SSRAppWrapper.jsx';
+import Breadcrumb from '../components/Breadcrumb.astro';
 
 // Always show SSR initially - client will check auth and mount SPA if needed
 const showSpa = false;
@@ -36,6 +37,7 @@ cities = await res.json();
 		<!-- SSR content - visible by default for SEO, hidden if user is logged in -->
 		<div id="ssr-content">
 			<main class="mx-auto px-4 py-5">
+				<Breadcrumb items={[{ label: 'Home' }]} />
 				<h1 class="mb-3 text-2xl font-semibold">Restaurants by City</h1>
 				<p class="text-gray-600 mb-4 text-base">
 					Choose a city to see restaurants available for delivery with RivCoDelivery.

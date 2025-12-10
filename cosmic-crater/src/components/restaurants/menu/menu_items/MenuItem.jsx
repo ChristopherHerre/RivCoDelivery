@@ -13,7 +13,7 @@ import { parseRestaurantId, getRestaurantMenuUrl, slugify } from '../../../../ut
 export default function MenuItem(props) {
     const params = useParams();
     const [searchParams] = useSearchParams();
-    const { restaurant: restaurantParam, city } = params;
+    const { restaurant: restaurantParam, city, item: itemParam } = params;
     const USDollar = props.USDollar;
     const debug = props.debug;
     const cart = props.cart;
@@ -21,17 +21,32 @@ export default function MenuItem(props) {
     const [restaurantData, setRestaurantData] = useState(null);
     const [restaurantName, setRestaurantName] = useState(props.restaurantName || "");
     
-    // Get menuItem ID from query params or props (backward compatibility)
+    // Get menuItem ID from URL path, query params, or props (backward compatibility)
     const menuItemId = React.useMemo(() => {
-        const itemParam = searchParams.get('item');
+        // First, try to extract from URL path parameter (new format: "cinnamon-roll-123")
         if (itemParam) {
-            const id = Number(itemParam);
-            if (!Number.isNaN(id)) return id;
+            // Parse format: [name-slug]-[id] → extract the ID (last number after final dash)
+            const parts = itemParam.split('-');
+            if (parts.length > 0) {
+                const lastPart = parts[parts.length - 1];
+                const id = Number(lastPart);
+                if (!Number.isNaN(id) && id > 0) {
+                    return id;
+                }
+            }
         }
+        
+        // Fallback to query parameter (old format: ?item=123)
+        const queryItemParam = searchParams.get('item');
+        if (queryItemParam) {
+            const id = Number(queryItemParam);
+            if (!Number.isNaN(id) && id > 0) return id;
+        }
+        
         // Fallback to props for backward compatibility
         if (props.menuItem && props.menuItem > 0) return props.menuItem;
         return -1;
-    }, [searchParams, props.menuItem]);
+    }, [itemParam, searchParams, props.menuItem]);
     
     // Parse restaurant ID from param or use prop
     const restaurant = React.useMemo(() => {

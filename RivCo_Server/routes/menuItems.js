@@ -374,26 +374,25 @@ function menuItemRoutes(app, pool, checkRole) {
         }
     });
 
-    // PUBLIC: menu items for a restaurant, for SEO / SSR
-    // GET /api/public/menu-items?restaurant_id=1
-    router.get('/public/menu-items', async (req, res) => {
-        const restaurantId = Number(req.query.restaurant_id);
-        if (!Number.isInteger(restaurantId) || restaurantId <= 0) {
-            return res.status(400).json({ error: 'restaurant_id must be a positive integer' });
+    // PUBLIC: Get menu item ingredients
+    // GET /api/public/menu-items/:id/ingredients
+    router.get('/public/menu-items/:id/ingredients', async (req, res) => {
+        const id = Number(req.params.id);
+        if (!id || Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid menu item id' });
         }
         try {
-            const [rows] = await pool.execute(
-                `SELECT id, restaurant_id, name, size_display_name,
-                        price, size1, size2, size3, size4,
-                        price2, price3, price4, category, sort
-                 FROM menu_items
-                 WHERE restaurant_id = ?
-                 ORDER BY category, sort, name`,
-                [restaurantId]
+            const [results] = await pool.execute(
+                `SELECT i.*
+                 FROM menu_item_ingredients i
+                 JOIN menu_item_ingredients_map m ON i.id = m.ingredient_id
+                 WHERE m.menu_item_id = ?
+                 ORDER BY i.sort_order, i.ingredients_name`,
+                [id]
             );
-            res.json(rows);
+            res.json(results);
         } catch (err) {
-            console.error('Error fetching public menu items:', err);
+            console.error('Error executing query:', err);
             res.status(500).json({ error: 'Database query failed' });
         }
     });

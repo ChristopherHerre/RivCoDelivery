@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../App';
 import Spinner from '../users/Spinner';
 import Welcome from '../users/address/Welcome';
-import { getRestaurantMenuUrl } from '../../utils/restaurantUrls';
+import { getRestaurantMenuUrl, getRestaurantCategoryUrl } from '../../utils/restaurantUrls';
 import CityFilter from './CityFilter';
 
 export function groupBy(array, keyFn) {
@@ -243,11 +243,29 @@ export default function RestaurantsList(props) {
                     {restaurants.length === 0 ? (
                         <p className="text-gray-600">No restaurants found in this area yet.</p>
                     ) : (
-                        Object.keys(result).map((category, categoryIndex) => (
-                            <div key={categoryIndex} className="mb-6">
-                                <h2 className="text-xl font-semibold mb-3">{category}</h2>
-                                <div className="flex flex-wrap -mx-3">
-                                    {result[category].map((data, key) => {
+                        Object.keys(result).map((category, categoryIndex) => {
+                            // Get city_slug from first restaurant in category (all should have same city)
+                            const firstRestaurant = result[category][0];
+                            const citySlug = firstRestaurant?.city_slug;
+                            const categoryUrl = citySlug ? getRestaurantCategoryUrl(citySlug, category) : null;
+                            
+                            return (
+                                <div key={categoryIndex} className="mb-6">
+                                    {categoryUrl ? (
+                                        <h2 className="text-xl font-semibold mb-3">
+                                            <button
+                                                onClick={() => navigate(categoryUrl)}
+                                                className="text-gray-900 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer text-left font-semibold"
+                                                style={{ fontSize: 'inherit', fontWeight: 'inherit' }}
+                                            >
+                                                {category}
+                                            </button>
+                                        </h2>
+                                    ) : (
+                                        <h2 className="text-xl font-semibold mb-3">{category}</h2>
+                                    )}
+                                    <div className="flex flex-wrap -mx-3">
+                                        {result[category].map((data, key) => {
                                         const h = haversine_dist(
                                             data.latitude, 
                                             data.longitude, 
@@ -306,10 +324,11 @@ export default function RestaurantsList(props) {
                                                 </article>
                                             </div>
                                         );
-                                    })}
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
             ) : (!showGetLocation ? <Spinner /> : null)}

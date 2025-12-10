@@ -12,9 +12,20 @@ export async function saveCartToBackend(cart, userId) {
     }
 
     try {
+        // If cart is empty, use DELETE endpoint
+        if (!cart || cart.length === 0) {
+            const response = await axios.delete('/api/cart', {
+                withCredentials: true
+            });
+            console.log('Cart cleared:', response.data);
+            return response.data;
+        }
+        
+        // Backend gets userId from session, not from body
         const response = await axios.post('/api/cart', { 
-            cart,
-            userId 
+            cart
+        }, {
+            withCredentials: true
         });
         console.log('Cart saved:', response.data);
         return response.data;
@@ -82,20 +93,33 @@ export default function Cart(props) {
         const newCart = cart.filter((cartItem, k) => {
             return k !== ciid;
         });
+        // Optimistic update - update UI immediately
+        setCart(newCart);
+        calcSubtotal(newCart, setSubtotal);
+        
+        // Then save to backend if user is logged in
         if (profile?.sub) {
             try {
-                const response = await axios.post('/api/cart', { 
-                    cart: newCart,
-                    userId: profile.sub 
-                }).then(response => {
-                    setCart(newCart);
-                    calcSubtotal(newCart, setSubtotal);
+                // If cart is empty, use DELETE endpoint instead of POST
+                if (newCart.length === 0) {
+                    const response = await axios.delete('/api/cart', {
+                        withCredentials: true
+                    });
+                    console.log('Cart cleared:', response.data);
+                } else {
+                    // Backend gets userId from session, not from body
+                    const response = await axios.post('/api/cart', { 
+                        cart: newCart
+                    }, {
+                        withCredentials: true
+                    });
                     console.log('Cart saved after removal:', response.data);
-                }).catch(error => {
-                    console.error('Error saving cart after removal:', error);
-                });
+                }
             } catch (error) {
                 console.error('Error saving cart after removal:', error);
+                // Revert on error - restore original cart
+                setCart(cart);
+                calcSubtotal(cart, setSubtotal);
             }
         }
     }
@@ -123,13 +147,18 @@ export default function Cart(props) {
                                         <QuantitySelector 
                                             key2={key} 
                                             cartItem={cartItem} 
-                                            setCart={setCart} 
+                                            setCart={setCart}
+                                            setSubtotal={setSubtotal}
                                         />
                                     </div>
                                     <div className="w-full sm:w-auto">
                                         <button
+                                            type="button"
                                             className="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 transition-colors text-sm w-full sm:w-auto"
-                                            onClick={(e) => removeFromCart(key)}>
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                removeFromCart(key);
+                                            }}>
                                                 <i className="bi bi-trash3"> </i>
                                                 Remove
                                         </button>
@@ -218,8 +247,25 @@ export default function Cart(props) {
                     {!cartLoading && cart.length > 0 && (
                         <button 
                             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full" 
-                            onClick={() => {
-                                //saveCartToBackend(cart, profile.sub);
+                            onClick={async () => {
+                                // Save cart to backend before navigating to ensure checkout has latest data
+                                if (profile?.sub) {
+                                    try {
+                                        if (cart.length === 0) {
+                                            await axios.delete('/api/cart', {
+                                                withCredentials: true
+                                            });
+                                        } else {
+                                            await axios.post('/api/cart', { 
+                                                cart
+                                            }, {
+                                                withCredentials: true
+                                            });
+                                        }
+                                    } catch (error) {
+                                        console.error('Error saving cart before checkout:', error);
+                                    }
+                                }
                                 navigate(getCheckoutUrl());
                             }}
                         >
@@ -236,10 +282,34 @@ export function QuantitySelector(props) {
     const key = props.key2;
     const cartItem = props.cartItem;
     const setCart = props.setCart;
+    const setSubtotal = props.setSubtotal;
+    const profile = JSON.parse(localStorage.getItem('profile'));
+    
+    async function saveCartToBackend(updatedCart) {
+        if (!profile?.sub) return;
+        
+        try {
+            if (updatedCart.length === 0) {
+                await axios.delete('/api/cart', {
+                    withCredentials: true
+                });
+            } else {
+                await axios.post('/api/cart', { 
+                    cart: updatedCart
+                }, {
+                    withCredentials: true
+                });
+            }
+        } catch (error) {
+            console.error('Error saving cart after quantity change:', error);
+            throw error;
+        }
+    }
+    
     async function decrement(key, setCart) {
         setCart(cart => {
             const minQuantity = 2;
-            return cart.map((cartItem, i) => {
+            const updatedCart = cart.map((cartItem, i) => {
                 if (cartItem.quantity < minQuantity)
                     return cartItem;
                 if (key === i) {
@@ -247,13 +317,25 @@ export function QuantitySelector(props) {
                 } else {
                     return cartItem;
                 }
-            })
+            });
+            
+            // Update subtotal
+            if (setSubtotal) {
+                calcSubtotal(updatedCart, setSubtotal);
+            }
+            
+            // Save to backend
+            saveCartToBackend(updatedCart).catch(err => {
+                console.error('Failed to save cart:', err);
+            });
+            
+            return updatedCart;
         });
     }
     async function increment(key, setCart) {
         setCart(cart => {
             const maxQuantity = 20;
-            return cart.map((cartItem, i) => {
+            const updatedCart = cart.map((cartItem, i) => {
                 if (key === i) {
                     if (cartItem.quantity >= maxQuantity) {
                         return { ...cartItem, quantity: maxQuantity }
@@ -262,7 +344,19 @@ export function QuantitySelector(props) {
                 } else {
                     return cartItem;
                 }
-            })
+            });
+            
+            // Update subtotal
+            if (setSubtotal) {
+                calcSubtotal(updatedCart, setSubtotal);
+            }
+            
+            // Save to backend
+            saveCartToBackend(updatedCart).catch(err => {
+                console.error('Failed to save cart:', err);
+            });
+            
+            return updatedCart;
         });
     }
     return (

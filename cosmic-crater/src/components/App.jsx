@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import { 
 	BrowserRouter, 
 	Routes, 
@@ -120,6 +120,15 @@ export function App() {
 		useEffect(() => {
 			if (handledRef.current) return;
 
+			// Don't process deep links if we're already on a valid restaurant route
+			// This prevents navigation when user is on a menu item page or restaurant page
+			const currentPath = location.pathname;
+			if (currentPath.startsWith('/restaurants/')) {
+				// We're already on a valid restaurant route, don't process query params
+				// This prevents DeepLinkHandler from interfering when user logs in on a menu item page
+				return;
+			}
+
 			const params = new URLSearchParams(location.search);
 			const view = params.get('view');
 			const restaurantParam = params.get('restaurant');
@@ -147,7 +156,7 @@ export function App() {
 						});
 				}
 			}
-		}, [location.search, navigate]);
+		}, [location.search, location.pathname, navigate]);
 
 		return null;
 	}
@@ -229,9 +238,55 @@ export function App() {
 		};
 	}, []); // Empty dependency array - only set up once
 
+	// Component to ensure route matching when SPA mounts on SSR page
+	// BrowserRouter should automatically use window.location, but we verify it's correct
+	function RouteSyncHandler() {
+		const location = useLocation();
+		const navigate = useNavigate();
+		const hasChecked = useRef(false);
+		
+		// Use useLayoutEffect to run synchronously before paint
+		// This ensures we check route matching before any components render
+		useLayoutEffect(() => {
+			// Only check once on mount
+			if (hasChecked.current) return;
+			hasChecked.current = true;
+			
+			// When SPA mounts (e.g., after login), verify we're on the correct route
+			// BrowserRouter should automatically use window.location.pathname
+			const currentPath = window.location.pathname;
+			const currentSearch = window.location.search;
+			const routerPath = location.pathname;
+			const routerSearch = location.search;
+			
+			// Debug: Log route matching info
+			console.log('[RouteSyncHandler] Route check:', {
+				browser: currentPath + currentSearch,
+				router: routerPath + routerSearch,
+				matches: routerPath === currentPath && routerSearch === currentSearch
+			});
+			
+			// Check if React Router location matches browser location
+			// If not, navigate to sync them (this should rarely happen)
+			if (routerPath !== currentPath || routerSearch !== currentSearch) {
+				console.log('[RouteSyncHandler] Syncing route to:', currentPath + currentSearch);
+				// Navigate to the actual browser URL to ensure correct route matching
+				// Use replace: true to avoid adding to history (URL stays the same)
+				navigate(currentPath + currentSearch, { replace: true });
+			}
+		}, []); // Only run once on mount
+		
+		return null;
+	}
+
 	function WhiteArea() {
+		// Get the current pathname before BrowserRouter initializes
+		// This ensures we can verify route matching is correct
+		const initialPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+		
 		return (
 			<BrowserRouter>
+				<RouteSyncHandler />
 				<DeepLinkHandler />
 				<Routes>
 					<Route
@@ -319,17 +374,22 @@ export function App() {
 							path="taxi"
 							element={<TaxiFareCalculator cartAmount={cartAmount} />}
 						/>
-						{/* New routes matching SSR format: /restaurants/:city/:restaurant */}
+						{/* More specific routes must come first - React Router matches first match */}
+						{/* New slug-based menu item route: /restaurants/:city/:restaurant/menu/:item (e.g., cinnamon-roll-123) */}
 						<Route
-							path="restaurants/:city/:restaurant"
+							path="restaurants/:city/:restaurant/menu/:item"
 							element={
-								<Menu
-									menuItem={menuItem}
-									setMenuItem={setMenuItem}
+								<MenuItem
+									USDollar={USDollar}
 									cartAmount={cartAmount}
+									setCartAmount={setCartAmount}
+									debug={debug}
+									cart={cart}
+									setCart={setCart}
 								/>
 							}
 						/>
+						{/* Old query parameter route for backward compatibility */}
 						<Route
 							path="restaurants/:city/:restaurant/menu/item"
 							element={
@@ -373,6 +433,18 @@ export function App() {
 									cart={cart}
 									setCart={setCart}
 									cartLoading={cartLoading}
+								/>
+							}
+						/>
+						{/* General restaurant route must come last - matches /restaurants/:city/:restaurant */}
+						{/* Only match if NOT a menu item, cart, or checkout route */}
+						<Route
+							path="restaurants/:city/:restaurant"
+							element={
+								<Menu
+									menuItem={menuItem}
+									setMenuItem={setMenuItem}
+									cartAmount={cartAmount}
 								/>
 							}
 						/>

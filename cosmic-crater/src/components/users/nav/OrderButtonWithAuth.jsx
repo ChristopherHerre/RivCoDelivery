@@ -80,12 +80,11 @@ function OrderButtonWithAuth({ restaurantId }) {
                 setLoginLoading(false);
                 
                 // Dispatch custom event to notify SSR pages to show SPA
+                // Don't change the URL - preserve the current page so user stays where they are
                 window.dispatchEvent(new Event('profile-changed'));
                 
-                // After login, navigate to SPA
-                if (restaurantId) {
-                    window.location.href = `/?restaurant=${restaurantId}&view=menu`;
-                }
+                // Note: We don't navigate here - the SPA will mount on the current page
+                // This ensures users stay on menu item pages after login
             } catch (err) {
                 // Handle 429 errors
                 if (err.response?.status === 429) {
@@ -141,9 +140,9 @@ function OrderButtonWithAuth({ restaurantId }) {
             })
             .then(res => {
                 if (res.status === 200) {
-                    if (restaurantId) {
-                        window.location.href = `/?restaurant=${restaurantId}&view=menu`;
-                    }
+                    // User is already logged in and on a valid page - don't navigate
+                    // The SPA should already be showing, or will show after profile-changed event
+                    // This preserves the current URL (e.g., menu item pages)
                 } else {
                     alert('You must be signed in to order from this restaurant.');
                 }
