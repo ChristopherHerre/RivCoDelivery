@@ -31,6 +31,12 @@ export const GET: APIRoute = async ({ request }) => {
     googleApiUrl.searchParams.set('key', apiKey);
     googleApiUrl.searchParams.set('components', `country:${country}`);
     
+    // Bias towards Riverside County, California
+    // Using Riverside city coordinates (approximately center of Riverside County)
+    googleApiUrl.searchParams.set('location', '33.9533,-117.3962');
+    // Radius in meters: ~80km covers most of Riverside County
+    googleApiUrl.searchParams.set('radius', '80000');
+    
     if (sessionToken) {
       googleApiUrl.searchParams.set('sessiontoken', sessionToken);
     }

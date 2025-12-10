@@ -32,17 +32,41 @@ export default function RedirectToNewUrl() {
 					const queryString = searchParams.toString();
 					const querySuffix = queryString ? `?${queryString}` : '';
 					
-					// Build new URL based on the current path
-					if (location.pathname.includes('/menu/item')) {
-						navigate(`${baseUrl}/menu/item${querySuffix}`, { replace: true });
-					} else if (location.pathname.includes('/cart')) {
-						navigate(`${baseUrl}/cart${querySuffix}`, { replace: true });
-					} else if (location.pathname.includes('/checkout')) {
-						navigate(`${baseUrl}/checkout${querySuffix}`, { replace: true });
+				// Build new URL based on the current path
+				if (location.pathname.includes('/menu/item')) {
+					// Check if there's an item query parameter to convert to slug format
+					const searchParams = new URLSearchParams(location.search);
+					const itemId = searchParams.get('item');
+					
+					if (itemId) {
+						// Fetch menu item to get name for slug and convert to new format
+						axios.get(`/api/public/menu-items/${itemId}`)
+							.then(itemRes => {
+								const menuItem = itemRes.data;
+								if (menuItem && menuItem.restaurant_id === restaurantId) {
+									const itemSlug = slugify(menuItem.name || '');
+									navigate(`${baseUrl}/menu/${itemSlug}-${itemId}`, { replace: true });
+								} else {
+									// Fallback to query param format if restaurant doesn't match
+									navigate(`${baseUrl}/menu/item?item=${itemId}`, { replace: true });
+								}
+							})
+							.catch(() => {
+								// Fallback to query param format if fetch fails
+								navigate(`${baseUrl}/menu/item?item=${itemId}`, { replace: true });
+							});
 					} else {
-						// Default to menu
-						navigate(`${baseUrl}${querySuffix}`, { replace: true });
+						// No item parameter, just redirect to menu
+						navigate(baseUrl, { replace: true });
 					}
+				} else if (location.pathname.includes('/cart')) {
+					navigate(`${baseUrl}/cart${querySuffix}`, { replace: true });
+				} else if (location.pathname.includes('/checkout')) {
+					navigate(`${baseUrl}/checkout${querySuffix}`, { replace: true });
+				} else {
+					// Default to menu
+					navigate(`${baseUrl}${querySuffix}`, { replace: true });
+				}
 				} else {
 					// If we can't get restaurant data, just go home
 					navigate('/', { replace: true });

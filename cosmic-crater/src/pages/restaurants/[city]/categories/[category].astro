@@ -1,0 +1,258 @@
+---
+import '@/components/index.css';
+import '@/components/index-ios.css';
+import BaseHead from '@/components/BaseHead.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SSRAppWrapper from '@/components/SSRAppWrapper.jsx';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+
+const { city, category } = Astro.params;
+
+// Decode category from slug (e.g., "chinese-food" -> "Chinese Food")
+// We'll need to fetch restaurants and match the actual category name
+let restaurants = [];
+let cityName = 'this area';
+let categoryName = category ? category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '';
+let actualCategoryName = '';
+
+// Always fetch restaurants for SSR (they'll be replaced if SPA mounts)
+const apiBase = Astro.url.origin;
+
+// First, get restaurants by city to find the actual category name
+const cityRes = await fetch(
+	`${apiBase}/api/restaurants-by-city?city_slug=${encodeURIComponent(city)}`,
+	{
+		method: 'GET',
+		headers: { accept: 'application/json' }
+	}
+);
+
+if (cityRes.ok) {
+	const allRestaurants = await cityRes.json();
+	if (allRestaurants.length > 0) {
+		cityName = allRestaurants[0].city_name ?? 'this area';
+		
+		// Find the actual category name by matching slug
+		const categorySlug = category.toLowerCase();
+		const matchingCategory = allRestaurants.find(r => {
+			if (!r.category) return false;
+			const rCategorySlug = r.category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+			return rCategorySlug === categorySlug;
+		});
+		
+		if (matchingCategory) {
+			actualCategoryName = matchingCategory.category;
+			// Now fetch restaurants with this exact category
+			const categoryRes = await fetch(
+				`${apiBase}/api/public/restaurants-by-city-and-category?city_slug=${encodeURIComponent(city)}&category=${encodeURIComponent(actualCategoryName)}`,
+				{
+					method: 'GET',
+					headers: { accept: 'application/json' }
+				}
+			);
+			
+			if (categoryRes.ok) {
+				restaurants = await categoryRes.json();
+			}
+		}
+	}
+}
+
+const slugify = (name) =>
+	name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/(^-|-$)/g, '');
+
+const pageTitle = actualCategoryName 
+	? `${actualCategoryName} in ${cityName} | RivCoDelivery`
+	: `Restaurants in ${cityName} | RivCoDelivery`;
+
+const pageDescription = actualCategoryName
+	? `Find ${actualCategoryName.toLowerCase()} restaurants in ${cityName}. Browse menus, place orders, and get delivery from top-rated ${actualCategoryName.toLowerCase()} restaurants.`
+	: `Discover restaurants in ${cityName} available for delivery with RivCoDelivery.`;
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
+
+// Structured data for CollectionPage
+const structuredData = {
+	'@context': 'https://schema.org',
+	'@type': 'CollectionPage',
+	name: pageTitle,
+	description: pageDescription,
+	url: canonicalUrl.toString(),
+	mainEntity: {
+		'@type': 'ItemList',
+		numberOfItems: restaurants.length,
+		itemListElement: restaurants.map((r, index) => ({
+			'@type': 'ListItem',
+			position: index + 1,
+			item: {
+				'@type': 'Restaurant',
+				name: r.name,
+				address: {
+					'@type': 'PostalAddress',
+					streetAddress: r.address,
+					addressLocality: r.city_name || '',
+					addressCountry: 'US'
+				},
+				servesCuisine: r.category,
+				url: `${Astro.url.origin}/restaurants/${city}/${r.id}-${slugify(r.name)}`
+			}
+		}))
+	}
+};
+
+// Breadcrumb structured data
+const breadcrumbData = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{
+			'@type': 'ListItem',
+			position: 1,
+			name: 'Home',
+			item: Astro.site + '/'
+		},
+		{
+			'@type': 'ListItem',
+			position: 2,
+			name: cityName,
+			item: Astro.site + `/restaurants/${city}`
+		},
+		{
+			'@type': 'ListItem',
+			position: 3,
+			name: actualCategoryName || categoryName,
+			item: canonicalUrl.toString()
+		}
+	]
+};
+---
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={pageTitle}
+			description={pageDescription}
+		/>
+		<link rel="canonical" href={canonicalUrl} />
+		<script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+		<script type="application/ld+json" set:html={JSON.stringify(breadcrumbData)} />
+		<style>
+			#ssr-content main {
+				max-width: 100%;
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<!-- SSR content - visible by default for SEO, hidden if user is logged in -->
+		<div id="ssr-content">
+			<main class="mx-auto px-4 py-5">
+				<Breadcrumb items={[
+					{ label: 'Home', href: '/' },
+					{ label: cityName, href: `/restaurants/${city}` },
+					{ label: actualCategoryName || categoryName }
+				]} />
+				
+				<header class="mb-6">
+					<h1 class="text-3xl font-bold text-gray-900 mb-2">
+						{actualCategoryName || categoryName} in {cityName}
+					</h1>
+					{restaurants.length > 0 && (
+						<p class="text-lg text-gray-700 mb-2">
+							Found {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''} in this category
+						</p>
+					)}
+				</header>
+
+				{restaurants.length === 0 ? (
+					<p class="text-gray-600">No restaurants found in this category for {cityName} yet.</p>
+				) : (
+					<div class="row flex flex-wrap -mx-3">
+						{restaurants.map((r) => {
+							const slug = slugify(r.name);
+							return (
+								<div class="w-full md:w-1/2 px-3 mb-3" key={r.id}>
+									<article class="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full flex flex-col hover:shadow-md transition-shadow">
+										<div class="p-4 flex-1 flex flex-col">
+											<h2 class="text-lg font-semibold mb-2">
+												<a href={`/restaurants/${city}/${r.id}-${slug}`} class="text-white no-underline hover:text-blue-400 transition-colors">
+													{r.name}
+												</a>
+											</h2>
+											<p class="mb-1 text-base">
+												<strong class="font-semibold text-white">{r.category}</strong>
+											</p>
+											<p class="mb-2 text-base text-gray-300">{r.address}</p>
+											<div class="mt-auto">
+												<a
+													href={`/restaurants/${city}/${r.id}-${slug}`}
+													class="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline"
+												>
+													View menu
+												</a>
+											</div>
+										</div>
+									</article>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</main>
+		</div>
+		
+		<!-- SPA container - wrapper checks auth before rendering App -->
+		<div id="spa-container" style="display: none;">
+			<SSRAppWrapper client:only="react" />
+		</div>
+		
+		<Footer />
+		
+		<!-- Client-side auth check -->
+		<script>
+			function checkAuthAndShowSPA() {
+				const profile = localStorage.getItem('profile');
+				const ssrContent = document.getElementById('ssr-content');
+				const spaContainer = document.getElementById('spa-container');
+				
+				if (profile) {
+					if (ssrContent) ssrContent.style.display = 'none';
+					if (spaContainer) spaContainer.style.display = 'block';
+					
+					fetch('/api/session', {
+						credentials: 'include'
+					})
+					.then(res => {
+						if (res.status !== 200) {
+							if (ssrContent) ssrContent.style.display = 'block';
+							if (spaContainer) spaContainer.style.display = 'none';
+						}
+					})
+					.catch(err => {
+						console.error('Error checking session:', err);
+						if (ssrContent) ssrContent.style.display = 'block';
+						if (spaContainer) spaContainer.style.display = 'none';
+					});
+				} else {
+					if (spaContainer) spaContainer.style.display = 'none';
+				}
+			}
+			
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', checkAuthAndShowSPA);
+			} else {
+				checkAuthAndShowSPA();
+			}
+			
+			window.addEventListener('profile-changed', () => {
+				checkAuthAndShowSPA();
+			});
+		</script>
+	</body>
+</html>
+

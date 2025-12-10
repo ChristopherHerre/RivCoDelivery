@@ -1,0 +1,279 @@
+---
+import '@/components/index.css';
+import '@/components/index-ios.css';
+import BaseHead from '@/components/BaseHead.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SSRAppWrapper from '@/components/SSRAppWrapper.jsx';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+
+const { ingredient } = Astro.params;
+
+let menuItems = [];
+let ingredientName = '';
+let restaurantsMap = new Map();
+
+const apiBase = Astro.url.origin;
+
+// Fetch menu items using this ingredient (global)
+const ingredientsRes = await fetch(`${apiBase}/api/public/ingredients/${ingredient}`, {
+	method: 'GET',
+	headers: { accept: 'application/json' }
+});
+
+if (ingredientsRes.ok) {
+	menuItems = await ingredientsRes.json();
+	if (menuItems.length > 0) {
+		ingredientName = menuItems[0].ingredients_name || ingredient.replace(/-/g, ' ');
+		// Group by restaurant
+		menuItems.forEach(item => {
+			if (!restaurantsMap.has(item.restaurant_id)) {
+				restaurantsMap.set(item.restaurant_id, {
+					restaurant_id: item.restaurant_id,
+					restaurant_name: item.restaurant_name,
+					city_name: item.city_name,
+					city_slug: item.city_slug,
+					items: []
+				});
+			}
+			restaurantsMap.get(item.restaurant_id).items.push(item);
+		});
+	}
+}
+
+if (menuItems.length === 0) {
+	return Astro.redirect('/404');
+}
+
+const restaurants = Array.from(restaurantsMap.values());
+
+// Helper function to slugify
+const slugify = (name) => {
+	if (!name) return '';
+	return name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/(^-|-$)/g, '');
+};
+
+// Generate canonical URL
+const canonicalUrl = `${Astro.url.origin}/ingredients/${ingredient}`;
+
+// SEO metadata
+const pageTitle = `${ingredientName} Menu Items | RivCoDelivery`;
+const pageDescription = `Browse menu items featuring ${ingredientName} from restaurants across Riverside County. Order delivery with RivCoDelivery.`;
+
+// Structured data
+const structuredData = {
+	'@context': 'https://schema.org',
+	'@type': 'CollectionPage',
+	name: pageTitle,
+	description: pageDescription,
+	url: canonicalUrl,
+	about: {
+		'@type': 'Thing',
+		name: ingredientName
+	}
+};
+
+const itemListData = {
+	'@context': 'https://schema.org',
+	'@type': 'ItemList',
+	name: `Menu items with ${ingredientName}`,
+	itemListElement: menuItems.map((item, index) => ({
+		'@type': 'ListItem',
+		position: index + 1,
+		item: {
+			'@type': 'Product',
+			name: item.name,
+			brand: {
+				'@type': 'Restaurant',
+				name: item.restaurant_name
+			},
+			offers: {
+				'@type': 'Offer',
+				price: item.price ? Number(item.price).toFixed(2) : '0.00',
+				priceCurrency: 'USD'
+			}
+		}
+	}))
+};
+
+const breadcrumbData = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{
+			'@type': 'ListItem',
+			position: 1,
+			name: 'Home',
+			item: Astro.url.origin
+		},
+		{
+			'@type': 'ListItem',
+			position: 2,
+			name: ingredientName,
+			item: canonicalUrl
+		}
+	]
+};
+---
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={pageTitle}
+			description={pageDescription}
+		/>
+		<link rel="canonical" href={canonicalUrl} />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={pageDescription} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={pageDescription} />
+		<script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+		<script type="application/ld+json" set:html={JSON.stringify(itemListData)} />
+		<script type="application/ld+json" set:html={JSON.stringify(breadcrumbData)} />
+		<style>
+			#ssr-content main {
+				max-width: 100%;
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<div id="ssr-content">
+			<main class="mx-auto px-4 py-5">
+				<Breadcrumb items={[
+					{ label: 'Home', href: '/' },
+					{ label: ingredientName }
+				]} />
+
+				<header class="mb-6">
+					<h1 class="text-3xl font-bold text-gray-900 mb-2">Menu Items with {ingredientName}</h1>
+					<p class="text-lg text-gray-700 mb-2">
+						Found {menuItems.length} menu item{menuItems.length !== 1 ? 's' : ''} from {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''}
+					</p>
+				</header>
+
+				{restaurants.length > 0 ? (
+					<div class="space-y-8">
+						{restaurants.map((restaurant) => {
+							const restaurantSlug = slugify(restaurant.restaurant_name);
+							return (
+								<section key={restaurant.restaurant_id} class="mb-6">
+									<h2 class="text-2xl font-semibold mb-3 text-gray-900">
+										<a
+											href={`/restaurants/${restaurant.city_slug}/${restaurant.restaurant_id}-${restaurantSlug}`}
+											class="text-blue-600 hover:underline no-underline"
+										>
+											{restaurant.restaurant_name}
+										</a>
+										{restaurant.city_name && (
+											<span class="text-lg font-normal text-gray-600 ml-2">in {restaurant.city_name}</span>
+										)}
+									</h2>
+									<div class="flex flex-wrap -mx-3">
+										{restaurant.items.map((item) => {
+											const itemSlug = slugify(item.name);
+											return (
+												<div class="w-full md:w-1/2 px-3 mb-3" key={item.id}>
+													<article class="border border-gray-300 rounded-lg shadow-sm bg-white h-full flex flex-col hover:shadow-md transition-shadow">
+														<div class="p-4 flex-1 flex flex-col">
+															<h3 class="text-lg font-semibold mb-1">
+																<a
+																	href={`/restaurants/${restaurant.city_slug}/${restaurant.restaurant_id}-${restaurantSlug}/menu/${itemSlug}-${item.id}`}
+																	class="text-gray-900 no-underline hover:text-blue-600 transition-colors"
+																>
+																	{item.name}
+																</a>
+															</h3>
+															{item.category && (
+																<p class="text-sm text-gray-600 mb-2">{item.category}</p>
+															)}
+															<div class="mt-auto pt-2 border-t border-gray-200 flex justify-between items-center">
+																<span class="font-bold text-lg text-gray-900">
+																	${item.price ? Number(item.price).toFixed(2) : 'Price varies'}
+																</span>
+																<a
+																	href={`/restaurants/${restaurant.city_slug}/${restaurant.restaurant_id}-${restaurantSlug}/menu/${itemSlug}-${item.id}`}
+																	class="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline"
+																>
+																	View details
+																</a>
+															</div>
+														</div>
+													</article>
+												</div>
+											);
+										})}
+									</div>
+									<div class="mt-3">
+										<a
+											href={`/restaurants/${restaurant.city_slug}/${restaurant.restaurant_id}-${restaurantSlug}/ingredients/${ingredient}`}
+											class="text-blue-600 hover:underline text-sm"
+										>
+											View all items with {ingredientName} at {restaurant.restaurant_name}
+										</a>
+									</div>
+								</section>
+							);
+						})}
+					</div>
+				) : (
+					<p class="text-gray-600">No menu items found with this ingredient.</p>
+				)}
+			</main>
+		</div>
+
+		<div id="spa-container" style="display: none;">
+			<SSRAppWrapper client:only="react" />
+		</div>
+
+		<Footer />
+
+		<script>
+			function checkAuthAndShowSPA() {
+				const profile = localStorage.getItem('profile');
+				const ssrContent = document.getElementById('ssr-content');
+				const spaContainer = document.getElementById('spa-container');
+				
+				if (profile) {
+					if (ssrContent) ssrContent.style.display = 'none';
+					if (spaContainer) spaContainer.style.display = 'block';
+					
+					fetch('/api/session', {
+						credentials: 'include'
+					})
+					.then(res => {
+						if (res.status !== 200) {
+							if (ssrContent) ssrContent.style.display = 'block';
+							if (spaContainer) spaContainer.style.display = 'none';
+						}
+					})
+					.catch(err => {
+						console.error('Error checking session:', err);
+						if (ssrContent) ssrContent.style.display = 'block';
+						if (spaContainer) spaContainer.style.display = 'none';
+					});
+				} else {
+					if (spaContainer) spaContainer.style.display = 'none';
+				}
+			}
+			
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', checkAuthAndShowSPA);
+			} else {
+				checkAuthAndShowSPA();
+			}
+			
+			window.addEventListener('profile-changed', () => {
+				checkAuthAndShowSPA();
+			});
+		</script>
+	</body>
+</html>
+

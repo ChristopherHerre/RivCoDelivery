@@ -104,8 +104,8 @@ function restaurantRoutes(app, pool, checkRole) {
         }
     });
 
-    // GET /api/restaurants2/:restaurantId/menu
-    router.get('/restaurants2/:restaurantId/menu', checkRole(0), async (req, res) => {
+    // GET /api/restaurants2/:restaurantId/menu (public endpoint for SSR and SPA)
+    router.get('/restaurants2/:restaurantId/menu', async (req, res) => {
         const parseResult = restaurantIdParamSchema.safeParse(req.params);
         if (!parseResult.success) {
             return res.status(400).json({
@@ -114,7 +114,7 @@ function restaurantRoutes(app, pool, checkRole) {
             });
         }
         const { restaurantId } = parseResult.data;
-        const query = 'SELECT * FROM menu_items WHERE restaurant_id = ? ORDER BY sort LIMIT 50';
+        const query = 'SELECT * FROM menu_items WHERE restaurant_id = ? ORDER BY category, sort, name';
         try {
             const [results] = await pool.execute(query, [restaurantId]);
             res.json(results);
@@ -204,6 +204,199 @@ function restaurantRoutes(app, pool, checkRole) {
             res.json(results[0]);
         } catch (err) {
             console.error('Error executing query:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // PUBLIC: Get menu item by ID with restaurant context
+    // GET /api/public/menu-items/:id
+    router.get('/public/menu-items/:id', async (req, res) => {
+        const id = Number(req.params.id);
+        if (!id || Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid menu item id' });
+        }
+        try {
+            const [results] = await pool.execute(
+                `SELECT mi.*, r.id as restaurant_id, r.name as restaurant_name, r.city_name, r.city_slug, r.address as restaurant_address
+                 FROM menu_items mi
+                 JOIN restaurants r ON mi.restaurant_id = r.id
+                 WHERE mi.id = ? LIMIT 1`,
+                [id]
+            );
+            if (results.length === 0) {
+                return res.status(404).json({ error: 'Menu item not found' });
+            }
+            res.json(results[0]);
+        } catch (err) {
+            console.error('Error executing query:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // PUBLIC: Get menu item by slug and restaurant
+    // GET /api/public/menu-items-by-slug?restaurant_id=37&slug=cinnamon-roll-123
+    router.get('/public/menu-items-by-slug', async (req, res) => {
+        const { restaurant_id, slug } = req.query;
+        if (!restaurant_id || !slug) {
+            return res.status(400).json({ error: 'restaurant_id and slug are required' });
+        }
+        const restaurantId = Number(restaurant_id);
+        if (!restaurantId || Number.isNaN(restaurantId)) {
+            return res.status(400).json({ error: 'Invalid restaurant_id' });
+        }
+        try {
+            // Extract ID from slug (format: name-id)
+            const slugParts = slug.split('-');
+            const itemId = Number(slugParts[slugParts.length - 1]);
+            
+            if (!itemId || Number.isNaN(itemId)) {
+                return res.status(400).json({ error: 'Invalid slug format' });
+            }
+
+            const [results] = await pool.execute(
+                `SELECT mi.*, r.id as restaurant_id, r.name as restaurant_name, r.city_name, r.city_slug, r.address as restaurant_address
+                 FROM menu_items mi
+                 JOIN restaurants r ON mi.restaurant_id = r.id
+                 WHERE mi.id = ? AND mi.restaurant_id = ? LIMIT 1`,
+                [itemId, restaurantId]
+            );
+            if (results.length === 0) {
+                return res.status(404).json({ error: 'Menu item not found' });
+            }
+            res.json(results[0]);
+        } catch (err) {
+            console.error('Error executing query:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // PUBLIC: Get menu items using an ingredient (global - all restaurants)
+    // GET /api/public/ingredients/:slug
+    router.get('/public/ingredients/:slug', async (req, res) => {
+        const { slug } = req.params;
+        if (!slug) {
+            return res.status(400).json({ error: 'Ingredient slug is required' });
+        }
+        try {
+            // Search for ingredient by name (slugified)
+            const ingredientName = slug.replace(/-/g, ' ');
+            const [results] = await pool.execute(
+                `SELECT DISTINCT 
+                    mi.id, mi.name, mi.price, mi.category, mi.restaurant_id,
+                    r.name as restaurant_name, r.city_name, r.city_slug,
+                    mii.ingredients_name, mii.id as ingredient_id
+                 FROM menu_item_ingredients mii
+                 JOIN menu_item_ingredients_map miim ON mii.id = miim.ingredient_id
+                 JOIN menu_items mi ON miim.menu_item_id = mi.id
+                 JOIN restaurants r ON mi.restaurant_id = r.id
+                 WHERE LOWER(REPLACE(mii.ingredients_name, ' ', '-')) = LOWER(?)
+                    OR LOWER(mii.ingredients_name) LIKE LOWER(?)
+                 ORDER BY r.city_name, r.name, mi.name`,
+                [slug, `%${ingredientName}%`]
+            );
+            res.json(results);
+        } catch (err) {
+            console.error('Error executing query:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // PUBLIC: Get menu items using ingredient at specific restaurant
+    // GET /api/public/restaurants/:restaurantId/ingredients/:slug
+    router.get('/public/restaurants/:restaurantId/ingredients/:slug', async (req, res) => {
+        const restaurantId = Number(req.params.restaurantId);
+        const { slug } = req.params;
+        if (!restaurantId || Number.isNaN(restaurantId)) {
+            return res.status(400).json({ error: 'Invalid restaurant id' });
+        }
+        if (!slug) {
+            return res.status(400).json({ error: 'Ingredient slug is required' });
+        }
+        try {
+            const ingredientName = slug.replace(/-/g, ' ');
+            const [results] = await pool.execute(
+                `SELECT DISTINCT 
+                    mi.id, mi.name, mi.price, mi.category,
+                    r.name as restaurant_name, r.city_name, r.city_slug,
+                    mii.ingredients_name, mii.id as ingredient_id
+                 FROM menu_item_ingredients mii
+                 JOIN menu_item_ingredients_map miim ON mii.id = miim.ingredient_id
+                 JOIN menu_items mi ON miim.menu_item_id = mi.id
+                 JOIN restaurants r ON mi.restaurant_id = r.id
+                 WHERE mi.restaurant_id = ?
+                   AND (LOWER(REPLACE(mii.ingredients_name, ' ', '-')) = LOWER(?)
+                    OR LOWER(mii.ingredients_name) LIKE LOWER(?))
+                 ORDER BY mi.name`,
+                [restaurantId, slug, `%${ingredientName}%`]
+            );
+            res.json(results);
+        } catch (err) {
+            console.error('Error executing query:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // PUBLIC: Get restaurants by city and category for SEO / SSR
+    // GET /api/public/restaurants-by-city-and-category?city_slug={city}&category={category}
+    router.get('/public/restaurants-by-city-and-category', async (req, res) => {
+        const { city_slug, category } = req.query;
+        if (!city_slug || !category) {
+            return res.status(400).json({ error: 'city_slug and category are required' });
+        }
+        try {
+            // The category parameter is the actual category name (e.g., "Pizza")
+            // Do exact match (case-insensitive)
+            const [results] = await pool.execute(
+                `SELECT id, name, address, latitude, longitude, category, city_name, city_slug
+                 FROM restaurants
+                 WHERE city_slug = ? 
+                   AND LOWER(category) = LOWER(?)
+                 ORDER BY name`,
+                [city_slug, category]
+            );
+            res.json(results);
+        } catch (err) {
+            console.error('Error fetching restaurants by city and category:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // PUBLIC: Get all unique categories for SEO / SSR
+    // GET /api/public/categories
+    router.get('/public/categories', async (req, res) => {
+        try {
+            const [results] = await pool.execute(
+                `SELECT DISTINCT category
+                 FROM restaurants
+                 WHERE category IS NOT NULL AND category != ''
+                 ORDER BY category`
+            );
+            res.json(results.map(row => row.category));
+        } catch (err) {
+            console.error('Error fetching categories:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // PUBLIC: Get categories available in a specific city for SEO / SSR
+    // GET /api/public/cities/:city_slug/categories
+    router.get('/public/cities/:city_slug/categories', async (req, res) => {
+        const { city_slug } = req.params;
+        if (!city_slug) {
+            return res.status(400).json({ error: 'city_slug is required' });
+        }
+        try {
+            const [results] = await pool.execute(
+                `SELECT DISTINCT category
+                 FROM restaurants
+                 WHERE city_slug = ? 
+                   AND category IS NOT NULL AND category != ''
+                 ORDER BY category`,
+                [city_slug]
+            );
+            res.json(results.map(row => row.category));
+        } catch (err) {
+            console.error('Error fetching categories for city:', err);
             res.status(500).json({ error: 'Database query failed' });
         }
     });

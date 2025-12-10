@@ -1,0 +1,54 @@
+---
+// Redirect handler for old query parameter URLs
+// Old format: /restaurants/[city]/[restaurant]/menu/item?item=123
+// New format: /restaurants/[city]/[restaurant]/menu/[item-slug]-[id]
+
+const { city, restaurant } = Astro.params;
+const itemId = Astro.url.searchParams.get('item');
+
+if (!itemId) {
+	return Astro.redirect(`/restaurants/${city}/${restaurant}`);
+}
+
+const menuItemId = Number(itemId);
+if (!menuItemId || Number.isNaN(menuItemId)) {
+	return Astro.redirect(`/restaurants/${city}/${restaurant}`);
+}
+
+// Parse restaurant ID
+const restaurantId = Number((restaurant ?? '').split('-')[0]);
+if (!restaurantId || Number.isNaN(restaurantId)) {
+	return Astro.redirect('/404');
+}
+
+// Fetch menu item to get name for slug
+const apiBase = Astro.url.origin;
+const menuItemRes = await fetch(`${apiBase}/api/public/menu-items/${menuItemId}`, {
+	method: 'GET',
+	headers: { accept: 'application/json' }
+});
+
+if (!menuItemRes.ok || menuItemRes.status === 404) {
+	return Astro.redirect(`/restaurants/${city}/${restaurant}`);
+}
+
+const menuItem = await menuItemRes.json();
+
+// Verify restaurant matches
+if (menuItem.restaurant_id !== restaurantId) {
+	return Astro.redirect(`/restaurants/${city}/${restaurant}`);
+}
+
+// Generate new URL
+const slugify = (name) => {
+	if (!name) return '';
+	return name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/(^-|-$)/g, '');
+};
+
+const itemSlug = slugify(menuItem.name);
+return Astro.redirect(`/restaurants/${city}/${restaurant}/menu/${itemSlug}-${menuItemId}`, 301);
+---
+
