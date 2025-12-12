@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
+import ResponsiveFlexRow from './common/ResponsiveFlexRow';
 import { 
 	BrowserRouter, 
 	Routes, 
@@ -9,6 +10,7 @@ import {
 import Menu from './restaurants/menu/Menu';
 import MenuItem from './restaurants/menu/menu_items/MenuItem';
 import RestaurantsList from './restaurants/RestaurantsList';
+import CategoryPage from './restaurants/CategoryPage';
 import Cart from './users/cart/Cart';
 import Admin from './restaurants/Admin';
 import Checkout from './users/checkout/CheckoutForm';
@@ -51,16 +53,16 @@ function Layout(props) {
 			{/* Display error message if present */}
 			{props.errorMessage && (
 				<div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-					<div className="flex items-center justify-between">
+					<ResponsiveFlexRow>
 						<p className="text-red-700 font-medium">{props.errorMessage}</p>
 						<button
 							onClick={() => props.setErrorMessage(null)}
-							className="text-red-500 hover:text-red-700 ml-4 text-xl font-bold"
+							className="text-red-500 hover:text-red-700 max-[480px]:ml-0 ml-4 text-xl font-bold"
 							aria-label="Dismiss error"
 						>
 							×
 						</button>
-					</div>
+					</ResponsiveFlexRow>
 				</div>
 			)}
 			<div id="white-area" className="blackborder">
@@ -375,6 +377,23 @@ export function App() {
 							element={<TaxiFareCalculator cartAmount={cartAmount} />}
 						/>
 						{/* More specific routes must come first - React Router matches first match */}
+						{/* Category page route: /restaurants/:city/categories/:category */}
+						<Route
+							path="restaurants/:city/categories/:category"
+							element={
+								<CategoryPage
+									USDollar={USDollar}
+									roundedToFixed={roundedToFixed}
+									setDeliveryFee={setDeliveryFee}
+									setRestaurant={setRestaurant}
+									setRestaurantName={setRestaurantName}
+									setRestaurantAddress={setRestaurantAddress}
+									setDistance={setDistance}
+									latitude={latitude}
+									longitude={longitude}
+								/>
+							}
+						/>
 						{/* New slug-based menu item route: /restaurants/:city/:restaurant/menu/:item (e.g., cinnamon-roll-123) */}
 						<Route
 							path="restaurants/:city/:restaurant/menu/:item"

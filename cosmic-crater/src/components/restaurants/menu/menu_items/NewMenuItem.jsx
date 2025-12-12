@@ -59,10 +59,10 @@ function NewMenuItem(props) {
         }
     }
     return (
-        <form onSubmit={submitMenuItem} className="flex flex-wrap shadow-lg rounded-2xl bg-gray-900 text-white mt-3 p-2">
+        <form onSubmit={submitMenuItem} className="flex flex-wrap shadow-lg rounded-2xl bg-gray-900 text-white p-4">
             <h3 className="text-white w-full mb-4">Add New Menu Item</h3>
-            <div className="w-full md:w-1/4">
-                <b>Name:</b>
+            <div className="w-full md:w-1/4 mb-4 md:pr-2">
+                <b className="text-white block mb-2">Name:</b>
                 <div className="group relative">
                     <input
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -79,8 +79,8 @@ function NewMenuItem(props) {
                     )}
                 </div>
             </div>
-            <div className="w-full md:w-1/4">
-                <b>Category:</b>
+            <div className="w-full md:w-1/4 mb-4 md:px-1">
+                <b className="text-white block mb-2">Category:</b>
                 <div className="group relative">
                     <input
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -97,8 +97,8 @@ function NewMenuItem(props) {
                     )}
                 </div>
             </div>
-            <div className="w-full md:w-1/4">
-                <b>Sort:</b>
+            <div className="w-full md:w-1/4 mb-4 md:px-1">
+                <b className="text-white block mb-2">Sort:</b>
                 <div className="group relative">
                     <input
                         type="number"
@@ -116,8 +116,8 @@ function NewMenuItem(props) {
                     )}
                 </div>
             </div>
-            <div className="w-full md:w-1/4">
-                <b>Price:</b>
+            <div className="w-full md:w-1/4 mb-4 md:pl-2">
+                <b className="text-white block mb-2">Price:</b>
                 <div className="group relative">
                     <input
                         type="number"
@@ -139,8 +139,8 @@ function NewMenuItem(props) {
             {/* Size and Price Fields */}
             {[1, 2, 3].map((num) => (
                 <React.Fragment key={num}>
-                    <div className="w-full md:w-1/4">
-                        <b>Size{num}:</b>
+                    <div className="w-full md:w-1/4 mb-4 md:pr-2">
+                        <b className="text-white block mb-2">Size{num}:</b>
                         <div className="group relative">
                             <input
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -156,8 +156,8 @@ function NewMenuItem(props) {
                             )}
                         </div>
                     </div>
-                    <div className="w-full md:w-1/4">
-                        <b>Price{num + 1}:</b>
+                    <div className="w-full md:w-1/4 mb-4 md:px-1">
+                        <b className="text-white block mb-2">Price{num + 1}:</b>
                         <div className="group relative">
                             <input
                                 type="number"
@@ -177,8 +177,8 @@ function NewMenuItem(props) {
                     </div>
                 </React.Fragment>
             ))}
-            <div className="w-full md:w-1/4">
-                <b>Size4:</b>
+            <div className="w-full md:w-1/4 mb-4 md:pr-2">
+                <b className="text-white block mb-2">Size4:</b>
                 <div className="group relative">
                     <input
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -194,26 +194,27 @@ function NewMenuItem(props) {
                     )}
                 </div>
             </div>
-            <div className="w-full md:w-1/4">
-                <br />
+            <div className="w-full md:w-1/4 mb-4">
                 <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
                     <i class="bi bi-plus-lg"> </i>
                     Add Menu Item
                 </button>
             </div>
-            {loading ? <Spinner /> : ""}
-            {success && (
-                <p className="text-green-600 mt-2">
-                    <i className="bi bi-check-circle-fill"> </i>
-                    Menu item added successfully!
-                </p>
-            )}
-            {error && (
-                <p className="text-red-600 mt-2">
-                    <i class="bi bi-exclamation-triangle"> </i>
-                    {error.length > 0 ? error : ""}
-                </p>
-            )}
+            <div className="w-full mt-2">
+                {loading ? <Spinner /> : ""}
+                {success && (
+                    <p className="text-green-600 mt-2">
+                        <i className="bi bi-check-circle-fill"> </i>
+                        Menu item added successfully!
+                    </p>
+                )}
+                {error && (
+                    <p className="text-red-600 mt-2">
+                        <i class="bi bi-exclamation-triangle"> </i>
+                        {error.length > 0 ? error : ""}
+                    </p>
+                )}
+            </div>
         </form>
     );
 }

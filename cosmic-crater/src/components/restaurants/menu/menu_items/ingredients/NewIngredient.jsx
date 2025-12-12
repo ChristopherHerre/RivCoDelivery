@@ -99,8 +99,8 @@ function NewIngredient(props) {
         });
     };
     return (
-        <div className="p-2">
-            <h3 className="text-white">
+        <div className="p-4 shadow-lg rounded-2xl bg-gray-900">
+            <h3 className="text-white mb-4">
                 Add New Ingredient
             </h3>
             {loading ? <Spinner /> :
@@ -117,8 +117,8 @@ function NewIngredient(props) {
                         }).map((key) => {
                             const tooltipText = getTooltip(key);
                             return (
-                                <div className="w-full md:w-1/4" key={key}>
-                                    <strong>{key}:</strong>
+                                <div className="w-full md:w-1/4 mb-4 md:pr-2" key={key}>
+                                    <strong className="text-white block mb-2">{key}:</strong>
                                     <div className="group relative">
                                         <input
                                             {...(isNumericField(key) && ['inputType', 'halfable', 'customize', 'selected'].includes(key) ? {min: "0", max: "1"} : {})}
@@ -140,29 +140,30 @@ function NewIngredient(props) {
                                 </div>
                             );
                         })}
-                        <div className='w-full md:w-1/4'>
-                            <br />
+                        <div className='w-full md:w-1/4 mb-4 md:pr-2'>
+                            <strong className="text-white block mb-2">&nbsp;</strong>
                             <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
                                 <i class="bi bi-plus-lg"> </i>
                                 Add Ingredient
                             </button>
                         </div>
-                        <br />
                     </div>
                 </form>
             }
-            {success &&
-                <p className="text-green-600">
-                    <i className="bi bi-check-circle-fill"> </i>
-                    Ingredient added successfully!
-                </p>
-            }
-            {error && (
-                <p className="text-red-600 mt-2">
-                    <i class="bi bi-exclamation-triangle"> </i>
-                    {error.length > 0 ? error : ""}
-                </p>
-            )}
+            <div className="mt-2">
+                {success && (
+                    <p className="text-green-600">
+                        <i className="bi bi-check-circle-fill"> </i>
+                        Ingredient added successfully!
+                    </p>
+                )}
+                {error && (
+                    <p className="text-red-600 mt-2">
+                        <i class="bi bi-exclamation-triangle"> </i>
+                        {error.length > 0 ? error : ""}
+                    </p>
+                )}
+            </div>
         </div>
     );
 }

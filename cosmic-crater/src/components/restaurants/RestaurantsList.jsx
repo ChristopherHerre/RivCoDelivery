@@ -6,6 +6,7 @@ import Spinner from '../users/Spinner';
 import Welcome from '../users/address/Welcome';
 import { getRestaurantMenuUrl, getRestaurantCategoryUrl } from '../../utils/restaurantUrls';
 import CityFilter from './CityFilter';
+import ResponsiveFlexRow from '../common/ResponsiveFlexRow';
 
 export function groupBy(array, keyFn) {
     return array.reduce((acc, item) => {
@@ -288,39 +289,41 @@ export default function RestaurantsList(props) {
                                         }
                                         return (
                                             <div className="w-full md:w-1/2 px-3 mb-3" key={key}>
-                                                <article className="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full flex flex-col hover:shadow-md transition-shadow">
-                                                    <div className="p-4 flex-1 flex flex-col">
-                                                        <h3 className="text-lg font-semibold mb-2">
-                                                            <button
-                                                                onClick={(e) => selectRestaurant(data)}
-                                                                className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
-                                                            >
-                                                                {data.name}
-                                                            </button>
-                                                        </h3>
-                                                        <p className="mb-1 text-base">
-                                                            <strong className="font-semibold text-white">{data.category}</strong>
-                                                        </p>
-                                                        <p className="mb-2 text-base text-gray-300">{data.address}</p>
-                                                        {h < 100 && (
-                                                            <p className="mb-2 text-sm text-gray-400">
-                                                                Distance: {roundedToFixed(h, 1)} mi
-                                                                {fee <= maxFee && (
-                                                                    <span className="ml-2">
-                                                                        • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
-                                                                    </span>
-                                                                )}
+                                                <article className="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full hover:shadow-md transition-shadow">
+                                                    <ResponsiveFlexRow className="h-full">
+                                                        <div className="p-4 flex-1 flex flex-col">
+                                                            <h3 className="text-lg font-semibold mb-2">
+                                                                <button
+                                                                    onClick={(e) => selectRestaurant(data)}
+                                                                    className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
+                                                                >
+                                                                    {data.name}
+                                                                </button>
+                                                            </h3>
+                                                            <p className="mb-1 text-base">
+                                                                <strong className="font-semibold text-white">{data.category}</strong>
                                                             </p>
-                                                        )}
-                                                        <div className="mt-auto">
-                                                            <button
-                                                                onClick={(e) => selectRestaurant(data)}
-                                                                className="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer"
+                                                            <p className="mb-2 text-base text-gray-300">{data.address}</p>
+                                                            {h < 100 && (
+                                                                <p className="mb-2 text-sm text-gray-400">
+                                                                    Distance: {roundedToFixed(h, 1)} mi
+                                                                    {fee <= maxFee && (
+                                                                        <span className="ml-2">
+                                                                            • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
+                                                                        </span>
+                                                                    )}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="p-4 flex items-center">
+                                                            <Link
+                                                                to={getRestaurantMenuUrl(data)}
+                                                                className="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer whitespace-nowrap"
                                                             >
                                                                 View menu
-                                                            </button>
+                                                            </Link>
                                                         </div>
-                                                    </div>
+                                                    </ResponsiveFlexRow>
                                                 </article>
                                             </div>
                                         );

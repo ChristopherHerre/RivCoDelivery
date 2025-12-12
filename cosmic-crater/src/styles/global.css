@@ -1,5 +1,8 @@
 /* Tailwind CSS v4 - must be imported for Tailwind classes to work */
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@200&display=swap');
+@import 'bootstrap-icons/font/bootstrap-icons.css';
 
 /*
   The CSS in this style tag is based off of Bear Blog's default CSS.
@@ -29,6 +32,13 @@
 	font-family: 'Atkinson';
 	src: url('/fonts/atkinson-bold.woff') format('woff');
 	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Bungee Spice';
+	src: url('/fonts/bungee-spice.ttf') format('truetype');
+	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
 }

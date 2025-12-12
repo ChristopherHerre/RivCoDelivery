@@ -114,7 +114,7 @@ function restaurantRoutes(app, pool, checkRole) {
             });
         }
         const { restaurantId } = parseResult.data;
-        const query = 'SELECT * FROM menu_items WHERE restaurant_id = ? ORDER BY category, sort, name';
+        const query = 'SELECT * FROM menu_items WHERE restaurant_id = ? ORDER BY sort, category, name';
         try {
             const [results] = await pool.execute(query, [restaurantId]);
             res.json(results);

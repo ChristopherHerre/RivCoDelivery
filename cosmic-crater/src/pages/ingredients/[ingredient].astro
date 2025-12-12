@@ -1,11 +1,11 @@
 ---
 import '@/components/index.css';
-import '@/components/index-ios.css';
 import BaseHead from '@/components/BaseHead.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import SSRAppWrapper from '@/components/SSRAppWrapper.jsx';
 import Breadcrumb from '@/components/Breadcrumb.astro';
+import ResponsiveFlexRow from '@/components/common/ResponsiveFlexRow.jsx';
 
 const { ingredient } = Astro.params;
 
@@ -146,7 +146,7 @@ const breadcrumbData = {
 	<body>
 		<Header />
 		<div id="ssr-content">
-			<main class="mx-auto px-4 py-5">
+			<main class="mx-auto">
 				<Breadcrumb items={[
 					{ label: 'Home', href: '/' },
 					{ label: ingredientName }
@@ -194,17 +194,17 @@ const breadcrumbData = {
 															{item.category && (
 																<p class="text-sm text-gray-600 mb-2">{item.category}</p>
 															)}
-															<div class="mt-auto pt-2 border-t border-gray-200 flex justify-between items-center">
+															<ResponsiveFlexRow className="mt-auto pt-2 border-t border-gray-200">
 																<span class="font-bold text-lg text-gray-900">
 																	${item.price ? Number(item.price).toFixed(2) : 'Price varies'}
 																</span>
 																<a
 																	href={`/restaurants/${restaurant.city_slug}/${restaurant.restaurant_id}-${restaurantSlug}/menu/${itemSlug}-${item.id}`}
-																	class="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline"
+																	class="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline max-[480px]:w-full text-center"
 																>
 																	View details
 																</a>
-															</div>
+															</ResponsiveFlexRow>
 														</div>
 													</article>
 												</div>

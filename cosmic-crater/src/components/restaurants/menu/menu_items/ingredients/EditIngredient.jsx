@@ -19,7 +19,7 @@ const EditIngredients = React.memo(function EditIngredients(props) {
             {ingredients.length <= 0 &&
                 (<p>No ingredients found.</p>)}
             {ingredients.length > 0 && (
-                <div className="flex flex-wrap font-bold">
+                <div className="flex flex-wrap mb-4">
                     <h3 className="text-xl font-bold">
                         Edit Ingredients
                     </h3>
