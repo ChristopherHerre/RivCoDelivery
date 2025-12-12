@@ -75,13 +75,12 @@ function EditItem(props) {
     }, []);
     return (loading3 ? <Spinner /> :
         <>
-            <h3>Edit Item</h3>
+            <h3 className="mb-4">Edit Item</h3>
             {Object.keys(item).filter((key) => key !== "id" && key !== "restaurant_id").sort().map((key) => {
                 const tooltipText = getTooltip(key);
                 return (
-                    <div key={key}>
-                        <b>{key}:</b>
-                        <br />
+                    <div key={key} className="mb-4">
+                        <b className="block mb-2">{key}:</b>
                         <div className="group relative">
                             <input
                                 {...(isNumericField(key) && key.includes('price') ? {min: "0", step: "0.01"} : {})}
@@ -102,25 +101,27 @@ function EditItem(props) {
             })}
             <button 
                 onClick={(e) => handleSave(e, item.id)} 
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mt-3 mb-3"
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-3"
             >
                 <i className="bi bi-pencil-square"></i> Save
             </button>
-            {success2 ? (
-                <p className="text-green-600">
-                    <i className="bi bi-check-circle-fill"> </i>
-                    Item updated successfully.
-                </p>) : ""
-            }
-            {error && (
-                <p className="text-red-600 mt-2">
-                    <i class="bi bi-exclamation-triangle"> </i>
-                    {error.length > 0 ? error : ""}
-                </p>
-            )}
+            <div className="mb-3">
+                {success2 ? (
+                    <p className="text-green-600">
+                        <i className="bi bi-check-circle-fill"> </i>
+                        Item updated successfully.
+                    </p>) : ""
+                }
+                {error && (
+                    <p className="text-red-600 mt-2">
+                        <i class="bi bi-exclamation-triangle"> </i>
+                        {error.length > 0 ? error : ""}
+                    </p>
+                )}
+            </div>
             <button 
                 onClick={() => handleDeleteMenuItem(item.id)} 
-                className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors mt-3 mb-3"
+                className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors mb-3"
             >
                 <i className="bi bi-trash"> </i>
                 Delete

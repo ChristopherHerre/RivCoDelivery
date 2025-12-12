@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&family=Work+Sans:wght@200&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@200&display=swap');
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
 #wr {
@@ -223,11 +222,11 @@ button .logofont2,
 
 /* Navbar should match white-area outer width - extend to same edges as white-area */
 #wr #navbar {
-    margin-left: -1.5em;
-    margin-right: -1.5em;
-    width: calc(100% + 3em);
-    padding-left: calc(1.5em + 1rem);
-    padding-right: calc(1.5em + 1rem);
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
     box-sizing: border-box;
 }
 
@@ -236,12 +235,54 @@ button .logofont2,
     color: #ffffff !important;
 }
 
+/* Make SSR anchor tags look and behave like SPA buttons */
+/* Only apply to text links, not buttons (buttons have bg-blue-600) */
+#ssr-content a.text-white:not(.bg-blue-600) {
+    color: #ffffff !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    display: inline !important;
+    font: inherit !important;
+}
+
+#ssr-content a.text-white:not(.bg-blue-600):hover {
+    color: #ffffff !important; /* Stay white on hover */
+    text-decoration: underline !important; /* Add underline on hover */
+}
+
+#ssr-content a.text-gray-900 {
+    color: #111827 !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    display: inline !important;
+    font: inherit !important;
+}
+
+#ssr-content a.text-gray-900:hover {
+    color: #2563eb !important; /* blue-600 */
+    text-decoration: none !important;
+}
+
 #ssr-content .text-red-600 {
     color: #dc2626 !important;
 }
 
 #ssr-content .text-green-600 {
     color: #16a34a !important;
+}
+
+/* Apply #wr padding and margin to main elements in SSR pages */
+#ssr-content main {
+    padding: 1.5em;
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
 }
 
 /* Restaurant Grid Layout - Responsive CSS Grid */
@@ -312,4 +353,11 @@ button .logofont2,
 #wr .restaurant-card .btn > div {
     margin-top: auto;
     font-size: 0.9rem;
+}
+
+/* Center text in anchor tags styled as buttons (for both SSR and SPA consistency) */
+a.bg-blue-600,
+a.bg-blue-600:not(.text-left) {
+    text-align: center;
+    display: inline-block;
 }

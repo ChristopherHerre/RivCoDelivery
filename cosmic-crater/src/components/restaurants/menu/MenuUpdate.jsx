@@ -16,7 +16,7 @@ const MenuUpdate = () => {
     }, [loading3]);
     return (
         <>
-            <div className="flex flex-wrap">
+            <div className="flex flex-wrap mb-6">
                 <div className="w-full">
                     <NewMenuItem
                         setLoading3={setLoading3}
@@ -24,7 +24,7 @@ const MenuUpdate = () => {
                     />
                 </div>
             </div>
-            <div className="flex flex-wrap">
+            <div className="flex flex-wrap gap-4">
                 {Array.isArray(menuItems) && menuItems?.map(item => (
                     <MenuItemWithIngredients 
                         key={item.id} 

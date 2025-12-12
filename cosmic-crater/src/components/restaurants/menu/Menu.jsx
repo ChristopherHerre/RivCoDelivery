@@ -1,11 +1,12 @@
 ﻿import React, { useEffect, useState } from 'react';
+import ResponsiveFlexRow from '../../common/ResponsiveFlexRow';
 import axios from 'axios';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../../users/Spinner';
 import { groupBy } from '../RestaurantsList';
 import { useParams } from 'react-router-dom';
-import { parseRestaurantId, getRestaurantMenuItemUrl, slugify } from '../../../utils/restaurantUrls';
+import { parseRestaurantId, getRestaurantMenuItemUrl, slugify, getMenuItemUrl } from '../../../utils/restaurantUrls';
 
 export default function Menu(props) {
     const params = useParams();
@@ -120,31 +121,37 @@ export default function Menu(props) {
     return (
         <div className="mx-auto">
             {loaded && (
-                <header className="mb-6">
-                    <Link to="/">
-                        <button className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition-colors text-lg mb-4">
-                            <i className="bi bi-arrow-return-left"></i> Back
-                        </button>
-                    </Link>
-                    {restaurantData ? (
-                        <>
-                            <h1 className="mb-2 text-2xl font-semibold text-gray-900">{restaurantData.name || restaurantName}</h1>
-                            {restaurantData.category && (
-                                <p className="mb-1 text-base">
-                                    <strong className="font-semibold text-gray-900">{restaurantData.category}</strong>
-                                </p>
-                            )}
-                            {restaurantData.address && (
-                                <p className="mb-1 text-base text-gray-700">{restaurantData.address}</p>
-                            )}
-                            {restaurantData.city_name && (
-                                <p className="text-gray-600 mb-4 text-base">{restaurantData.city_name}</p>
-                            )}
-                        </>
-                    ) : (
-                        <h2 className="mb-4 text-2xl font-semibold text-gray-900">{restaurantName} Menu</h2>
+                <>
+                    {restaurantData && (
+                        <nav className="mb-4 text-sm text-gray-600">
+                            <Link to="/" className="text-blue-600 hover:underline">Home</Link>
+                            <span className="mx-2">/</span>
+                            <Link to={`/restaurants/${city}`} className="text-blue-600 hover:underline">{restaurantData.city_name || city}</Link>
+                            <span className="mx-2">/</span>
+                            <span className="text-gray-900">{restaurantData.name || restaurantName}</span>
+                        </nav>
                     )}
-                </header>
+                    <header className="mb-6">
+                        {restaurantData ? (
+                            <>
+                                <h1 className="mb-2 text-2xl font-semibold text-gray-900">{restaurantData.name || restaurantName}</h1>
+                                {restaurantData.category && (
+                                    <p className="mb-1 text-base">
+                                        <strong className="font-semibold text-gray-900">{restaurantData.category}</strong>
+                                    </p>
+                                )}
+                                {restaurantData.address && (
+                                    <p className="mb-1 text-base text-gray-700">{restaurantData.address}</p>
+                                )}
+                                {restaurantData.city_name && (
+                                    <p className="text-gray-600 mb-4 text-base">{restaurantData.city_name}</p>
+                                )}
+                            </>
+                        ) : (
+                            <h2 className="mb-4 text-2xl font-semibold text-gray-900">{restaurantName} Menu</h2>
+                        )}
+                    </header>
+                </>
             )}
             
             {
@@ -170,17 +177,17 @@ export default function Menu(props) {
                                                     <p className="text-sm text-gray-300 mb-2">{data.size_display_name}</p>
                                                 )}
                                                 {priceDisplay && (
-                                                    <div className="mt-auto pt-2 border-t border-gray-700 flex justify-between items-center">
+                                                    <ResponsiveFlexRow className="mt-auto pt-2 border-t border-gray-700">
                                                         <span className="font-bold text-lg text-white">
                                                             {priceDisplay}
                                                         </span>
-                                                        <button
-                                                            onClick={(e) => changeMenuItem(data)}
+                                                        <Link
+                                                            to={restaurantData ? getMenuItemUrl(restaurantData, data) : `/${restaurantId}/menu/item?item=${data.id}`}
                                                             className="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer"
                                                         >
                                                             View details
-                                                        </button>
-                                                    </div>
+                                                        </Link>
+                                                    </ResponsiveFlexRow>
                                                 )}
                                             </div>
                                         </article>
@@ -189,9 +196,9 @@ export default function Menu(props) {
                             })}
                         </div>
                     </section>
-                ))
-                : 
-                (<Spinner />)
+                )) : (
+                    <Spinner />
+                )
             }
         </div>
     );

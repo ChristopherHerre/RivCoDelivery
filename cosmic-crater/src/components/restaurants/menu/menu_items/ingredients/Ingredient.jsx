@@ -58,13 +58,13 @@ function Ingredient(props) {
     };
     console.log("sortedFields2: " + sortedFields);
     return (
-        <div key={ingredient.id} className={`flex flex-wrap pb-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
+        <div key={ingredient.id} className={`flex flex-wrap pb-4 mb-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
             {
                 sortedFields.map((field) => {
                     const tooltipText = getTooltip(field);
                     return (
-                        <div key={field} className="w-full md:w-1/4">
-                            <b>{field}:</b>
+                        <div key={field} className="w-full md:w-1/4 mb-4 md:pr-2">
+                            <b className="block mb-2">{field}:</b>
                             <div className="group relative">
                                 <input
                                     {...(isNumericField(field) && ['inputType', 'halfable', 'customize', 'selected'].includes(field) ? {min: "0", max: "1"} : {})}
@@ -86,21 +86,20 @@ function Ingredient(props) {
                     )
                 })
             }
-            <div className="w-full md:w-1/4">
-                <br />
+            <div className="w-full md:w-1/4 mb-4 md:pr-2">
+                <b className="block mb-2">&nbsp;</b>
                 <button onClick={() => handleSave(ingredient.id)} className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
                     <i className="bi bi-pencil-square"> </i>Save
                 </button>
-                
             </div>
-            <div className="w-full md:w-1/4">
-                <br />
+            <div className="w-full md:w-1/4 mb-4 md:pr-2">
+                <b className="block mb-2">&nbsp;</b>
                 <button onClick={() => handleDelete(ingredient.id)} className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
                     <i className="bi bi-trash"> </i>Delete
                 </button>
             </div>
-            <div className="w-full">
-            {success ? (
+            <div className="w-full mt-2">
+                {success ? (
                     <p className="text-green-600">
                         <i className="bi bi-check-circle-fill"> </i>
                         Ingredient updated successfully.
@@ -111,10 +110,7 @@ function Ingredient(props) {
                         <i class="bi bi-exclamation-triangle"> </i>
                         {error.length > 0 ? error : ""}
                     </p>
-                )
-            }
-            </div>
-            <div className="w-full">
+                )}
                 {error2 && (
                     <p className="text-red-600 mt-2">
                         <i class="bi bi-exclamation-triangle"> </i>

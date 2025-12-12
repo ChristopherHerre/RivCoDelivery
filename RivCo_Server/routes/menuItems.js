@@ -287,10 +287,8 @@ function menuItemRoutes(app, pool, checkRole) {
                 SELECT menu_items.*
                 FROM menu_items
                 JOIN users ON users.restaurant_id = menu_items.restaurant_id
-                LEFT JOIN menu_item_ingredients_map ON menu_items.id = menu_item_ingredients_map.menu_item_id
                 WHERE users.id = ?
-                GROUP BY menu_items.id
-                ORDER BY COUNT(menu_item_ingredients_map.ingredient_id) DESC;
+                ORDER BY menu_items.sort, menu_items.category, menu_items.name;
             `;
             const [results] = await pool.query(query, [req.session.user.sub]);
             if (results.length === 0) {

@@ -108,8 +108,9 @@ export default function MenuItem(props) {
             try {
                 const res = await axios.get('/api/menu/item/ingredients', { params: { menuItem: menuItemId } });
                 setItemIngredients(res.data);
-                const initialEnabled = res.data.map(ingredient => ingredient.selected || false);
-                setEnabled(initialEnabled);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/25bb6152-9e23-4333-946f-6e50585cf520',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MenuItem.jsx:109',message:'Ingredients fetched from API',data:{count:res.data.length,ingredients:res.data.map(i=>({id:i.id||i.ingredient_id,name:i.ingredients_name,selected:i.selected,sort_order:i.sort_order})),originalOrder:res.data.map((_,idx)=>idx)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
             } catch (err) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {
                     fetchMenuItemIngredients(attempt + 1);
@@ -125,6 +126,40 @@ export default function MenuItem(props) {
             fetchMenuItemIngredients();
         }
     }, [menuItemId, navigate, cart, setCart, setPrice, setEnabled, setHalfables, setCustoms, setVal1, setVal2, setVal3, setVal4]);
+
+    // Rebuild enabled array based on sorted ingredients order
+    useEffect(() => {
+        if (itemIngredients.length === 0) {
+            setEnabled([]);
+            return;
+        }
+        // Create a map of ingredient ID to selected state
+        const selectedMap = new Map();
+        itemIngredients.forEach(ingredient => {
+            const id = ingredient.id;
+            if (id) {
+                selectedMap.set(id, ingredient.selected || false);
+            }
+        });
+        // Group by type, flatten, and sort (same logic as populateIngredientData)
+        const grouped = groupBy(itemIngredients, i => i.type);
+        const sortedIngredients = [];
+        for (const j in grouped) {
+            for (const i in grouped[j]) {
+                sortedIngredients.push(grouped[j][i]);
+            }
+        }
+        sortedIngredients.sort((a, b) => a.sort_order - b.sort_order);
+        // Build enabled array in sorted order
+        const newEnabled = sortedIngredients.map(ingredient => {
+            const id = ingredient.id;
+            return selectedMap.get(id) || false;
+        });
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/25bb6152-9e23-4333-946f-6e50585cf520',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MenuItem.jsx:145',message:'Rebuilt enabled array after sorting',data:{sortedIngredients:sortedIngredients.map((ing,idx)=>({sortedIndex:idx,id:ing.id,name:ing.ingredients_name,selected:ing.selected,sort_order:ing.sort_order,enabledValue:newEnabled[idx]})),newEnabled:newEnabled},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        setEnabled(newEnabled);
+    }, [itemIngredients]);
 
     // Fetch restaurant data for building URLs
     useEffect(() => {
@@ -235,8 +270,14 @@ export default function MenuItem(props) {
                 ingredientsData.push(result[j][i]);
             }
         }
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/25bb6152-9e23-4333-946f-6e50585cf520',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MenuItem.jsx:235',message:'Before sorting ingredientsData',data:{count:ingredientsData.length,ingredients:ingredientsData.map((ing,idx)=>({index:idx,id:ing.id||ing.ingredient_id,name:ing.ingredients_name,selected:ing.selected,sort_order:ing.sort_order}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         // Sort ingredientsData by the sort_order column
         ingredientsData.sort((a, b) => a.sort_order - b.sort_order);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/25bb6152-9e23-4333-946f-6e50585cf520',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MenuItem.jsx:239',message:'After sorting ingredientsData',data:{count:ingredientsData.length,ingredients:ingredientsData.map((ing,idx)=>({sortedIndex:idx,id:ing.id||ing.ingredient_id,name:ing.ingredients_name,selected:ing.selected,sort_order:ing.sort_order})),enabledArray:enabled},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
     }
     let lastCategory = "";
     function setLastCategoryPrinted(v) {
@@ -437,6 +478,9 @@ export default function MenuItem(props) {
                                 {console.log(ingredientsData)}
                                 {!loading2 ? (
                                     ingredientsData.map((q, key) => {
+                                        // #region agent log
+                                        fetch('http://127.0.0.1:7242/ingest/25bb6152-9e23-4333-946f-6e50585cf520',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MenuItem.jsx:439',message:'Rendering ingredient with index mismatch check',data:{sortedIndex:key,ingredientId:q.id||q.ingredient_id,name:q.ingredients_name,selected:q.selected,sort_order:q.sort_order,enabledValue:enabled[key],enabledArrayLength:enabled.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                                        // #endregion
                                         function changeEnabledRadio(e) {
                                             // Create a new array to properly update state
                                             const newEnabled = [...enabled];
@@ -502,6 +546,12 @@ export default function MenuItem(props) {
                                                                         id="ingredients"
                                                                         defaultChecked={enabled[key] ? true : false}
                                                                         name={q['type']}
+                                                                        // #region agent log
+                                                                        data-debug-ingredient-id={q.id||q.ingredient_id}
+                                                                        data-debug-sorted-index={key}
+                                                                        data-debug-selected={q.selected}
+                                                                        data-debug-enabled-value={enabled[key]}
+                                                                        // #endregion
                                                                     />
                                                                     <span> </span>
                                                                     <span>{q['ingredients_name']}</span>
@@ -515,6 +565,12 @@ export default function MenuItem(props) {
                                                                         id="ingredients"
                                                                         defaultChecked={enabled[key] ? true : false}
                                                                         name={q['type']}
+                                                                        // #region agent log
+                                                                        data-debug-ingredient-id={q.id||q.ingredient_id}
+                                                                        data-debug-sorted-index={key}
+                                                                        data-debug-selected={q.selected}
+                                                                        data-debug-enabled-value={enabled[key]}
+                                                                        // #endregion
                                                                     />
                                                                     <span> </span>
                                                                     <span>{q['ingredients_name']}</span>
@@ -594,18 +650,17 @@ export default function MenuItem(props) {
     }
     return (
         <div className="mx-auto">
-            <button className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition-colors text-lg mb-4" onClick={(e) => {
-                // Use new URL format if we have restaurant data
-                if (restaurantData && restaurantData.city_slug) {
-                    const restaurantSlug = slugify(restaurantData.name || '');
-                    navigate(`/restaurants/${restaurantData.city_slug}/${restaurant}-${restaurantSlug}`);
-                } else {
-                    // Fallback to old format
-                    navigate(`/${restaurant}/menu`);
-                }
-            }}>
-                <i className="bi bi-arrow-return-left"></i> {restaurantName != undefined ? restaurantName : "Back"}
-            </button>
+            {restaurantData && (
+                <nav className="mb-4 text-sm text-gray-600">
+                    <Link to="/" className="text-blue-600 hover:underline">Home</Link>
+                    <span className="mx-2">/</span>
+                    <Link to={`/restaurants/${restaurantData.city_slug || city}`} className="text-blue-600 hover:underline">{restaurantData.city_name || city}</Link>
+                    <span className="mx-2">/</span>
+                    <Link to={`/restaurants/${restaurantData.city_slug || city}/${restaurantParam || restaurant}-${slugify(restaurantData.name || restaurantName)}`} className="text-blue-600 hover:underline">{restaurantData.name || restaurantName}</Link>
+                    <span className="mx-2">/</span>
+                    <span className="text-gray-900">{itemName || 'Menu Item'}</span>
+                </nav>
+            )}
             {loading ? (
                 <div className="flex flex-wrap text-center">
                     <div className="w-full">

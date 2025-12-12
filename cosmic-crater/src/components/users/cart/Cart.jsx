@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import ResponsiveFlexRow from '../../common/ResponsiveFlexRow';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { roundedToFixed } from '../../App';
 import axios from 'axios';
 import { fetchCart } from '../checkout/CheckoutForm';
@@ -142,28 +143,24 @@ export default function Cart(props) {
                                 <CartItemDetails
                                     USDollar={USDollar}
                                     cartItem={cartItem} />
-                                <div className="flex flex-wrap items-end justify-end sm:justify-end gap-2 mt-2">
-                                    <div className="w-full sm:w-auto">
-                                        <QuantitySelector 
-                                            key2={key} 
-                                            cartItem={cartItem} 
-                                            setCart={setCart}
-                                            setSubtotal={setSubtotal}
-                                        />
-                                    </div>
-                                    <div className="w-full sm:w-auto">
-                                        <button
-                                            type="button"
-                                            className="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 transition-colors text-sm w-full sm:w-auto"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                removeFromCart(key);
-                                            }}>
-                                                <i className="bi bi-trash3"> </i>
-                                                Remove
-                                        </button>
-                                    </div>
-                                </div>
+                                <ResponsiveFlexRow justify="end" align="stretch" className="gap-2 mt-2">
+                                    <QuantitySelector 
+                                        key2={key} 
+                                        cartItem={cartItem} 
+                                        setCart={setCart}
+                                        setSubtotal={setSubtotal}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 transition-colors text-sm"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            removeFromCart(key);
+                                        }}>
+                                            <i className="bi bi-trash3"> </i>
+                                            Remove
+                                    </button>
+                                </ResponsiveFlexRow>
                             </div>
                         );
                     })
@@ -219,15 +216,16 @@ export default function Cart(props) {
     // In Cart.jsx
     return (
         <div className="mx-auto">
-            {/* Add loading check and null check for cart */}
-            {!cartLoading && cart.length > 0 && (
-                <button 
-                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-lg" 
-                    onClick={() => navigate(getMenuUrl())}
-                >
-                    <i className="bi bi-arrow-return-left"> </i>
-                    Back
-                </button>
+            {!cartLoading && cart.length > 0 && restaurantData && (
+                <nav className="mb-4 text-sm text-gray-600">
+                    <Link to="/" className="text-blue-600 hover:underline">Home</Link>
+                    <span className="mx-2">/</span>
+                    <Link to={`/restaurants/${restaurantData.city_slug || city}`} className="text-blue-600 hover:underline">{restaurantData.city_name || city}</Link>
+                    <span className="mx-2">/</span>
+                    <Link to={getMenuUrl()} className="text-blue-600 hover:underline">{restaurantData.name}</Link>
+                    <span className="mx-2">/</span>
+                    <span className="text-gray-900">Cart</span>
+                </nav>
             )}
             <h1>Shopping Cart</h1>
             <div className="flex flex-wrap">
@@ -360,7 +358,7 @@ export function QuantitySelector(props) {
         });
     }
     return (
-        <span className="flex items-center gap-1 mb-1">
+        <span className="flex items-center gap-1">
             <button
                 type="button"
                 className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"

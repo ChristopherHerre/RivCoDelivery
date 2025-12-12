@@ -11,13 +11,15 @@ export default function Admin(props) {
     return (
         <div className="w-full p-3">
             <h2 className="mb-4">Admin Panel</h2>
-            <ManageRestaurant 
-                setLoading={setLoading}
-                success={success}
-                setSuccess={setSuccess}
-                loading2={loading2}
-                setLoading2={setLoading2}
-            />
+            <div className="mb-6">
+                <ManageRestaurant 
+                    setLoading={setLoading}
+                    success={success}
+                    setSuccess={setSuccess}
+                    loading2={loading2}
+                    setLoading2={setLoading2}
+                />
+            </div>
             <MenuUpdate />
         </div>
     );
