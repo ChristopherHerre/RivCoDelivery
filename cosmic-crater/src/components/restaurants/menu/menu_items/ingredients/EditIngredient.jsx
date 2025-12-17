@@ -49,13 +49,11 @@ const EditIngredients = React.memo(function EditIngredients(props) {
                     />
                 );
             })}
-            <div className="flex flex-wrap bg-gray-900 text-white">
-                <div className="w-full">
-                    <NewIngredient
-                        menuItem={menuItem}
-                        setIngredients={setIngredients}
-                    />
-                </div>
+            <div className="w-full">
+                <NewIngredient
+                    menuItem={menuItem}
+                    setIngredients={setIngredients}
+                />
             </div>
         </>
     );

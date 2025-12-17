@@ -1,4 +1,5 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Button from '../common/Button';
 
 export default function QuantitySelector(props) {
     const [quantity, setQuantity] = useState(props.inputValue);
@@ -15,12 +16,14 @@ export default function QuantitySelector(props) {
     }
     return (
         <span className="flex items-center gap-1">
-            <button
+            <Button
                 type="button"
-                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
-                onClick={(e) => decrement(e)}>
+                size="sm"
+                onClick={(e) => decrement(e)}
+                iconOnly
+            >
                 <i className="bi bi-dash-lg"></i>
-            </button>
+            </Button>
             <input
                 className={"input-number text-center w-12"}
                 disabled="disabled"
@@ -29,12 +32,14 @@ export default function QuantitySelector(props) {
                 size="2"
                 min="1"
                 max="10" />
-            <button
+            <Button
                 type="button"
-                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
-                onClick={(e) => increment(e)}>
+                size="sm"
+                onClick={(e) => increment(e)}
+                iconOnly
+            >
                 <i className="bi bi-plus-lg"></i>
-            </button>
+            </Button>
         </span>
     );
 }

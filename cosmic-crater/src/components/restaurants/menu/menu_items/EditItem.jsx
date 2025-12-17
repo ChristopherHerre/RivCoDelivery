@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Spinner from '../../../users/Spinner';
 import axios from 'axios';
 import { isNumericField, getTooltip } from './ingredients/NewIngredient';
+import Button from '../../../common/Button';
 function EditItem(props) {
     const item = props.item;
     const [success2, setSuccess2] = useState(false);
@@ -99,12 +100,14 @@ function EditItem(props) {
                     </div>
                 );
             })}
-            <button 
+            <Button 
                 onClick={(e) => handleSave(e, item.id)} 
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-3"
+                fullWidth
+                className="mb-3"
+                loading={loading3}
             >
                 <i className="bi bi-pencil-square"></i> Save
-            </button>
+            </Button>
             <div className="mb-3">
                 {success2 ? (
                     <p className="text-green-600">
@@ -119,13 +122,15 @@ function EditItem(props) {
                     </p>
                 )}
             </div>
-            <button 
+            <Button 
                 onClick={() => handleDeleteMenuItem(item.id)} 
-                className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors mb-3"
+                variant="danger"
+                fullWidth
+                className="mb-3"
             >
                 <i className="bi bi-trash"> </i>
                 Delete
-            </button>
+            </Button>
             {error2 && (
                 <p className="text-red-600 mt-2">
                     <i class="bi bi-exclamation-triangle"> </i>

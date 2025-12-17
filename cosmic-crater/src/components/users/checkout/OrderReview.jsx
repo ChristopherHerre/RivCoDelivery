@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { CartItemDetails, calcSubtotal, Subtotal } from '../cart/Cart';
 import { roundedToFixed } from '../../App';
 import currency from 'currency.js';
+import Button from '../../common/Button';
 
 export default function OrderReview(props) {
   const cart = props.cart;
@@ -44,7 +45,7 @@ export default function OrderReview(props) {
           <span className="label">Total:</span>
           <b className="amount">{USDollar.format(total)}</b>
         </h4>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full">Place order</button>
+        <Button fullWidth>Place order</Button>
       </div>
     </div>
   );

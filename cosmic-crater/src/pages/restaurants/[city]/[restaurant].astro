@@ -7,6 +7,7 @@ import SSRAppWrapper from '@/components/SSRAppWrapper.jsx';
 import OrderButtonWithAuth from '@/components/users/nav/OrderButtonWithAuth.jsx';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ResponsiveFlexRow from '@/components/common/ResponsiveFlexRow.jsx';
+import LikeDisplay from '@/components/common/LikeDisplay.astro';
 
 const { city, restaurant } = Astro.params;
 
@@ -63,8 +64,8 @@ grouped = menuItems.reduce((acc, item) => {
 <html lang="en">
 	<head>
 		<BaseHead
-			title={r ? `${r.name} | ${r.city_name} Delivery | RivCoDelivery` : `Restaurant Menu | RivCoDelivery`}
-			description={r ? `Order delivery from ${r.name} in ${r.city_name}. Browse menu items and place your order with RivCoDelivery.` : `Browse restaurant menu and order delivery with RivCoDelivery.`}
+			title={r ? `${r.name} Delivery in ${r.city_name}, CA | Order ${r.category || 'Food'} Online | RivCoDelivery` : `Restaurant Menu | RivCoDelivery`}
+			description={r ? `Order ${r.category ? r.category.toLowerCase() : 'food'} delivery from ${r.name} in ${r.city_name}, California. Browse full menu, customize your order, and get fast delivery. Easy online ordering with RivCoDelivery.` : `Browse restaurant menu and order delivery with RivCoDelivery.`}
 		/>
 		{r && (
 			<script type="application/ld+json">
@@ -108,18 +109,19 @@ grouped = menuItems.reduce((acc, item) => {
 						{ label: r.city_name || city, href: `/restaurants/${city}` },
 						{ label: r.name }
 					]} />
-					<header class="mb-6">
-						<h1 class="mb-2 text-2xl font-semibold text-gray-900">{r.name}</h1>
-						<p class="mb-1 text-base">
-							<strong class="font-semibold text-gray-900">{r.category}</strong>
-						</p>
-						<p class="mb-1 text-base text-gray-700">{r.address}</p>
-						{r.city_name && <p class="text-gray-600 mb-4 text-base">{r.city_name}</p>}
-
-						<div class="mb-4">
+					<ResponsiveFlexRow margin="mb-6" align="stretch" variant="restaurant" client:only="react">
+						<div class="flex-1 flex flex-col">
+							<h1 class="mb-2 text-2xl font-semibold text-white">{r.name} Menu</h1>
+							<p class="mb-1 text-base">
+								<strong class="font-semibold text-white">{r.category}</strong>
+							</p>
+							<p class="mb-1 text-base text-white/90">{r.address}</p>
+							
+						</div>
+						<div class="flex items-center max-lg:w-full">
 							<OrderButtonWithAuth restaurantId={r.id} client:only="react" />
 						</div>
-					</header>
+					</ResponsiveFlexRow>
 
 					{Object.entries(grouped).map(([category, items]) => {
 						const slugify = (name) => {
@@ -137,9 +139,9 @@ grouped = menuItems.reduce((acc, item) => {
 										const itemSlug = slugify(item.name);
 										return (
 											<div class="w-full md:w-1/2 px-3 mb-3" key={item.id}>
-												<article class="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full flex flex-col hover:shadow-md transition-shadow">
-													<div class="p-4 flex-1 flex flex-col">
-														<h3 class="text-lg font-semibold mb-1">
+												<ResponsiveFlexRow card vertical align="stretch" variant="menu">
+													<div class="flex-1 flex flex-col">
+														<h3 class="text-lg font-semibold mb-2">
 															<a 
 																href={`/restaurants/${city}/${restaurant}/menu/${itemSlug}-${item.id}`}
 																class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
@@ -147,22 +149,28 @@ grouped = menuItems.reduce((acc, item) => {
 																{item.name}
 															</a>
 														</h3>
-														{item.size_display_name && (
-															<p class="text-sm text-gray-300 mb-2">{item.size_display_name}</p>
+														{item.category && (
+															<p class="text-sm text-white/80 mb-2">{item.category}</p>
 														)}
-														<ResponsiveFlexRow className="mt-auto pt-2 border-t border-gray-700">
+														{item.size_display_name && (
+															<p class="text-sm text-white/80 mb-2">{item.size_display_name}</p>
+														)}
+														<ResponsiveFlexRow borderTop margin="mt-auto" variant="nested">
 															<span class="font-bold text-lg text-white">
 																${Number(item.price).toFixed(2)}
 															</span>
-															<a 
-																href={`/restaurants/${city}/${restaurant}/menu/${itemSlug}-${item.id}`}
-																class="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline max-[480px]:w-full text-center"
-															>
-																View details
-															</a>
+															<div class="flex items-center gap-2">
+																<a 
+																	href={`/restaurants/${city}/${restaurant}/menu/${itemSlug}-${item.id}`}
+																	class="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer max-lg:w-full max-lg:text-center"
+																>
+																	View details
+																</a>
+																<LikeDisplay itemId={item.id} itemType="menu-item" likes={item.likes || 0} />
+															</div>
 														</ResponsiveFlexRow>
 													</div>
-												</article>
+												</ResponsiveFlexRow>
 											</div>
 										);
 									})}

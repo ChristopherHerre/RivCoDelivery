@@ -21,7 +21,7 @@ function publicRoutes(app, pool, checkRole) {
         }
         const { latitude, longitude } = parseResult.data;
         const query = `
-            SELECT * FROM restaurants 
+            SELECT *, COALESCE(likes, 0) as likes FROM restaurants 
             WHERE address IS NOT NULL 
             AND longitude IS NOT NULL 
             AND latitude IS NOT NULL

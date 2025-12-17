@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ResponsiveFlexRow from '../../common/ResponsiveFlexRow';
 import axios from 'axios';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -7,6 +7,8 @@ import Spinner from '../../users/Spinner';
 import { groupBy } from '../RestaurantsList';
 import { useParams } from 'react-router-dom';
 import { parseRestaurantId, getRestaurantMenuItemUrl, slugify, getMenuItemUrl } from '../../../utils/restaurantUrls';
+import LikeButton from '../../common/LikeButton';
+import Button from '../../common/Button';
 
 export default function Menu(props) {
     const params = useParams();
@@ -20,6 +22,8 @@ export default function Menu(props) {
     const location = useLocation();
     const result = groupBy(menu, r => r.category);
     const [loaded, setLoaded] = useState(false);
+    const [profile, setProfile] = useState(null);
+    const [menuItemLikes, setMenuItemLikes] = useState({}); // { menuItemId: { likes: number, liked: boolean } }
     
     // Check if we're actually on a menu item page (shouldn't render Menu component)
     // This prevents Menu from rendering when React Router incorrectly matches the route
@@ -44,6 +48,25 @@ export default function Menu(props) {
         return parseRestaurantId(restaurantParam);
     }, [restaurantParam]);
 
+    // Load profile
+    useEffect(() => {
+        const storedProfile = localStorage.getItem('profile');
+        if (storedProfile) {
+            setProfile(JSON.parse(storedProfile));
+        }
+        
+        const handleProfileChange = () => {
+            const storedProfile = localStorage.getItem('profile');
+            if (storedProfile) {
+                setProfile(JSON.parse(storedProfile));
+            } else {
+                setProfile(null);
+            }
+        };
+        window.addEventListener('profile-changed', handleProfileChange);
+        return () => window.removeEventListener('profile-changed', handleProfileChange);
+    }, []);
+
     useEffect(() => {
         const fetchRestaurantAndMenu = async (attempt = 1) => {
             if (!restaurantId) {
@@ -64,6 +87,41 @@ export default function Menu(props) {
                 const menuRes = await axios.get(`/api/restaurants2/${restaurantId}/menu`);
                 console.log(menuRes.data);
                 setMenu(menuRes.data);
+                
+                // Fetch like status for each menu item if user is logged in
+                const storedProfile = localStorage.getItem('profile');
+                if (storedProfile) {
+                    const likesMap = {};
+                    await Promise.all(menuRes.data.map(async (item) => {
+                        try {
+                            const likeRes = await axios.get(`/api/menu-items/${item.id}/like-status`, {
+                                withCredentials: true
+                            });
+                            likesMap[item.id] = {
+                                likes: item.likes || 0,
+                                liked: likeRes.data.liked || false
+                            };
+                        } catch (err) {
+                            // If error, just use default values
+                            likesMap[item.id] = {
+                                likes: item.likes || 0,
+                                liked: false
+                            };
+                        }
+                    }));
+                    setMenuItemLikes(likesMap);
+                } else {
+                    // User not logged in - just set likes counts
+                    const likesMap = {};
+                    menuRes.data.forEach(item => {
+                        likesMap[item.id] = {
+                            likes: item.likes || 0,
+                            liked: false
+                        };
+                    });
+                    setMenuItemLikes(likesMap);
+                }
+                
                 setLoaded(true);
             } catch (err) {
                 if (attempt < MAX_RETRY_ATTEMPTS) {
@@ -120,38 +178,20 @@ export default function Menu(props) {
     
     return (
         <div className="mx-auto">
-            {loaded && (
-                <>
-                    {restaurantData && (
-                        <nav className="mb-4 text-sm text-gray-600">
-                            <Link to="/" className="text-blue-600 hover:underline">Home</Link>
-                            <span className="mx-2">/</span>
-                            <Link to={`/restaurants/${city}`} className="text-blue-600 hover:underline">{restaurantData.city_name || city}</Link>
-                            <span className="mx-2">/</span>
-                            <span className="text-gray-900">{restaurantData.name || restaurantName}</span>
-                        </nav>
-                    )}
-                    <header className="mb-6">
-                        {restaurantData ? (
-                            <>
-                                <h1 className="mb-2 text-2xl font-semibold text-gray-900">{restaurantData.name || restaurantName}</h1>
-                                {restaurantData.category && (
-                                    <p className="mb-1 text-base">
-                                        <strong className="font-semibold text-gray-900">{restaurantData.category}</strong>
-                                    </p>
-                                )}
-                                {restaurantData.address && (
-                                    <p className="mb-1 text-base text-gray-700">{restaurantData.address}</p>
-                                )}
-                                {restaurantData.city_name && (
-                                    <p className="text-gray-600 mb-4 text-base">{restaurantData.city_name}</p>
-                                )}
-                            </>
-                        ) : (
-                            <h2 className="mb-4 text-2xl font-semibold text-gray-900">{restaurantName} Menu</h2>
+            {loaded && restaurantData && (
+                <ResponsiveFlexRow margin="mb-6" align="stretch" variant="restaurant">
+                    <div className="flex-1 flex flex-col">
+                        <h1 className="mb-2 text-2xl font-semibold text-white">{restaurantData.name || restaurantName} Menu</h1>
+                        {restaurantData.category && (
+                            <p className="mb-1 text-base">
+                                <strong className="font-semibold text-white">{restaurantData.category}</strong>
+                            </p>
                         )}
-                    </header>
-                </>
+                        {restaurantData.address && (
+                            <p className="mb-1 text-base text-white/90">{restaurantData.address}</p>
+                        )}
+                    </div>
+                </ResponsiveFlexRow>
             )}
             
             {
@@ -163,9 +203,9 @@ export default function Menu(props) {
                                 const priceDisplay = getPriceDisplay(data);
                                 return (
                                     <div className="w-full md:w-1/2 px-3 mb-3" key={data.id}>
-                                        <article className="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full flex flex-col hover:shadow-md transition-shadow">
-                                            <div className="p-4 flex-1 flex flex-col">
-                                                <h3 className="text-lg font-semibold mb-1">
+                                        <ResponsiveFlexRow card vertical align="stretch" variant="menu">
+                                            <div className="flex-1 flex flex-col">
+                                                <h3 className="text-lg font-semibold mb-2">
                                                     <button
                                                         onClick={(e) => changeMenuItem(data)}
                                                         className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
@@ -173,24 +213,41 @@ export default function Menu(props) {
                                                         {data.name}
                                                     </button>
                                                 </h3>
+                                                {data.category && (
+                                                    <p className="text-sm text-white/80 mb-2">{data.category}</p>
+                                                )}
                                                 {data.size_display_name && (
-                                                    <p className="text-sm text-gray-300 mb-2">{data.size_display_name}</p>
+                                                    <p className="text-sm text-white/80 mb-2">{data.size_display_name}</p>
                                                 )}
                                                 {priceDisplay && (
-                                                    <ResponsiveFlexRow className="mt-auto pt-2 border-t border-gray-700">
+                                                    <ResponsiveFlexRow borderTop margin="mt-auto" variant="nested">
                                                         <span className="font-bold text-lg text-white">
                                                             {priceDisplay}
                                                         </span>
-                                                        <Link
-                                                            to={restaurantData ? getMenuItemUrl(restaurantData, data) : `/${restaurantId}/menu/item?item=${data.id}`}
-                                                            className="inline-block px-3 py-1.5 bg-blue-600 text-white text-sm font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer"
-                                                        >
-                                                            View details
-                                                        </Link>
+                                                        <div className="flex items-center gap-2">
+                                                            <Link
+                                                                to={restaurantData ? getMenuItemUrl(restaurantData, data) : `/${restaurantId}/menu/item?item=${data.id}`}
+                                                                className="no-underline"
+                                                            >
+                                                                <Button
+                                                                    size="md-large"
+                                                                    responsiveFullWidth={true}
+                                                                >
+                                                                    View details
+                                                                </Button>
+                                                            </Link>
+                                                            <LikeButton
+                                                                itemId={data.id}
+                                                                itemType="menu-item"
+                                                                initialLikes={menuItemLikes[data.id]?.likes || data.likes || 0}
+                                                                initialLiked={menuItemLikes[data.id]?.liked || false}
+                                                                profile={profile}
+                                                            />
+                                                        </div>
                                                     </ResponsiveFlexRow>
                                                 )}
                                             </div>
-                                        </article>
+                                        </ResponsiveFlexRow>
                                     </div>
                                 );
                             })}

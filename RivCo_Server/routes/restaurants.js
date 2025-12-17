@@ -150,7 +150,7 @@ function restaurantRoutes(app, pool, checkRole) {
         }
         try {
             const [rows] = await pool.execute(
-                `SELECT id, name, address, latitude, longitude, category, city_name, city_slug
+                `SELECT id, name, address, latitude, longitude, category, city_name, city_slug, COALESCE(likes, 0) as likes
                  FROM restaurants
                  WHERE city_slug = ?`,
                 [city_slug]
@@ -171,7 +171,7 @@ function restaurantRoutes(app, pool, checkRole) {
         }
         try {
             const [results] = await pool.execute(
-                'SELECT id, name, category, address, latitude, longitude, city_name, city_slug FROM restaurants WHERE id = ? LIMIT 1',
+                'SELECT id, name, category, address, latitude, longitude, city_name, city_slug, COALESCE(likes, 0) as likes FROM restaurants WHERE id = ? LIMIT 1',
                 [id]
             );
             if (results.length === 0) {
@@ -195,7 +195,7 @@ function restaurantRoutes(app, pool, checkRole) {
             });
         }
         const restaurant = parseResult.data.restaurantId;
-        const query = 'SELECT * FROM restaurants WHERE id = ? LIMIT 1';
+        const query = 'SELECT *, COALESCE(likes, 0) as likes FROM restaurants WHERE id = ? LIMIT 1';
         try {
             const [results] = await pool.execute(query, [restaurant]);
             if (results.length === 0) {
@@ -347,7 +347,7 @@ function restaurantRoutes(app, pool, checkRole) {
             // The category parameter is the actual category name (e.g., "Pizza")
             // Do exact match (case-insensitive)
             const [results] = await pool.execute(
-                `SELECT id, name, address, latitude, longitude, category, city_name, city_slug
+                `SELECT id, name, address, latitude, longitude, category, city_name, city_slug, COALESCE(likes, 0) as likes
                  FROM restaurants
                  WHERE city_slug = ? 
                    AND LOWER(category) = LOWER(?)

@@ -2,6 +2,7 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios';
 import QuantitySelector from '../../../users/QuantitySelector';
+import Button from '../../../common/Button';
 import currency from 'currency.js';
 import { MAX_RETRY_ATTEMPTS } from '../../../App';
 import Spinner from '../../../users/Spinner';
@@ -634,11 +635,13 @@ export default function MenuItem(props) {
                                         />
                                     </div>
                                     <div className="flex justify-center">
-                                        <input
+                                        <Button
                                             type="submit"
-                                            className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors text-lg font-semibold"
-                                            value={"Add " + quantity + " to cart"}
-                                        />
+                                            size="lg"
+                                            className="font-semibold"
+                                        >
+                                            Add {quantity} to cart
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -650,17 +653,6 @@ export default function MenuItem(props) {
     }
     return (
         <div className="mx-auto">
-            {restaurantData && (
-                <nav className="mb-4 text-sm text-gray-600">
-                    <Link to="/" className="text-blue-600 hover:underline">Home</Link>
-                    <span className="mx-2">/</span>
-                    <Link to={`/restaurants/${restaurantData.city_slug || city}`} className="text-blue-600 hover:underline">{restaurantData.city_name || city}</Link>
-                    <span className="mx-2">/</span>
-                    <Link to={`/restaurants/${restaurantData.city_slug || city}/${restaurantParam || restaurant}-${slugify(restaurantData.name || restaurantName)}`} className="text-blue-600 hover:underline">{restaurantData.name || restaurantName}</Link>
-                    <span className="mx-2">/</span>
-                    <span className="text-gray-900">{itemName || 'Menu Item'}</span>
-                </nav>
-            )}
             {loading ? (
                 <div className="flex flex-wrap text-center">
                     <div className="w-full">

@@ -200,16 +200,65 @@ function userRoutes(app, pool, checkRole) {
         const offset = (page - 1) * limit;
         try {
             let sqlQuery = 'SELECT * FROM users';
-            let params = [];
+            let countQuery = 'SELECT COUNT(*) as total FROM users';
+            let countParams = [];
+            let selectParams = [];
+            
             if (searchQuery) {
                 sqlQuery += ' WHERE name LIKE ? OR email LIKE ?';
-                params.push(`%${searchQuery}%`, `%${searchQuery}%`);
+                countQuery += ' WHERE name LIKE ? OR email LIKE ?';
+                // COUNT query needs the params for WHERE clause
+                countParams.push(`%${searchQuery}%`, `%${searchQuery}%`);
+                // SELECT query also needs the params for WHERE clause
+                selectParams.push(`%${searchQuery}%`, `%${searchQuery}%`);
             }
             // ✅ FIXED: Values are validated as safe integers by Zod, so template literal is safe
             // MySQL doesn't support LIMIT/OFFSET as parameters in prepared statements
             sqlQuery += ` ORDER BY name ASC LIMIT ${limit} OFFSET ${offset}`;
-            const [results] = await pool.execute(sqlQuery, params);
-            res.json(results);
+            
+            // Get total count and results in parallel
+            // COUNT query uses countParams, SELECT query uses selectParams
+            const [countResult, selectResult] = await Promise.all([
+                pool.execute(countQuery, countParams),
+                pool.execute(sqlQuery, selectParams)
+            ]);
+            
+            // pool.execute returns [rows, fields]
+            // countResult[0] is the rows array from COUNT query
+            // countResult[0][0] is the first row: { total: number }
+            // selectResult[0] is the rows array from SELECT query
+            const countRows = countResult[0];
+            const results = selectResult[0];
+            const countRow = countRows && countRows.length > 0 ? countRows[0] : null;
+            
+            // Extract total - try multiple possible property names
+            const total = countRow?.total ?? countRow?.['COUNT(*)'] ?? 0;
+            const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
+            
+            console.log('Users pagination debug:', { 
+                page, 
+                limit, 
+                total, 
+                totalPages, 
+                resultsCount: results.length,
+                countRow: countRow,
+                countRowsLength: countRows?.length,
+                countQuery: countQuery,
+                countParams: countParams,
+                hasSearchQuery: !!searchQuery,
+                selectQuery: sqlQuery.substring(0, 100) + '...',
+                fullCountResult: JSON.stringify(countResult[0])
+            });
+            
+            res.json({
+                users: results,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages
+                }
+            });
         } catch (err) {
             console.error('Error executing query:', err);
             res.status(500).json({ error: 'Database query failed' });
@@ -265,6 +314,49 @@ function userRoutes(app, pool, checkRole) {
         } catch (err) {
             console.error('Error fetching user details:', err);
             res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // DELETE /api/users/:id/cart (Admin only - clear a specific user's cart)
+    router.delete('/users/:id/cart', checkRole(2), async (req, res) => {
+        // Validate path parameter
+        const paramParseResult = userIdParamSchema.safeParse(req.params);
+        if (!paramParseResult.success) {
+            return res.status(400).json({
+                error: "Validation failed",
+                details: paramParseResult.error.flatten().fieldErrors,
+            });
+        }
+        
+        const { id } = paramParseResult.data;
+        
+        try {
+            // Verify user exists
+            const [userResults] = await pool.execute(
+                'SELECT id FROM users WHERE id = ? LIMIT 1',
+                [id]
+            );
+            
+            if (userResults.length === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            
+            // Clear the user's cart
+            const [result] = await pool.execute(
+                'DELETE FROM cart WHERE user_id = ?',
+                [id]
+            );
+            
+            console.log(`Admin ${req.session.user.sub} cleared cart for user ${id}, removed ${result.affectedRows} items`);
+            
+            res.json({ 
+                message: 'Cart cleared successfully', 
+                removed: result.affectedRows,
+                userId: id
+            });
+        } catch (err) {
+            console.error('Error clearing user cart:', err);
+            res.status(500).json({ error: err.message || 'Failed to clear cart' });
         }
     });
 

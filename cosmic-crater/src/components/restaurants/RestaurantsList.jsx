@@ -1,12 +1,14 @@
-﻿import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../App';
 import Spinner from '../users/Spinner';
 import Welcome from '../users/address/Welcome';
 import { getRestaurantMenuUrl, getRestaurantCategoryUrl } from '../../utils/restaurantUrls';
 import CityFilter from './CityFilter';
 import ResponsiveFlexRow from '../common/ResponsiveFlexRow';
+import LikeButton from '../common/LikeButton';
+import Button from '../common/Button';
 
 export function groupBy(array, keyFn) {
     return array.reduce((acc, item) => {
@@ -45,7 +47,9 @@ export default function RestaurantsList(props) {
     const [loaded, setLoaded] = useState(false);
     const [profile, setProfile] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
     const [locLoaded, setLocLoaded] = useState(false);
+    const [restaurantLikes, setRestaurantLikes] = useState({}); // { restaurantId: { likes: number, liked: boolean } }
 
     useEffect(() => {
         const storedProfile = localStorage.getItem('profile');
@@ -65,6 +69,33 @@ export default function RestaurantsList(props) {
         window.addEventListener('profile-changed', handleProfileChange);
         return () => window.removeEventListener('profile-changed', handleProfileChange);
     }, []);
+
+    // Auto-select city filter from URL when SPA loads on /restaurants/:city route
+    // Clear city filter when navigating to home
+    useEffect(() => {
+        const pathname = location.pathname;
+        
+        // Clear city filter when on home page
+        if (pathname === '/') {
+            setSelectedCities([]);
+            return;
+        }
+        
+        // Check if we're on a /restaurants/:city route (exact match, no sub-paths)
+        const cityRouteMatch = pathname.match(/^\/restaurants\/([^\/]+)$/);
+        if (cityRouteMatch) {
+            const citySlug = cityRouteMatch[1];
+            // Set the city filter to match the URL
+            // Use functional update to avoid dependency on selectedCities
+            setSelectedCities(prev => {
+                // Only update if different to avoid unnecessary re-renders
+                if (prev.length === 1 && prev[0] === citySlug) {
+                    return prev;
+                }
+                return [citySlug];
+            });
+        }
+    }, [location.pathname]);
 
     const updateUserRestaurant = async (restaurantId) => {
         if (!profile?.sub) return;
@@ -145,6 +176,41 @@ export default function RestaurantsList(props) {
                 const res = await axios.get(url);
                 const restaurants = res.data.map(r => r);
                 setRestaurantsCopy(restaurants);
+                
+                // Fetch like status for each restaurant if user is logged in
+                const storedProfile = localStorage.getItem('profile');
+                if (storedProfile) {
+                    const likesMap = {};
+                    await Promise.all(restaurants.map(async (restaurant) => {
+                        try {
+                            const likeRes = await axios.get(`/api/restaurants/${restaurant.id}/like-status`, {
+                                withCredentials: true
+                            });
+                            likesMap[restaurant.id] = {
+                                likes: restaurant.likes || 0,
+                                liked: likeRes.data.liked || false
+                            };
+                        } catch (err) {
+                            // If error, just use default values
+                            likesMap[restaurant.id] = {
+                                likes: restaurant.likes || 0,
+                                liked: false
+                            };
+                        }
+                    }));
+                    setRestaurantLikes(likesMap);
+                } else {
+                    // User not logged in - just set likes counts
+                    const likesMap = {};
+                    restaurants.forEach(restaurant => {
+                        likesMap[restaurant.id] = {
+                            likes: restaurant.likes || 0,
+                            liked: false
+                        };
+                    });
+                    setRestaurantLikes(likesMap);
+                }
+                
                 setLoaded(true);
             } catch (error) {
                 console.error('Error fetching restaurants:', error);
@@ -289,42 +355,52 @@ export default function RestaurantsList(props) {
                                         }
                                         return (
                                             <div className="w-full md:w-1/2 px-3 mb-3" key={key}>
-                                                <article className="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full hover:shadow-md transition-shadow">
-                                                    <ResponsiveFlexRow className="h-full">
-                                                        <div className="p-4 flex-1 flex flex-col">
-                                                            <h3 className="text-lg font-semibold mb-2">
-                                                                <button
-                                                                    onClick={(e) => selectRestaurant(data)}
-                                                                    className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
-                                                                >
-                                                                    {data.name}
-                                                                </button>
-                                                            </h3>
-                                                            <p className="mb-1 text-base">
-                                                                <strong className="font-semibold text-white">{data.category}</strong>
+                                                <ResponsiveFlexRow card align="stretch" variant="restaurant">
+                                                    <div className="flex-1 flex flex-col">
+                                                        <h3 className="text-lg font-semibold mb-2">
+                                                            <button
+                                                                onClick={(e) => selectRestaurant(data)}
+                                                                className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
+                                                            >
+                                                                {data.name}
+                                                            </button>
+                                                        </h3>
+                                                        <p className="mb-1 text-base">
+                                                            <strong className="font-semibold text-white">{data.category}</strong>
+                                                        </p>
+                                                        <p className="mb-2 text-base text-white/80">{data.address}</p>
+                                                        {h < 100 && (
+                                                            <p className="mb-2 text-sm text-white/70">
+                                                                Distance: {roundedToFixed(h, 1)} mi
+                                                                {fee <= maxFee && (
+                                                                    <span className="ml-2">
+                                                                        • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
+                                                                    </span>
+                                                                )}
                                                             </p>
-                                                            <p className="mb-2 text-base text-gray-300">{data.address}</p>
-                                                            {h < 100 && (
-                                                                <p className="mb-2 text-sm text-gray-400">
-                                                                    Distance: {roundedToFixed(h, 1)} mi
-                                                                    {fee <= maxFee && (
-                                                                        <span className="ml-2">
-                                                                            • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
-                                                                        </span>
-                                                                    )}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        <div className="p-4 flex items-center">
-                                                            <Link
-                                                                to={getRestaurantMenuUrl(data)}
-                                                                className="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer whitespace-nowrap"
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 max-lg:w-full">
+                                                        <Link
+                                                            to={getRestaurantMenuUrl(data)}
+                                                            className="no-underline"
+                                                        >
+                                                            <Button
+                                                                size="md-large"
+                                                                responsiveFullWidth={true}
                                                             >
                                                                 View menu
-                                                            </Link>
-                                                        </div>
-                                                    </ResponsiveFlexRow>
-                                                </article>
+                                                            </Button>
+                                                        </Link>
+                                                        <LikeButton
+                                                            itemId={data.id}
+                                                            itemType="restaurant"
+                                                            initialLikes={restaurantLikes[data.id]?.likes || data.likes || 0}
+                                                            initialLiked={restaurantLikes[data.id]?.liked || false}
+                                                            profile={profile}
+                                                        />
+                                                    </div>
+                                                </ResponsiveFlexRow>
                                             </div>
                                         );
                                         })}

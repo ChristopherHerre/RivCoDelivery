@@ -5,7 +5,13 @@ import { SITE_TITLE } from '../consts';
 
 <header>
 	<nav>
-		<h2><a href="/">{SITE_TITLE}</a></h2>
+		<h2>
+			<a href="/" class="logo-link">
+				<span class="logofont2">RivCo</span>
+				<span class="logofont">DELIVERY</span>
+			</a>
+			<span class="sr-only">{SITE_TITLE}</span>
+		</h2>
 		<div class="internal-links">
 			<HeaderLink href="/">Home</HeaderLink>
 			<HeaderLink href="/blog">Blog</HeaderLink>
@@ -48,7 +54,34 @@ import { SITE_TITLE } from '../consts';
 	h2 a,
 	h2 a.active {
 		text-decoration: none;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-weight: normal;
 	}
+
+	.logo-link {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-weight: normal !important;
+	}
+
+	.logofont2 {
+		font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+		font-size: 20pt !important;
+		font-weight: 200 !important;
+		margin: 0;
+	}
+
+	.logofont {
+		font-family: 'Bungee Spice', Arial, 'Arial Black', sans-serif !important;
+		font-size: 20pt !important;
+		font-weight: 900 !important;
+		margin: 0;
+		letter-spacing: 0.05em;
+	}
+
 	nav {
 		display: flex;
 		align-items: center;
@@ -71,6 +104,10 @@ import { SITE_TITLE } from '../consts';
 	@media (max-width: 720px) {
 		.social-links {
 			display: none;
+		}
+		header .logofont2,
+		header .logofont {
+			font-size: 10pt !important;
 		}
 	}
 </style>

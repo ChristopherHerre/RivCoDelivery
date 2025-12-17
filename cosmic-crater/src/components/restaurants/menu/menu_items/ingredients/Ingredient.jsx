@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Spinner from '../../../../users/Spinner';
 import { isNumericField, getTooltip } from './NewIngredient';
+import Button from '../../../../common/Button';
 function Ingredient(props) {
     const index = props.index;
     const sortedFields = props.sortedFields;
@@ -88,15 +89,15 @@ function Ingredient(props) {
             }
             <div className="w-full md:w-1/4 mb-4 md:pr-2">
                 <b className="block mb-2">&nbsp;</b>
-                <button onClick={() => handleSave(ingredient.id)} className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                <Button onClick={() => handleSave(ingredient.id)} fullWidth>
                     <i className="bi bi-pencil-square"> </i>Save
-                </button>
+                </Button>
             </div>
             <div className="w-full md:w-1/4 mb-4 md:pr-2">
                 <b className="block mb-2">&nbsp;</b>
-                <button onClick={() => handleDelete(ingredient.id)} className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                <Button onClick={() => handleDelete(ingredient.id)} variant="danger" fullWidth>
                     <i className="bi bi-trash"> </i>Delete
-                </button>
+                </Button>
             </div>
             <div className="w-full mt-2">
                 {success ? (

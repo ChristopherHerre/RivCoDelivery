@@ -3,6 +3,8 @@
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
 #wr {
+    width: 100%;
+    max-width: 100%;
     padding: 1.5em;
     background-size: cover;
     background-position: center;
@@ -47,8 +49,9 @@
 }
 #wr ol,
 #wr ol.li {
-    margin:0;
-    padding:20px;
+    /* Avoid generic list padding so shared elements like breadcrumbs align */
+    margin: 0;
+    padding: 0;
 }
 #wr .form-control::placeholder {
     color: lightgray;
@@ -360,4 +363,81 @@ a.bg-blue-600,
 a.bg-blue-600:not(.text-left) {
     text-align: center;
     display: inline-block;
+}
+
+/* Breadcrumb styles matching SSR Breadcrumb.astro */
+.breadcrumb-nav {
+    margin-bottom: 1rem;
+}
+
+/* Breadcrumb wrapper in navbar should have consistent padding with SSR pages */
+#navbar .breadcrumb-nav {
+    margin-bottom: 1rem;
+}
+
+/* Ensure breadcrumb wrapper container has consistent padding and width */
+.breadcrumb-wrapper-container {
+    /* Not used when rendering nav directly; keep zeroed */
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+}
+
+.breadcrumb-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.5rem;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.breadcrumb-link {
+    color: rgb(59 130 246);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.breadcrumb-link:hover {
+    color: rgb(37 99 235);
+    background-color: rgb(239 246 255);
+    text-decoration: none;
+}
+
+.breadcrumb-current {
+    color: rgb(17 24 39);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+
+.breadcrumb-separator {
+    width: 1rem;
+    height: 1rem;
+    color: rgb(156 163 175);
+    flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+    .breadcrumb-link,
+    .breadcrumb-current {
+        font-size: 0.75rem;
+        padding: 0.125rem 0.375rem;
+    }
+
+    .breadcrumb-separator {
+        width: 0.875rem;
+        height: 0.875rem;
+    }
 }

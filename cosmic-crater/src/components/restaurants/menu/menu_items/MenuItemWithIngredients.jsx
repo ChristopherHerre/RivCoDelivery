@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import EditIngredients from './ingredients/EditIngredient';
 import EditItem from './EditItem';
 import ResponsiveFlexRow from '../../../common/ResponsiveFlexRow';
+import Button from '../../../common/Button';
 
 function MenuItemWithIngredients(props) {
     const item = props.item;
@@ -12,33 +13,36 @@ function MenuItemWithIngredients(props) {
     const [isExpanded, setIsExpanded] = useState(false);
     
     return (
-        <div key={item.id} className="w-full mt-3 shadow-lg border border-gray-300 rounded-lg">
-            <div className="bg-gray-100 p-4 cursor-pointer hover:bg-gray-200 transition-colors"
-                 onClick={() => setIsExpanded(!isExpanded)}>
-                <ResponsiveFlexRow>
-                    <h3 className="text-lg font-semibold m-0">{item.name || `Menu Item #${item.id}`}</h3>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsExpanded(!isExpanded);
-                        }}
-                        className="max-[480px]:ml-0 ml-4 px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors flex items-center gap-2"
-                        aria-label={isExpanded ? "Minimize" : "Maximize"}
-                    >
-                        {isExpanded ? (
-                            <>
-                                <i className="bi bi-chevron-up"></i>
-                                <span>Minimize</span>
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-chevron-down"></i>
-                                <span>Maximize</span>
-                            </>
-                        )}
-                    </button>
-                </ResponsiveFlexRow>
-            </div>
+        <div key={item.id} className="w-full mt-3">
+            <ResponsiveFlexRow 
+                variant="menu"
+                className="cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setIsExpanded(!isExpanded)}
+            >
+                <h3 className="text-lg font-semibold m-0 text-white">{item.name || `Menu Item #${item.id}`}</h3>
+                <Button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded(!isExpanded);
+                    }}
+                    variant="secondary"
+                    size="sm"
+                    className="max-[480px]:ml-0 ml-4"
+                    ariaLabel={isExpanded ? "Minimize" : "Maximize"}
+                >
+                    {isExpanded ? (
+                        <>
+                            <i className="bi bi-chevron-up"></i>
+                            <span>Minimize</span>
+                        </>
+                    ) : (
+                        <>
+                            <i className="bi bi-chevron-down"></i>
+                            <span>Maximize</span>
+                        </>
+                    )}
+                </Button>
+            </ResponsiveFlexRow>
             {isExpanded && (
                 <div className="flex flex-wrap">
                     <div className='w-full xl:w-1/4 bg-blue-50 p-4'>

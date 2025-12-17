@@ -6,6 +6,9 @@ import Footer from '../../components/Footer.astro';
 import SSRAppWrapper from '../../components/SSRAppWrapper.jsx';
 import Breadcrumb from '../../components/Breadcrumb.astro';
 import ResponsiveFlexRow from '../../components/common/ResponsiveFlexRow.jsx';
+import Link from '../../components/common/Link.astro';
+import LikeDisplay from '../../components/common/LikeDisplay.astro';
+import { SITE_TITLE } from '../../consts';
 
 const { city } = Astro.params;
 
@@ -54,14 +57,35 @@ const getCategoryUrl = (categoryName) => {
 	const categorySlug = slugify(categoryName);
 	return `/restaurants/${city}/categories/${categorySlug}`;
 };
+
+// Breadcrumb structured data
+const breadcrumbData = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{
+			'@type': 'ListItem',
+			position: 1,
+			name: 'Home',
+			item: Astro.url.origin + '/'
+		},
+		{
+			'@type': 'ListItem',
+			position: 2,
+			name: cityName,
+			item: Astro.url.origin + `/restaurants/${city}`
+		}
+	]
+};
 ---
 <!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead
-			title={`Restaurants in ${cityName} | RivCoDelivery`}
-			description={`Discover restaurants in ${cityName} available for delivery with RivCoDelivery.`}
+			title={`Food Delivery in ${cityName}, CA | Order Online | RivCoDelivery`}
+			description={`Order food delivery from top restaurants in ${cityName}, California. Browse menus, compare prices, and get fast delivery. Easy online ordering with RivCoDelivery.`}
 		/>
+		<script type="application/ld+json" set:html={JSON.stringify(breadcrumbData)} />
 		<style>
 			#ssr-content main {
 				max-width: 100%;
@@ -78,7 +102,11 @@ const getCategoryUrl = (categoryName) => {
 					{ label: 'Home', href: '/' },
 					{ label: cityName }
 				]} />
-				<h1 class="mb-3 text-2xl font-semibold">Restaurants in {cityName}</h1>
+				<h1 class="mb-3 text-2xl font-semibold">Restaurants in {cityName}, California</h1>
+				
+				<p class="text-base text-gray-700 mb-6">
+					{SITE_TITLE} fulfills restaurant delivery orders in {cityName} after we receive payment for your order. You can pay for your order through Zelle, Apple Cash, or credit card, and your food will be delivered as soon as possible or at the delivery time you specify.
+				</p>
 
 				{restaurants.length === 0 ? (
 					<p class="text-gray-600">No restaurants found in this city yet.</p>
@@ -89,46 +117,46 @@ const getCategoryUrl = (categoryName) => {
 							<div class="mb-6" key={category}>
 								{categoryUrl ? (
 									<h2 class="text-xl font-semibold mb-3">
-										<a 
+										<Link 
 											href={categoryUrl}
-											class="text-gray-900 hover:text-blue-600 transition-colors no-underline bg-transparent border-none p-0 cursor-pointer text-left font-semibold"
+											variant="heading"
+											className=""
 											style="font-size: inherit; font-weight: inherit;"
 										>
-											{category}
-										</a>
+											{category} delivery in {cityName}
+										</Link>
 									</h2>
 								) : (
-									<h2 class="text-xl font-semibold mb-3">{category}</h2>
+									<h2 class="text-xl font-semibold mb-3">{category} delivery in {cityName}</h2>
 								)}
 								<div class="row flex flex-wrap -mx-3">
 									{grouped[category].map((r) => {
 										const slug = slugify(r.name);
 										return (
-											<div class="w-full md:w-1/2 px-3 mb-3" key={r.id}>
-												<article class="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full hover:shadow-md transition-shadow">
-													<ResponsiveFlexRow className="h-full">
-														<div class="p-4 flex-1 flex flex-col">
-															<h3 class="text-lg font-semibold mb-2">
-																<a href={`/restaurants/${city}/${r.id}-${slug}`} class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors">
-																	{r.name}
-																</a>
-															</h3>
-															<p class="mb-1 text-base">
-																<strong class="font-semibold text-white">{r.category}</strong>
-															</p>
-															<p class="mb-2 text-base text-gray-300">{r.address}</p>
-														</div>
-														<div class="p-4 flex items-center">
-															<a
-																href={`/restaurants/${city}/${r.id}-${slug}`}
-																class="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline whitespace-nowrap max-[480px]:w-full text-center"
-															>
-																View menu
-															</a>
-														</div>
-													</ResponsiveFlexRow>
-												</article>
-											</div>
+										<div class="w-full md:w-1/2 px-3 mb-3" key={r.id}>
+											<ResponsiveFlexRow card align="stretch" variant="restaurant">
+												<div class="flex-1 flex flex-col">
+													<h3 class="text-lg font-semibold mb-2">
+														<a href={`/restaurants/${city}/${r.id}-${slug}`} class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors">
+															{r.name}
+														</a>
+													</h3>
+													<p class="mb-1 text-base">
+														<strong class="font-semibold text-white">{r.category}</strong>
+													</p>
+													<p class="mb-2 text-base text-white/80">{r.address}</p>
+												</div>
+												<div class="flex items-center gap-2 max-lg:w-full">
+													<a
+														href={`/restaurants/${city}/${r.id}-${slug}`}
+														class="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline whitespace-nowrap max-lg:w-full max-lg:whitespace-normal max-lg:text-center"
+													>
+														View menu
+													</a>
+													<LikeDisplay itemId={r.id} itemType="restaurant" likes={r.likes || 0} />
+												</div>
+											</ResponsiveFlexRow>
+										</div>
 										);
 									})}
 								</div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Button from '../../common/Button';
 
 const Donate = (props) => {
     const GoFundMeEmbed = () => {
@@ -33,10 +34,10 @@ const Donate = (props) => {
         <div className="flex flex-wrap bg-gray-900 text-white p-5 m-1">
             <div className="w-full text-center mx-auto">
                 <a href="https://github.com/ChristopherHerre/RivCoDelivery">
-                    <button className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors text-lg">
+                    <Button size="lg">
                         <i className="bi bi-github"> </i>
                         Download Project From GitHub
-                    </button>
+                    </Button>
                 </a>
             </div>
         </div>

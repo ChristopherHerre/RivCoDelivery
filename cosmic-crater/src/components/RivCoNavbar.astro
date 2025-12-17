@@ -1,0 +1,83 @@
+---
+// SEO-optimized navbar for RivCoDelivery SSR pages
+// Uses semantic HTML and structured data to help Google identify the site name
+---
+
+<header>
+	<nav aria-label="Main navigation" itemscope itemtype="https://schema.org/Organization">
+		<div class="navbar-container">
+			<a href="/" class="logo-link" itemprop="url">
+				<h1 class="logo" itemprop="name" aria-label="RivCoDelivery - Food Delivery Service">
+					<span class="logofont2">RivCo</span>
+					<span class="logofont">DELIVERY</span>
+				</h1>
+			</a>
+			<meta itemprop="name" content="RivCoDelivery" />
+			<meta itemprop="description" content="Food delivery service in Riverside County, California" />
+		</div>
+	</nav>
+</header>
+
+<style>
+	header {
+		margin: 0;
+		padding: 0;
+		background: white;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	}
+
+	nav {
+		padding: 0.75rem 1rem;
+		margin: 0;
+	}
+
+	.navbar-container {
+		max-width: 1200px;
+		margin: 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+	}
+
+	.logo-link {
+		text-decoration: none;
+		color: inherit;
+		display: inline-block;
+	}
+
+	h1.logo {
+		margin: 0;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 20pt;
+		line-height: 1.2;
+		font-weight: normal;
+	}
+
+	.logofont2 {
+		font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+		font-size: 20pt;
+		font-weight: 200;
+		margin: 0;
+	}
+
+	.logofont {
+		font-family: 'Bungee Spice', Arial, 'Arial Black', sans-serif;
+		font-size: 20pt;
+		font-weight: 900;
+		margin: 0;
+	}
+
+	@media (max-width: 768px) {
+		h1.logo {
+			font-size: 18pt;
+		}
+		.logofont2,
+		.logofont {
+			font-size: 18pt;
+		}
+	}
+</style>
+

@@ -1,0 +1,79 @@
+---
+/**
+ * Standardized Link component for consistent styling across the application
+ * 
+ * @param {string} href - The URL to link to
+ * @param {string} variant - Link style variant:
+ *   - 'heading' - For category/heading links (gray text, blue hover)
+ *   - 'gradient' - For links on gradient backgrounds (white text, blue hover)
+ *   - 'light' - For links on light backgrounds (blue text, underline hover)
+ *   - 'menu-item' - For menu item name links (white text, blue hover)
+ *   - 'button' - Button-style link (blue background, white text)
+ *   - 'button-sm' - Small button-style link
+ *   - 'text-sm' - Small text link (blue text, underline hover)
+ *   - 'ingredient-tag' - For ingredient tag links (white/transparent background)
+ * @param {string} className - Additional CSS classes
+ * @param {string} target - Link target attribute
+ * @param {string} rel - Link rel attribute
+ */
+interface Props {
+	href: string;
+	variant?: 'heading' | 'gradient' | 'light' | 'menu-item' | 'button' | 'button-sm' | 'text-sm' | 'ingredient-tag';
+	className?: string;
+	target?: string;
+	rel?: string;
+	style?: string;
+}
+
+const { href, variant = 'light', className = '', target, rel, style } = Astro.props;
+
+let baseClasses = '';
+let variantClasses = '';
+
+switch (variant) {
+	case 'heading':
+		// Category/heading links: gray text, blue hover
+		variantClasses = 'text-gray-900 hover:text-blue-600 transition-colors no-underline bg-transparent border-none p-0 cursor-pointer text-left font-semibold';
+		break;
+	case 'gradient':
+		// Links on gradient backgrounds: white text, blue hover
+		variantClasses = 'text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors';
+		break;
+	case 'light':
+		// Links on light backgrounds: blue text, underline hover
+		variantClasses = 'text-blue-600 hover:underline no-underline';
+		break;
+	case 'menu-item':
+		// Menu item name links: white text, blue hover
+		variantClasses = 'text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors';
+		break;
+	case 'button':
+		// Button-style link: blue background, white text
+		variantClasses = 'inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer max-lg:w-full max-lg:text-center';
+		break;
+	case 'button-sm':
+		// Small button-style link
+		variantClasses = 'inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors no-underline text-center';
+		break;
+	case 'text-sm':
+		// Small text link: blue text, underline hover
+		variantClasses = 'text-blue-600 hover:underline text-sm';
+		break;
+	case 'ingredient-tag':
+		// Ingredient tag links: white/transparent background
+		variantClasses = 'inline-block px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded hover:bg-white/30 transition-colors text-sm no-underline border border-white/30';
+		break;
+}
+
+const allClasses = `${baseClasses} ${variantClasses} ${className}`.trim();
+---
+
+<a 
+	href={href}
+	class={allClasses}
+	target={target}
+	rel={rel}
+	style={style}
+>
+	<slot />
+</a>
