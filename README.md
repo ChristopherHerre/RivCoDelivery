@@ -1,16 +1,16 @@
 ---
-title: 'Software Requirements Specfication'
-description: 'srs'
-pubDate: 2024-12-12
+title: 'Software Requirements Specification'
+description: 'Describes functional/non-functional requirements, route end-points, and current architecture for the RivCoDelivery project.'
+pubDate: 2025-01-15
 heroImage: '/hero.jpg'
 slug: 'software-requirements'
 ---
 # Software Requirements Specification (SRS)
 ## RivCoDelivery - Full-Stack Delivery Application
 
-**Version:** 1.0  
-**Date:** 2024  
-**Document Status:** Pending
+**Version:** 2.0  
+**Date:** January 2025  
+**Document Status:** Current
 
 ---
 
@@ -183,24 +183,79 @@ RivCoDelivery is a web-based food delivery platform consisting of:
 ### 3.1 Frontend Architecture
 
 **Technology Stack:**
-- **Framework**: Astro (SSG/SSR)
-- **UI Library**: React 19.0
-- **Routing**: React Router DOM 7.2
-- **HTTP Client**: Axios 1.8
-- **Styling**: Bootstrap 5.3, Tailwind CSS 4.1
-- **Icons**: Bootstrap Icons 1.11
-- **Currency**: currency.js 2.0
+- **Framework**: Astro 5.4.0 (SSR with hybrid SPA)
+- **UI Library**: React 19.0.0
+- **Routing**: React Router DOM 7.2.0 (SPA) + Astro file-based routing (SSR)
+- **HTTP Client**: Axios 1.8.1
+- **Styling**: Tailwind CSS 4.1.3, Bootstrap Icons 1.11.3
+- **Currency**: currency.js 2.0.4
+
+**Hybrid SSR/SPA Architecture:**
+The application uses a hybrid architecture that combines Server-Side Rendering (SSR) for SEO and initial page loads with a Single Page Application (SPA) for authenticated users:
+
+1. **SSR Pages (Astro)**: All public-facing pages are rendered server-side for optimal SEO:
+   - Home page (`/`)
+   - City pages (`/restaurants/[city]`)
+   - Restaurant pages (`/restaurants/[city]/[restaurant]`)
+   - Menu item pages (`/restaurants/[city]/[restaurant]/menu/[item]`)
+   - Category pages (`/restaurants/[city]/categories/[category]`)
+   - Ingredient pages (`/ingredients/[ingredient]` and `/restaurants/[city]/[restaurant]/ingredients/[ingredient]`)
+   - Blog pages (`/blog/*`)
+
+2. **SPA Routes (React Router)**: Authenticated users see a client-side React application:
+   - User management (`/users`)
+   - Order history (`/user-orders`, `/orders`)
+   - Cart and checkout (nested under restaurant routes)
+   - Admin features
+
+3. **Authentication-Based Rendering**:
+   - Unauthenticated users: See SSR content with full HTML, meta tags, and structured data
+   - Authenticated users: SSR content hidden, SPA mounted via `SSRAppWrapper`
+   - Client-side script checks authentication and toggles visibility
 
 **Component Structure:**
 ```
 src/
 ├── components/
-│   ├── App.jsx (Main application router)
-│   ├── restaurants/ (Restaurant management)
+│   ├── App.jsx (Main SPA router)
+│   ├── SSRAppWrapper.jsx (SSR-to-SPA bridge)
+│   ├── RedirectToNewUrl.jsx (Backward compatibility)
+│   ├── common/
+│   │   ├── Button.jsx (Reusable button component)
+│   │   ├── Pagination.jsx (Reusable pagination component)
+│   │   ├── BreadcrumbWrapper.jsx (SPA breadcrumb generator)
+│   │   ├── Link.astro (Reusable link component with variants)
+│   │   └── ResponsiveFlexRow.jsx (Responsive layout component)
+│   ├── restaurants/ (Restaurant management & browsing)
+│   │   ├── RestaurantsList.jsx
+│   │   ├── CategoryPage.jsx
+│   │   ├── menu/ (Menu components)
+│   │   └── Admin.jsx, ManageRestaurant.jsx, etc.
 │   ├── users/ (User-facing features)
+│   │   ├── nav/ (Navigation components)
+│   │   ├── cart/ (Cart components)
+│   │   ├── checkout/ (Checkout components)
+│   │   ├── orders/ (Order history)
+│   │   └── address/ (Address management)
 │   ├── drivers/ (Driver features)
+│   │   └── orders/DriverOrders.jsx
 │   └── webmaster/ (Admin features)
-├── pages/ (Astro pages)
+│       ├── Users.jsx
+│       └── Resume.jsx
+├── pages/ (Astro SSR pages)
+│   ├── index.astro (Home)
+│   ├── restaurants/[city].astro
+│   ├── restaurants/[city]/[restaurant].astro
+│   ├── restaurants/[city]/[restaurant]/menu/[item].astro
+│   ├── restaurants/[city]/categories/[category].astro
+│   ├── restaurants/[city]/[restaurant]/ingredients/[ingredient].astro
+│   ├── ingredients/[ingredient].astro
+│   ├── users.astro (SPA wrapper)
+│   ├── user-orders.astro (SPA wrapper)
+│   ├── orders.astro (SPA wrapper)
+│   └── blog/ (Blog pages)
+├── layouts/
+│   └── BlogPost.astro (Blog layout)
 └── styles/ (Global styles)
 ```
 
@@ -209,17 +264,18 @@ src/
 - LocalStorage for profile persistence
 - Session-based authentication state
 - Component-level state for UI interactions
+- Server-side state for SSR pages (fetched at build/render time)
 
 ### 3.2 Backend Architecture
 
 **Technology Stack:**
 - **Runtime**: Node.js
-- **Framework**: Express.js 4.21
-- **Database**: MySQL 3.11 (mysql2)
-- **Authentication**: Passport.js 0.7, Google OAuth 2.0
-- **Session**: express-session 1.18, express-mysql-session 3.0
-- **Validation**: Zod 3.24
-- **Security**: Helmet 8.1, csurf 1.11, express-rate-limit 7.4
+- **Framework**: Express.js 4.21.2
+- **Database**: MySQL 3.11.5 (mysql2)
+- **Authentication**: Passport.js 0.7.0, Google OAuth 2.0
+- **Session**: express-session 1.18.1, express-mysql-session 3.0.3
+- **Validation**: Zod 3.24.1
+- **Security**: Helmet 8.1.0, csurf 1.11.0, express-rate-limit 7.4.1
 
 **Route Structure:**
 ```
@@ -289,86 +345,139 @@ routes/
 
 ### 4.1 Role 0: Basic User
 
-**Permissions:**
-- ✅ View restaurants list
-- ✅ View restaurant menus
-- ✅ View menu items and ingredients
-- ✅ Add items to cart
-- ✅ View own cart
-- ✅ Place orders
-- ✅ View own order history
-- ✅ Manage own profile
-- ✅ Manage own delivery address
-- ✅ Search menu items
-- ❌ Manage restaurants
-- ❌ Manage menu items
-- ❌ View other users' orders
-- ❌ Change user roles
+<details>
+<summary><strong>Permissions</strong></summary>
 
-**API Access:**
-- All `/api/restaurants/*` GET endpoints
-- All `/api/menu/*` GET endpoints
-- `/api/cart` (GET, POST, DELETE)
-- `/api/checkout-data/*`
-- `/api/co` (POST)
-- `/api/user/orders` (GET)
-- `/api/user/address` (GET, POST, PUT)
-- `/api/user/details` (GET)
-- `/api/users/:id/selected_restaurant` (GET, PUT - own ID only)
+| Permission | Allowed |
+|------------|---------|
+| View restaurants list | ✅ |
+| View restaurant menus | ✅ |
+| View menu items and ingredients | ✅ |
+| Add items to cart | ✅ |
+| View own cart | ✅ |
+| Place orders | ✅ |
+| View own order history | ✅ |
+| Manage own profile | ✅ |
+| Manage own delivery address | ✅ |
+| Search menu items | ✅ |
+| Manage restaurants | ❌ |
+| Manage menu items | ❌ |
+| View other users' orders | ❌ |
+| Change user roles | ❌ |
+
+</details>
+
+<details>
+<summary><strong>API Access</strong></summary>
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/restaurants/:restaurant` | GET | Get restaurant details by ID |
+| `/api/restaurants/:latitude/:longitude` | GET | Get restaurants sorted by distance from coordinates |
+| `/api/restaurants2/:restaurantId/menu` | GET | Get menu items for a restaurant (public endpoint) |
+| `/api/restaurant-cities` | GET | Get list of all cities with restaurants (public) |
+| `/api/restaurants-by-city` | GET | Get restaurants filtered by city slug (public) |
+| `/api/public/restaurants/:id` | GET | Get restaurant by ID (public, for SSR) |
+| `/api/public/restaurants/:restaurantId/ingredients/:slug` | GET | Get menu items by ingredient at specific restaurant (public) |
+| `/api/public/restaurants-by-city-and-category` | GET | Get restaurants by city and category (public) |
+| `/api/public/categories` | GET | Get all unique restaurant categories (public) |
+| `/api/public/cities/:city_slug/categories` | GET | Get categories available in a specific city (public) |
+| `/api/public/ingredients/:slug` | GET | Get menu items using an ingredient globally (public) |
+| `/api/public/menu-items/:id` | GET | Get menu item by ID with restaurant context (public) |
+| `/api/public/menu-items-by-slug` | GET | Get menu item by slug and restaurant ID (public) |
+| `/api/public/menu-items/:id/ingredients` | GET | Get ingredients for a menu item (public) |
+| `/api/menu/item` | GET | Get menu item by ID (query param: `menuItem`) |
+| `/api/menu/item/search` | GET | Search menu items by name (query param: `menuItemName`) |
+| `/api/menu/item/ingredients` | GET | Get ingredients for a menu item (query param: `menuItem`) |
+| `/api/cart` | GET, POST, DELETE | Get, save, or clear shopping cart |
+| `/api/checkout-data/:selected_restaurant?` | GET | Get checkout data (cart, address, restaurant) - optional restaurant param |
+| `/api/co` | POST | Place order (checkout) - rate limited |
+| `/api/user/orders` | GET | Get authenticated user's order history (paginated) |
+| `/api/user/address` | GET, POST, PUT | Get, update, or clear delivery address |
+| `/api/user/details` | GET | Get authenticated user details |
+| `/api/users/:id/selected_restaurant` | GET, PUT | Get or update user's selected restaurant preference (own ID only) |
+
+</details>
 
 ### 4.2 Role 1: Driver
 
-**Permissions:**
-- ✅ All Basic User permissions
-- ✅ View all open orders
-- ✅ View order details
-- ✅ Mark orders as closed
-- ❌ Manage restaurants
-- ❌ Manage menu items
-- ❌ Manage users
+<details>
+<summary><strong>Permissions</strong></summary>
 
-**API Access:**
-- All Role 0 endpoints
-- `/api/orders` (GET - open orders only)
-- `/api/order_items` (GET)
-- `/api/changeOrderOpen` (POST)
+| Permission | Allowed |
+|------------|---------|
+| All Basic User permissions | ✅ |
+| View all open orders | ✅ |
+| View order details | ✅ |
+| Mark orders as closed | ✅ |
+| Manage restaurants | ❌ |
+| Manage menu items | ❌ |
+| Manage users | ❌ |
+
+</details>
+
+<details>
+<summary><strong>API Access</strong></summary>
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| All Role 0 endpoints | - | Inherits all Basic User API access |
+| `/api/orders` | GET | Get all open orders (paginated, driver view) |
+| `/api/order_items` | GET | Get order items for a specific order |
+| `/api/changeOrderOpen` | POST | Mark order as closed/completed |
+
+</details>
 
 ### 4.3 Role 2: Restaurant Owner/Admin
 
-**Permissions:**
-- ✅ All Driver permissions
-- ✅ Manage own restaurant profile
-- ✅ Create, update, delete menu items (own restaurant)
-- ✅ Manage ingredients (own restaurant)
-- ✅ Link ingredients to menu items (own restaurant)
-- ✅ View own restaurant menu items
-- ✅ Manage users (admin only)
-- ✅ Assign user roles (admin only)
-- ✅ Assign restaurant associations (admin only)
-- ❌ Manage other restaurants' menus (unless admin)
+<details>
+<summary><strong>Permissions</strong></summary>
 
-**API Access:**
-- All Role 1 endpoints
-- `/api/addRestaurant` (POST)
-- `/api/manageRestaurant` (POST)
-- `/api/getUserRestaurant` (GET)
-- `/api/add-menu-item` (POST)
-- `/api/update-menu-item/:id` (POST)
-- `/api/menu-items/:id` (DELETE)
-- `/api/menu-items` (POST - link ingredient)
-- `/api/menu-items-list` (GET)
-- `/api/menu-item-ingredients` (POST)
-- `/api/menu-item-ingredients/:ingredient_id` (DELETE)
-- `/api/menu-ingredients/:id` (PUT)
-- `/api/users` (GET - admin only)
-- `/api/users/:id/role` (PUT - admin only)
-- `/api/users/:id/restaurant` (PUT - admin only)
+| Permission | Allowed |
+|------------|---------|
+| All Driver permissions | ✅ |
+| Manage own restaurant profile | ✅ |
+| Create, update, delete menu items (own restaurant) | ✅ |
+| Manage ingredients (own restaurant) | ✅ |
+| Link ingredients to menu items (own restaurant) | ✅ |
+| View own restaurant menu items | ✅ |
+| Manage users (admin only) | ✅ |
+| Assign user roles (admin only) | ✅ |
+| Assign restaurant associations (admin only) | ✅ |
+| Manage other restaurants' menus (unless admin) | ❌ |
+
+</details>
+
+<details>
+<summary><strong>API Access</strong></summary>
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| All Role 1 endpoints | - | Inherits all Driver API access |
+| `/api/addRestaurant` | POST | Create new restaurant |
+| `/api/manageRestaurant` | POST | Create or update restaurant (for restaurant owners) |
+| `/api/getUserRestaurant` | GET | Get restaurant associated with current user |
+| `/api/add-menu-item` | POST | Create new menu item (own restaurant only) |
+| `/api/update-menu-item/:id` | POST | Update existing menu item (own restaurant only) |
+| `/api/menu-items/:id` | DELETE | Delete menu item (own restaurant only) |
+| `/api/menu-items` | POST | Link ingredient to menu item (own restaurant only) |
+| `/api/menu-items-list` | GET | Get all menu items for user's restaurant |
+| `/api/menu-item-ingredients` | POST | Create new ingredient (own restaurant only) |
+| `/api/menu-item-ingredients/:ingredient_id` | DELETE | Delete ingredient (own restaurant only) |
+| `/api/menu-ingredients/:id` | PUT | Update ingredient (own restaurant only) |
+| `/api/users` | GET | Get paginated list of users (admin only) |
+| `/api/users/:id/role` | PUT | Update user role (admin only) |
+| `/api/users/:id/restaurant` | PUT | Assign restaurant to user (admin only) |
+| `/api/users/:id/cart` | DELETE | Clear a specific user's cart (admin only) |
+
+</details>
 
 ---
 
 ## 5. Backend API Documentation
 
-### 5.1 Authentication Routes
+<details>
+<summary><strong>5.1 Authentication Routes</strong></summary>
 
 #### POST `/api/google-login`
 **Description:** Authenticate user with Google ID token  
@@ -432,7 +541,10 @@ routes/
 **Authentication:** Passport session  
 **Response:** `200 OK` or redirect to `/`
 
-### 5.2 User Management Routes
+</details>
+
+<details>
+<summary><strong>5.2 User Management Routes</strong></summary>
 
 #### GET `/api/users`
 **Description:** Get paginated list of users  
@@ -444,16 +556,24 @@ routes/
 
 **Response:** `200 OK`
 ```json
-[
-  {
-    "id": "string",
-    "name": "string",
-    "email": "string",
-    "role": 0,
-    "restaurant_id": 1,
-    "address": "string"
+{
+  "users": [
+    {
+      "id": "string",
+      "name": "string",
+      "email": "string",
+      "role": 0,
+      "restaurant_id": 1,
+      "address": "string"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 50,
+    "totalPages": 5
   }
-]
+}
 ```
 
 #### PUT `/api/users/:id/role`
@@ -544,7 +664,31 @@ routes/
 }
 ```
 
-### 5.3 User Address Routes
+#### DELETE `/api/users/:id/cart`
+**Description:** Clear a specific user's cart (admin only)  
+**Authentication:** Role 2 (Admin)  
+**Path Parameters:**
+- `id` (string) - User ID whose cart should be cleared
+
+**Response:** `200 OK`
+```json
+{
+  "message": "Cart cleared successfully",
+  "removed": 3
+}
+```
+
+**Response:** `404 Not Found` - User not found
+```json
+{
+  "error": "User not found"
+}
+```
+
+</details>
+
+<details>
+<summary><strong>5.3 User Address Routes</strong></summary>
 
 #### GET `/api/user/address`
 **Description:** Get user's delivery address  
@@ -614,7 +758,10 @@ routes/
 }
 ```
 
-### 5.4 Restaurant Routes
+</details>
+
+<details>
+<summary><strong>5.4 Restaurant Routes</strong></summary>
 
 #### GET `/api/restaurants/:latitude/:longitude`
 **Description:** Get restaurants sorted by distance from location  
@@ -725,7 +872,10 @@ routes/
 }
 ```
 
-### 5.5 Menu Item Routes
+</details>
+
+<details>
+<summary><strong>5.5 Menu Item Routes</strong></summary>
 
 #### GET `/api/menu/item`
 **Description:** Get menu item by ID  
@@ -939,7 +1089,10 @@ routes/
 }
 ```
 
-### 5.7 Cart Routes
+</details>
+
+<details>
+<summary><strong>5.7 Cart Routes</strong></summary>
 
 #### GET `/api/cart`
 **Description:** Get user's shopping cart  
@@ -1010,7 +1163,10 @@ routes/
 }
 ```
 
-### 5.8 Checkout Routes
+</details>
+
+<details>
+<summary><strong>5.8 Checkout Routes</strong></summary>
 
 #### GET `/api/checkout-data/:selected_restaurant?`
 **Description:** Get checkout data (cart, address, restaurant)  
@@ -1088,36 +1244,44 @@ routes/
 
 **Response:** `200 OK`
 ```json
-[
-  {
-    "id": 1,
-    "user_id": "string",
-    "address": "string",
-    "instructions": "string",
-    "business_type": "Home",
-    "knock_type": "Knock on door",
-    "item_count": 3,
-    "restaurant": "string",
-    "restaurant_address": "string",
-    "delivery_fee": "10.50",
-    "subtotal": "25.99",
-    "distance": 2.5,
-    "tax": "3.28",
-    "total": "39.77",
-    "date": "2024-01-01T12:00:00Z",
-    "open": 0
+{
+  "orders": [
+    {
+      "id": 1,
+      "user_id": "string",
+      "address": "string",
+      "instructions": "string",
+      "business_type": "Home",
+      "knock_type": "Knock on door",
+      "item_count": 3,
+      "restaurant": "string",
+      "restaurant_address": "string",
+      "delivery_fee": "10.50",
+      "subtotal": "25.99",
+      "distance": 2.5,
+      "tax": "3.28",
+      "total": "39.77",
+      "date": "2024-01-01T12:00:00Z",
+      "open": 0
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "totalPages": 3
   }
-]
+}
 ```
 
 #### GET `/api/user/orders`
-**Description:** Get user's order history  
+**Description:** Get user's order history with pagination  
 **Authentication:** Role 0+  
 **Query Parameters:**
 - `page` (number, default: 1)
 - `limit` (number, default: 10)
 
-**Response:** `200 OK` - Same format as `/api/orders`
+**Response:** `200 OK` - Same format as `/api/orders` with orders array and pagination metadata
 
 #### GET `/api/order_items`
 **Description:** Get items for an order  
@@ -1156,7 +1320,12 @@ routes/
 }
 ```
 
-### 5.10 Public Routes
+</details>
+
+<details>
+<summary><strong>5.10 Public Routes</strong></summary>
+
+All public routes require no authentication and are accessible to unauthenticated users. These endpoints are primarily used for SSR pages and SEO.
 
 #### GET `/api/health`
 **Description:** Health check endpoint  
@@ -1168,38 +1337,250 @@ routes/
 }
 ```
 
+#### GET `/api/restaurant-cities`
+**Description:** Get list of all cities with restaurants (for SSR city listing)  
+**Authentication:** None  
+**Response:** `200 OK`
+```json
+[
+  {
+    "city_name": "Riverside",
+    "city_slug": "riverside-ca"
+  }
+]
+```
+
+#### GET `/api/restaurants-by-city`
+**Description:** Get restaurants by city slug  
+**Authentication:** None  
+**Query Parameters:**
+- `city_slug` (string, required)
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "name": "string",
+    "address": "string",
+    "latitude": 33.9519,
+    "longitude": -117.3962,
+    "category": "string",
+    "city_name": "string",
+    "city_slug": "string"
+  }
+]
+```
+
+#### GET `/api/public/restaurants/:id`
+**Description:** Get restaurant by ID (public, for SSR)  
+**Authentication:** None  
+**Path Parameters:**
+- `id` (number) - Restaurant ID
+
+**Response:** `200 OK`
+```json
+{
+  "id": 1,
+  "name": "string",
+  "category": "string",
+  "address": "string",
+  "latitude": 33.9519,
+  "longitude": -117.3962,
+  "city_name": "string",
+  "city_slug": "string"
+}
+```
+
+#### GET `/api/restaurants2/:restaurantId/menu`
+**Description:** Get restaurant menu items (public, for SSR)  
+**Authentication:** None  
+**Path Parameters:**
+- `restaurantId` (number)
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "restaurant_id": 1,
+    "name": "string",
+    "price": 10.99,
+    "category": "string",
+    "sort": 1
+  }
+]
+```
+
+#### GET `/api/public/menu-items/:id`
+**Description:** Get menu item by ID with restaurant context (public, for SSR)  
+**Authentication:** None  
+**Path Parameters:**
+- `id` (number) - Menu item ID
+
+**Response:** `200 OK`
+```json
+{
+  "id": 1,
+  "name": "string",
+  "price": 10.99,
+  "restaurant_id": 1,
+  "restaurant_name": "string",
+  "city_name": "string",
+  "city_slug": "string"
+}
+```
+
+#### GET `/api/public/menu-items-by-slug`
+**Description:** Get menu item by slug and restaurant ID (public, for SSR)  
+**Authentication:** None  
+**Query Parameters:**
+- `restaurant_id` (number, required)
+- `slug` (string, required) - Format: "name-id"
+
+**Response:** `200 OK` - Same format as `/api/public/menu-items/:id`
+
+#### GET `/api/public/menu-items/:id/ingredients`
+**Description:** Get ingredients for a menu item (public, for SSR)  
+**Authentication:** None  
+**Path Parameters:**
+- `id` (number) - Menu item ID
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "ingredients_name": "string",
+    "sort_order": 1
+  }
+]
+```
+
+#### GET `/api/public/ingredients/:slug`
+**Description:** Get menu items using an ingredient globally (all restaurants, for SSR)  
+**Authentication:** None  
+**Path Parameters:**
+- `slug` (string) - Ingredient slug (e.g., "cheese", "beef")
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "name": "string",
+    "price": 10.99,
+    "category": "string",
+    "restaurant_id": 1,
+    "restaurant_name": "string",
+    "city_name": "string",
+    "city_slug": "string",
+    "ingredients_name": "string",
+    "ingredient_id": 1
+  }
+]
+```
+
+#### GET `/api/public/restaurants/:restaurantId/ingredients/:slug`
+**Description:** Get menu items using an ingredient at a specific restaurant (for SSR)  
+**Authentication:** None  
+**Path Parameters:**
+- `restaurantId` (number)
+- `slug` (string) - Ingredient slug
+
+**Response:** `200 OK` - Same format as `/api/public/ingredients/:slug`
+
+#### GET `/api/public/restaurants-by-city-and-category`
+**Description:** Get restaurants by city and category (for SSR category pages)  
+**Authentication:** None  
+**Query Parameters:**
+- `city_slug` (string, required)
+- `category` (string, required)
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "name": "string",
+    "address": "string",
+    "category": "string",
+    "city_slug": "string"
+  }
+]
+```
+
+#### GET `/api/public/categories`
+**Description:** Get all unique restaurant categories (for SSR)  
+**Authentication:** None  
+**Response:** `200 OK`
+```json
+["Pizza", "Mexican", "Italian", ...]
+```
+
+#### GET `/api/public/cities/:city_slug/categories`
+**Description:** Get categories available in a specific city (for SSR)  
+**Authentication:** None  
+**Path Parameters:**
+- `city_slug` (string)
+
+**Response:** `200 OK`
+```json
+["Pizza", "Mexican", ...]
+```
+
+</details>
+
 ---
 
 ## 6. Frontend Features and Components
 
 ### 6.1 User Interface Components
 
-#### App.jsx (Main Router)
+#### App.jsx (Main SPA Router)
 **Location:** `src/components/App.jsx`  
-**Purpose:** Main application component with React Router setup  
+**Purpose:** Main SPA application component with React Router setup (mounted only for authenticated users)  
 **Features:**
-- Route definitions for all pages
+- Route definitions for all SPA pages
 - Global state management (cart, profile, address)
 - Axios interceptors for authentication
 - Cart amount calculation
 - Profile loading from localStorage
 - Cart synchronization with backend
+- Deep link handling for legacy routes
+- Route synchronization with browser URL
 
-**Routes:**
-- `/` - RestaurantsList
-- `/:restaurant/menu` - Menu
-- `/:restaurant/menu/item` - MenuItem
-- `/:restaurant/cart` - Cart
-- `/:restaurant/checkout` - CheckoutForm
-- `/user-orders` - UserOrders
-- `/orders` - DriverOrders
+**SPA Routes:**
+- `/` - RestaurantsList (SPA version)
+- `/restaurants/:city/:restaurant` - Menu
+- `/restaurants/:city/:restaurant/menu/:item` - MenuItem (slug-based)
+- `/restaurants/:city/:restaurant/menu/item` - MenuItem (backward compatibility, redirects)
+- `/restaurants/:city/:restaurant/cart` - Cart
+- `/restaurants/:city/:restaurant/checkout` - CheckoutForm
+- `/restaurants/:city/categories/:category` - Category page
+- `/user-orders` - UserOrders (with pagination)
+- `/orders` - DriverOrders (with pagination)
 - `/admin` - Admin
-- `/users` - Users (admin)
+- `/users` - Users (admin, with pagination)
 - `/success` - Success
 - `/failure` - Failure
 - `/donate` - Donate
-- `/srs` - SRS
 - `/taxi` - TaxiFareCalculator
+- `/:restaurant/menu` - RedirectToNewUrl (backward compatibility)
+- `/:restaurant/menu/item` - RedirectToNewUrl (backward compatibility)
+- `/:restaurant/cart` - RedirectToNewUrl (backward compatibility)
+- `/:restaurant/checkout` - RedirectToNewUrl (backward compatibility)
+
+**SSR Pages (Astro file-based routing):**
+- `/` - Home page (index.astro)
+- `/restaurants/[city]` - City page
+- `/restaurants/[city]/[restaurant]` - Restaurant menu page
+- `/restaurants/[city]/[restaurant]/menu/[item]` - Menu item page
+- `/restaurants/[city]/categories/[category]` - Category page
+- `/restaurants/[city]/[restaurant]/ingredients/[ingredient]` - Restaurant ingredient page (SSR only)
+- `/ingredients/[ingredient]` - Global ingredient page
+- `/blog/*` - Blog pages (including `/blog/software-requirements` for this SRS document)
+- `/users.astro`, `/user-orders.astro`, `/orders.astro` - SPA wrapper pages for direct navigation
 
 #### Navbar Component
 **Location:** `src/components/users/nav/Navbar.jsx`  
@@ -1209,6 +1590,9 @@ routes/
 - Cart badge with item count
 - Address display and management
 - Navigation links
+- BreadcrumbWrapper integration (SPA breadcrumbs)
+
+**Note:** SSR pages use `SSRNavbar.jsx` for server-side rendering, while SPA uses `Navbar.jsx`.
 
 #### BottomNavbar Component
 **Location:** `src/components/users/nav/BottomNavbar.jsx`  
@@ -1217,7 +1601,88 @@ routes/
 - Quick access to main features
 - Role-based menu items
 
-### 6.2 Restaurant Management Interface
+### 6.2 Reusable UI Components
+
+#### Button Component
+**Location:** `src/components/common/Button.jsx`  
+**Purpose:** Standardized button component used across all SPA pages  
+**Props:**
+- `variant`: "primary" | "secondary" | "danger" | "success"
+- `size`: "sm" | "md" | "lg"
+- `fullWidth`: boolean
+- `responsiveFullWidth`: boolean (full width on mobile)
+- `iconOnly`: boolean
+- `loading`: boolean
+- `disabled`: boolean
+- `align`: "left" | "center" | "right"
+- `type`: HTML button type
+
+**Features:**
+- Consistent styling across application
+- Icon support with proper alignment
+- Loading states
+- Responsive behavior
+- Accessibility support
+
+#### Pagination Component
+**Location:** `src/components/common/Pagination.jsx`  
+**Purpose:** Reusable pagination component for data tables  
+**Props:**
+- `currentPage`: number
+- `onPageChange`: function
+- `totalPages`: number
+- `total`: number (total items)
+- `itemName`: string (e.g., "users", "orders")
+- `maxVisiblePages`: number (default: 10)
+- `loading`: boolean
+
+**Features:**
+- Displays up to 10 page numbers with ellipsis
+- Shows total count and current range
+- Loading state support
+- Used in Users, UserOrders, and DriverOrders pages
+
+#### BreadcrumbWrapper Component
+**Location:** `src/components/common/BreadcrumbWrapper.jsx`  
+**Purpose:** Generates breadcrumbs for SPA routes based on current URL  
+**Features:**
+- Dynamic breadcrumb generation from React Router location
+- Fetches restaurant/city data from API
+- Generates JSON-LD structured data for SEO
+- Matches SSR breadcrumb structure exactly
+- Handles nested routes (restaurant → menu item, category, ingredient)
+
+#### Link Component
+**Location:** `src/components/common/Link.astro`  
+**Purpose:** Reusable Astro link component with standardized styling variants  
+**Props:**
+- `variant`: "heading" | "ingredient-tag" | "category" | etc. (8 variants)
+- `href`: string
+- Standard HTML anchor attributes
+
+**Features:**
+- Consistent link styling across SSR pages
+- Preserves different visual styles via variants
+- Used for category links, ingredient badges, navigation
+
+#### ResponsiveFlexRow Component
+**Location:** `src/components/common/ResponsiveFlexRow.jsx`  
+**Purpose:** Responsive flex layout component with gradient variants  
+**Props:**
+- `variant`: "city" | "restaurant" | "menu" | "ingredient" | "nested"
+- `margin`: string (Tailwind margin classes)
+- `align`: "start" | "center" | "end" | "stretch"
+- `justify`: "start" | "center" | "end" | "between"
+- `borderTop`: boolean
+- `card`: boolean
+
+**Features:**
+- Gradient backgrounds per variant
+- Responsive flex behavior
+- Consistent spacing and alignment
+- Used for restaurant cards, menu items, headers
+
+### 6.3 Restaurant Management Interface
 
 #### RestaurantsList Component
 **Location:** `src/components/restaurants/RestaurantsList.jsx`  
@@ -1283,16 +1748,17 @@ routes/
 - Error messages
 - Navigation back to home
 
-### 6.4 Order Management
+### 6.5 Order Management
 
 #### UserOrders Component
 **Location:** `src/components/users/orders/UserOrders.jsx`  
 **Features:**
 - Display user's order history
-- Pagination
-- Order details
+- Server-side pagination (via reusable Pagination component)
+- Order details with itemized breakdown
 - Order items display
 - Date formatting
+- Handles direct navigation/refresh via SSR wrapper page
 
 #### DriverOrders Component
 **Location:** `src/components/drivers/orders/DriverOrders.jsx`  
@@ -1301,7 +1767,8 @@ routes/
 - Order details (address, instructions, delivery type)
 - Order items table
 - Mark order as closed
-- Pagination
+- Server-side pagination (via reusable Pagination component)
+- Handles direct navigation/refresh via SSR wrapper page
 
 ### 6.5 User Profile Management
 
@@ -1322,7 +1789,7 @@ routes/
 - Place selection
 - Address parsing
 
-### 6.6 Restaurant Administration
+### 6.7 Restaurant Administration
 
 #### Admin Component
 **Location:** `src/components/restaurants/Admin.jsx`  
@@ -1376,17 +1843,72 @@ routes/
 #### Users Component
 **Location:** `src/components/webmaster/Users.jsx`  
 **Features:**
-- User list with pagination
-- User search
+- User list with server-side pagination (via reusable Pagination component)
+- User search and filtering
 - Role assignment (slider: 0-2)
-- Restaurant assignment
+- Restaurant assignment with debounced API calls
+- Clear user cart functionality (admin-only)
 - User management interface
+- Handles direct navigation/refresh via SSR wrapper page
 
-#### SRS Component
-**Location:** `src/components/webmaster/SRS.jsx`  
-**Features:**
-- Display Software Requirements Specification
-- Documentation viewer
+### 6.9 SEO and SSR Features
+
+#### SSR Page Structure
+All public-facing pages are server-rendered using Astro for optimal SEO:
+
+**Key Features:**
+- Full HTML rendered on server with meta tags
+- Structured data (JSON-LD) for restaurants, breadcrumbs, products
+- Canonical URLs
+- Open Graph and Twitter Card meta tags
+- Breadcrumb navigation with structured data
+- Semantic HTML structure
+
+**SSR Pages:**
+- Home page with city listings
+- City pages with restaurant listings
+- Restaurant menu pages
+- Menu item detail pages
+- Category pages
+- Global and restaurant-specific ingredient pages
+- Blog posts
+
+#### Breadcrumb System
+**SSR Breadcrumbs:**
+- Component: `src/components/Breadcrumb.astro`
+- Generates JSON-LD structured data
+- Used in all SSR pages
+- Consistent styling and structure
+
+**SPA Breadcrumbs:**
+- Component: `src/components/common/BreadcrumbWrapper.jsx`
+- Dynamically generates from React Router location
+- Matches SSR breadcrumb HTML structure exactly
+- Generates JSON-LD structured data client-side
+- Handles nested routes automatically
+
+#### SEO Optimizations
+**Meta Tags:**
+- Keyword-rich titles with location and action words
+- Compelling meta descriptions (150-160 characters)
+- Consistent title format: `[Content] in [Location], CA | Order Online | RivCoDelivery`
+
+**Structured Data:**
+- Restaurant schema (name, address, cuisine, geo coordinates)
+- BreadcrumbList schema
+- Product schema for menu items
+- CollectionPage schema for category/ingredient pages
+
+**URL Structure:**
+- SEO-friendly slugs: `/restaurants/riverside-ca/1-domino-s`
+- Hierarchical structure: city → restaurant → menu item
+- Category and ingredient pages with descriptive URLs
+
+**Performance:**
+- Server-side rendering for fast initial load
+- Optimized images and fonts
+- Minimal JavaScript for SSR pages
+- Progressive enhancement (SPA mounts only for authenticated users)
 
 ---
 
@@ -2229,48 +2751,75 @@ await pool.execute(
 
 ---
 
-## Appendix B: Component Summary
+<details>
+<summary><strong>Appendix B: Component Summary</strong></summary>
 
-### User Components (15)
-- App.jsx (Main router)
-- Navbar.jsx
-- BottomNavbar.jsx
-- RestaurantsList.jsx
-- Menu.jsx
-- MenuItem.jsx
-- Cart.jsx
-- CheckoutForm.jsx
-- OrderReview.jsx
-- Success.jsx
-- Failure.jsx
-- UserOrders.jsx
-- DeliveryAddress.jsx
-- PlaceAutocomplete.jsx
-- TaxiFareCalculator.jsx
+### Core Application Components (2)
+- **App.jsx** - Main SPA router with React Router setup, global state management, authentication handling
+- **SSRAppWrapper.jsx** - Wrapper component that mounts SPA for authenticated users on SSR pages
+
+### Navigation & Layout Components (6)
+- **Navbar.jsx** - Main navigation bar with authentication, cart badge, address management
+- **BottomNavbar.jsx** - Bottom navigation bar with role-based menu items
+- **SSRNavbar.jsx** - SSR-specific navbar component
+- **BreadcrumbWrapper.jsx** - Dynamic breadcrumb generator for SPA routes (in `common/`)
+- **Logo.jsx** - Application logo component
+- **RedirectToNewUrl.jsx** - Handles backward compatibility redirects for legacy routes
+
+### User-Facing Components (14)
+- **RestaurantsList.jsx** - Displays list of restaurants with filtering
+- **CategoryPage.jsx** - Displays restaurants by category
+- **Menu.jsx** - Restaurant menu display
+- **MenuItem.jsx** - Individual menu item display and customization
+- **Cart.jsx** - Shopping cart management
+- **CheckoutForm.jsx** - Order checkout form
+- **OrderReview.jsx** - Order review before submission
+- **Success.jsx** - Order success confirmation page
+- **Failure.jsx** - Order failure/error page
+- **UserOrders.jsx** - User order history with pagination
+- **DeliveryAddress.jsx** - Delivery address management
+- **PlaceAutocomplete.jsx** - Google Places autocomplete for addresses
+- **TaxiFareCalculator.jsx** - Taxi fare calculation tool
+- **Welcome.jsx** - Welcome screen for new users
 
 ### Restaurant Admin Components (10)
-- Admin.jsx
-- ManageRestaurant.jsx
-- MenuUpdate.jsx
-- NewMenuItem.jsx
-- EditItem.jsx
-- MenuItemWithIngredients.jsx
-- NewIngredient.jsx
-- EditIngredient.jsx
-- Ingredient.jsx
-- AdminDropdown.jsx
+- **Admin.jsx** - Main admin dashboard
+- **ManageRestaurant.jsx** - Restaurant profile management
+- **MenuUpdate.jsx** - Menu item list and management interface
+- **NewMenuItem.jsx** - Create new menu item form
+- **EditItem.jsx** - Edit existing menu item form
+- **MenuItemWithIngredients.jsx** - Menu item display with ingredient management
+- **NewIngredient.jsx** - Create new ingredient form
+- **EditIngredient.jsx** - Edit ingredient form
+- **Ingredient.jsx** - Ingredient display component
+- **AdminDropdown.jsx** - Admin action dropdown menu
 
-### Webmaster Components (3)
-- Users.jsx
-- SRS.jsx
-- Resume.jsx
+### Driver Components (1)
+- **DriverOrders.jsx** - Driver order management with pagination
 
-### Shared Components (3)
-- Spinner.jsx
-- QuantitySelector.jsx
-- Badge.jsx
+### Webmaster/Admin Components (2)
+- **Users.jsx** - User management interface with pagination and role assignment
+- **Resume.jsx** - Resume/portfolio display component
 
-**Total: 31 React components**
+### Reusable UI Components (6)
+- **Button.jsx** (in `common/`) - Standardized button component with variants
+- **Pagination.jsx** (in `common/`) - Reusable pagination component
+- **ResponsiveFlexRow.jsx** (in `common/`) - Responsive flex layout with gradient variants
+- **Spinner.jsx** - Loading spinner component
+- **QuantitySelector.jsx** - Quantity selection component
+- **Badge.jsx** - Badge component for tags/labels
+
+### SSR-Specific Components (2)
+- **SSRGoogleSignIn.jsx** - Google sign-in button for SSR pages
+- **CityFilter.jsx** - City filtering component
+
+### Utility Components (2)
+- **OrderButtonWithAuth.jsx** - Order button with authentication check
+- **Donate.jsx** - Donation component
+
+**Total: 45 React components** (excluding Astro components like `Link.astro`, `BaseHead.astro`, `Header.astro`, `Footer.astro`, `Breadcrumb.astro`)
+
+</details>
 
 ---
 
@@ -2283,3 +2832,4 @@ await pool.execute(
 ---
 
 **End of Document**
+
