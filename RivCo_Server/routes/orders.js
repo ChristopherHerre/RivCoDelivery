@@ -35,11 +35,45 @@ function ordersRoutes(app, pool, checkRole) {
         const { page, limit } = parseResult.data;
         const offset = (page - 1) * limit;
         try {
-            // ✅ FIXED: Values are validated as safe integers by Zod, so template literal is safe
-            // MySQL doesn't support LIMIT/OFFSET as parameters in prepared statements
-            const query = `SELECT * FROM orders WHERE open = '0' ORDER BY date DESC LIMIT ${limit} OFFSET ${offset}`;
-            const [results] = await pool.execute(query);
-            res.json(results);
+            // Get total count and results in parallel
+            const countQuery = `SELECT COUNT(*) as total FROM orders WHERE open = '0'`;
+            const selectQuery = `SELECT * FROM orders WHERE open = '0' ORDER BY date DESC LIMIT ${limit} OFFSET ${offset}`;
+            
+            const [countResult, selectResult] = await Promise.all([
+                pool.execute(countQuery),
+                pool.execute(selectQuery)
+            ]);
+            
+            // pool.execute returns [rows, fields]
+            // countResult[0] is the rows array from COUNT query
+            // countResult[0][0] is the first row: { total: number }
+            const countRows = countResult[0];
+            const results = selectResult[0];
+            const countRow = countRows && countRows.length > 0 ? countRows[0] : null;
+            
+            // Extract total - try multiple possible property names
+            const total = countRow?.total ?? countRow?.['COUNT(*)'] ?? 0;
+            const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
+            
+            console.log('Driver orders pagination:', { 
+                page, 
+                limit, 
+                total, 
+                totalPages, 
+                resultsCount: results.length,
+                countRow: countRow,
+                countResult: countResult[0]
+            });
+            
+            res.json({
+                orders: results,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages
+                }
+            });
         } catch (err) {
             console.error('Error fetching orders:', err);
             res.status(500).json({ error: 'Failed to fetch orders' });
@@ -83,11 +117,46 @@ function ordersRoutes(app, pool, checkRole) {
         const { page, limit } = parseResult.data;
         const offset = (page - 1) * limit;
         try {
-            // ✅ FIXED: Values are validated as safe integers by Zod, so template literal is safe
-            // MySQL doesn't support LIMIT/OFFSET as parameters in prepared statements
-            const query = `SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC LIMIT ${limit} OFFSET ${offset}`;
-            const [results] = await pool.execute(query, [req.session.user.sub]);
-            res.json(results);
+            // Get total count and results in parallel
+            const countQuery = `SELECT COUNT(*) as total FROM orders WHERE user_id = ?`;
+            const selectQuery = `SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC LIMIT ${limit} OFFSET ${offset}`;
+            
+            const [countResult, selectResult] = await Promise.all([
+                pool.execute(countQuery, [req.session.user.sub]),
+                pool.execute(selectQuery, [req.session.user.sub])
+            ]);
+            
+            // pool.execute returns [rows, fields]
+            // countResult[0] is the rows array from COUNT query
+            // countResult[0][0] is the first row: { total: number }
+            const countRows = countResult[0];
+            const results = selectResult[0];
+            const countRow = countRows && countRows.length > 0 ? countRows[0] : null;
+            
+            // Extract total - try multiple possible property names
+            const total = countRow?.total ?? countRow?.['COUNT(*)'] ?? 0;
+            const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
+            
+            console.log('User orders pagination:', { 
+                page, 
+                limit, 
+                total, 
+                totalPages, 
+                resultsCount: results.length,
+                countRow: countRow,
+                countResult: countResult[0],
+                userId: req.session.user.sub
+            });
+            
+            res.json({
+                orders: results,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages
+                }
+            });
         } catch (err) {
             console.error('Error fetching orders:', err);
             res.status(500).json({ error: 'Failed to fetch orders', message: err.message });

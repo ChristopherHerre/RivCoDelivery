@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
+import Button from '../common/Button';
 
 const AdminDropdown = (props) => {
     const full = props.full;
@@ -46,12 +47,10 @@ const AdminDropdown = (props) => {
         <div className="relative inline-block" ref={dropdownRef}>
             <div className="flex gap-2">
                 {profile ? (
-                    <button
-                        className={
-                            full
-                                ? "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors mt-1 w-full flex items-center justify-center gap-2"
-                                : "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors mt-1 flex items-center gap-2"
-                        }
+                    <Button
+                        variant="secondary"
+                        fullWidth={full}
+                        className={full ? "mt-1" : "mt-1"}
                         onClick={toggleDropdown}
                         aria-haspopup="true"
                         aria-expanded={isOpen}
@@ -59,19 +58,17 @@ const AdminDropdown = (props) => {
                         <i className="bi bi-briefcase"></i>
                         Admin
                         <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'} text-xs`}></i>
-                    </button>
+                    </Button>
                 ) : null}
                 <Link to="/donate">
-                    <button
-                        className={
-                            full
-                                ? "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors mt-1 mr-1 w-full flex items-center justify-center gap-2"
-                                : "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors mt-1 mr-1 flex items-center gap-2"
-                        }
+                    <Button
+                        variant="secondary"
+                        fullWidth={full}
+                        className={full ? "mt-1 mr-1" : "mt-1 mr-1"}
                     >
                         <i className="bi bi-credit-card-fill"></i>
                         Donate
-                    </button>
+                    </Button>
                 </Link>
             </div>
             {profile && isOpen && (

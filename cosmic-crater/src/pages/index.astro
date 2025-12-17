@@ -4,6 +4,8 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SSRAppWrapper from '../components/SSRAppWrapper.jsx';
+import ResponsiveFlexRow from '../components/common/ResponsiveFlexRow.jsx';
+import { SITE_TITLE } from '../consts';
 
 // Always show SSR initially - client will check auth and mount SPA if needed
 const showSpa = false;
@@ -21,14 +23,55 @@ if (!res.ok) {
 }
 
 cities = await res.json();
+
+// Organization structured data for homepage
+const organizationData = {
+	'@context': 'https://schema.org',
+	'@type': 'LocalBusiness',
+	'@id': Astro.url.origin,
+	name: SITE_TITLE,
+	description: 'Food delivery service in Riverside County, California',
+	url: Astro.url.origin,
+	address: {
+		'@type': 'PostalAddress',
+		addressRegion: 'CA',
+		addressCountry: 'US'
+	},
+	areaServed: {
+		'@type': 'State',
+		name: 'California'
+	},
+	sameAs: [
+		'https://www.linkedin.com/in/christopher-herre-04a59511a/',
+		'https://github.com/ChristopherHerre/RivCoDelivery'
+	]
+};
+
+// WebSite structured data
+const websiteData = {
+	'@context': 'https://schema.org',
+	'@type': 'WebSite',
+	name: SITE_TITLE,
+	url: Astro.url.origin,
+	potentialAction: {
+		'@type': 'SearchAction',
+		target: {
+			'@type': 'EntryPoint',
+			urlTemplate: `${Astro.url.origin}/restaurants/{search_term_string}`
+		},
+		'query-input': 'required name=search_term_string'
+	}
+};
 ---
 <!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead
-			title="Restaurants by city | RivCoDelivery"
-			description="Browse restaurants available on RivCoDelivery organized by city."
+			title={`Food Delivery in Riverside County, CA | Order Online | ${SITE_TITLE}`}
+			description={`Order food delivery from top restaurants in Riverside County, California. Fast delivery, easy online ordering. Browse menus by city and place your order today with ${SITE_TITLE}.`}
 		/>
+		<script type="application/ld+json" set:html={JSON.stringify(organizationData)} />
+		<script type="application/ld+json" set:html={JSON.stringify(websiteData)} />
 	</head>
 	<body>
 		<Header />
@@ -38,7 +81,7 @@ cities = await res.json();
 				<header class="mb-6">
 					<h1 class="text-3xl font-bold text-gray-900 mb-2">Restaurants by City</h1>
 					<p class="text-lg text-gray-700 mb-2">
-						Choose a city to see restaurants available for delivery with RivCoDelivery.
+						Choose a city to see restaurants available for delivery with {SITE_TITLE}.
 					</p>
 				</header>
 
@@ -48,18 +91,18 @@ cities = await res.json();
 					<div class="row flex flex-wrap -mx-3">
 						{cities.map((city) => (
 							<div class="w-full md:w-1/2 px-3 mb-3" key={city.city_slug}>
-								<article class="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full flex flex-col hover:shadow-md transition-shadow">
-									<div class="p-4 flex-1 flex flex-col">
+								<ResponsiveFlexRow card align="stretch" variant="city">
+									<div class="flex-1 flex flex-col">
 										<h2 class="text-lg font-semibold mb-2">
 											<a 
 												href={`/restaurants/${city.city_slug}`} 
 												class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
 											>
-												Restaurants in {city.city_name}
+												Restaurants in {city.city_name}, California
 											</a>
 										</h2>
 									</div>
-								</article>
+								</ResponsiveFlexRow>
 							</div>
 						))}
 					</div>

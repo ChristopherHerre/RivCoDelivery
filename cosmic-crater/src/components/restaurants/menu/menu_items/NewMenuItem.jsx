@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Spinner from '../../../users/Spinner';
 import { dbPost } from '../../Admin';
 import { getTooltip } from './ingredients/NewIngredient';
+import Button from '../../../common/Button';
 function NewMenuItem(props) {
     const setMenuItems = props.setMenuItems;
     const setLoading3 = props.setLoading3;
@@ -195,10 +196,10 @@ function NewMenuItem(props) {
                 </div>
             </div>
             <div className="w-full md:w-1/4 mb-4">
-                <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
-                    <i class="bi bi-plus-lg"> </i>
+                <Button type="submit" fullWidth loading={loading}>
+                    <i className="bi bi-plus-lg"> </i>
                     Add Menu Item
-                </button>
+                </Button>
             </div>
             <div className="w-full mt-2">
                 {loading ? <Spinner /> : ""}

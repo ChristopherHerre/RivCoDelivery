@@ -1,31 +1,58 @@
 ---
+import { generateBreadcrumbJsonLd } from '../utils/breadcrumbUtils';
+
 interface Props {
 	items: Array<{ label: string; href?: string }>;
+	/**
+	 * If true, generates and returns JSON-LD structured data for SEO
+	 * The JSON-LD script tag should be placed in the <head> section
+	 */
+	generateJsonLd?: boolean;
+	/**
+	 * Base URL for generating absolute URLs in JSON-LD
+	 * Defaults to Astro.url.origin
+	 */
+	baseUrl?: string;
 }
 
-const { items } = Astro.props;
+const { items, generateJsonLd = false, baseUrl = Astro.url.origin } = Astro.props;
+
+// Generate JSON-LD if requested
+const jsonLd = generateJsonLd && items && items.length > 0
+	? generateBreadcrumbJsonLd(items, baseUrl)
+	: null;
 ---
 
 {items && items.length > 0 && (
-	<nav class="mb-4 text-sm text-gray-600" aria-label="Breadcrumb">
-		{items.map((item, index) => {
-			const isLast = index === items.length - 1;
-			const isLink = item.href && !isLast;
-			
-			return (
-				<>
-					{isLink ? (
-						<a href={item.href} class="text-blue-600 hover:underline">
-							{item.label}
-						</a>
-					) : (
-						<span class={isLast ? "text-gray-900" : "text-gray-600"}>
-							{item.label}
-						</span>
-					)}
-					{!isLast && <span class="mx-2">/</span>}
-				</>
-			);
-		})}
+	<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+		<ol class="breadcrumb-list">
+			{items.map((item, index) => {
+				const isLast = index === items.length - 1;
+				const isLink = item.href && !isLast;
+				
+				return (
+					<li class="breadcrumb-item">
+						{isLink ? (
+							<a href={item.href} class="breadcrumb-link">
+								{item.label}
+							</a>
+						) : (
+							<span class="breadcrumb-current" aria-current="page">
+								{item.label}
+							</span>
+						)}
+						{!isLast && (
+							<svg class="breadcrumb-separator" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
+								<path fill-rule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0L10.94 8a.75.75 0 0 1 0 1.06l-3.66 3.78a.75.75 0 1 1-1.06-1.06L9.38 8.5 6.22 5.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+							</svg>
+						)}
+					</li>
+				);
+			})}
+		</ol>
 	</nav>
+)}
+
+{jsonLd && (
+	<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 )}

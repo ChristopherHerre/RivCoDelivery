@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import qs from 'qs';
 import ManageRestaurant from './ManageRestaurant';
@@ -9,7 +9,7 @@ export default function Admin(props) {
     const [loading, setLoading] = useState(false);
     const [loading2, setLoading2] = useState(false);
     return (
-        <div className="w-full p-3">
+        <div className="w-full">
             <h2 className="mb-4">Admin Panel</h2>
             <div className="mb-6">
                 <ManageRestaurant 

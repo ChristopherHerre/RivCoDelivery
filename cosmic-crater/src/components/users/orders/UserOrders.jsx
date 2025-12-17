@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../Spinner';
+import Button from '../../common/Button';
+import Pagination from '../../common/Pagination';
 
 function UserOrders() {
     const [userOrders, setUserOrders] = useState([]);
     const [orderItems, setOrderItems] = useState({});
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
     const profile = JSON.parse(localStorage.getItem('profile'));
     const googleId = profile ? profile.sub : null;
     const USDollar = new Intl.NumberFormat('en-US', {
@@ -29,9 +32,41 @@ function UserOrders() {
                         },
                         withCredentials: true
                     });
-                    console.log('User orders:', res.data);
-                    setUserOrders(res.data);
-                    res.data.forEach(order => {
+                    console.log('User orders response:', res.data);
+                    console.log('Response type:', Array.isArray(res.data) ? 'array' : 'object');
+                    console.log('Response keys:', Array.isArray(res.data) ? 'N/A' : Object.keys(res.data));
+                    
+                    // Handle both old format (array) and new format (object with orders and pagination)
+                    let ordersData;
+                    let paginationData;
+                    
+                    if (Array.isArray(res.data)) {
+                        // Old format - just an array of orders
+                        ordersData = res.data;
+                        paginationData = {
+                            page,
+                            limit: 10,
+                            total: ordersData.length,
+                            totalPages: Math.ceil(ordersData.length / 10) || 1
+                        };
+                    } else {
+                        // New format - object with orders and pagination
+                        ordersData = res.data.orders || [];
+                        paginationData = res.data.pagination || {
+                            page,
+                            limit: 10,
+                            total: ordersData.length,
+                            totalPages: Math.ceil(ordersData.length / 10) || 1
+                        };
+                    }
+                    
+                    console.log('Parsed ordersData:', ordersData.length, 'orders');
+                    console.log('Parsed paginationData:', paginationData);
+                    
+                    setUserOrders(ordersData);
+                    setPagination(paginationData);
+                    
+                    ordersData.forEach(order => {
                         fetchOrderItems(order.id);
                     });
                 } catch (err) {
@@ -65,31 +100,6 @@ function UserOrders() {
         }
     };
 
-    function Pages() {
-        const handleNextPage = () => {
-            setPage(prevPage => prevPage + 1);
-        };
-    
-        const handlePreviousPage = () => {
-            setPage(prevPage => Math.max(prevPage - 1, 1));
-        };
-        return (
-            <div className="flex items-center justify-center gap-4 my-4">
-                <button 
-                        className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={handlePreviousPage} 
-                        disabled={page === 1}>
-                    Previous
-                </button>
-                <b>Page {page}</b>
-                <button 
-                        className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
-                        onClick={handleNextPage}>
-                    Next
-                </button>
-            </div>
-        );
-    }
     return (
         <div>
             <h1>Your Orders</h1>
@@ -97,7 +107,14 @@ function UserOrders() {
                 <Spinner />
             ) : (
                 <>
-                    {userOrders.length > 0 ? <Pages /> : ""}
+                    <Pagination
+                        currentPage={page}
+                        onPageChange={setPage}
+                        totalPages={pagination?.totalPages ?? 1}
+                        total={pagination?.total ?? 0}
+                        itemName="orders"
+                        loading={loading}
+                    />
                     {userOrders.length > 0 ? (
                         userOrders.map(order => (
                             <div key={order.id} className="flex flex-wrap mb-4">
@@ -220,7 +237,14 @@ function UserOrders() {
                     ) : (
                         <p>No orders found.</p>
                     )}
-                    {userOrders.length > 0 ? <Pages /> : ""}
+                    <Pagination
+                        currentPage={page}
+                        onPageChange={setPage}
+                        totalPages={pagination?.totalPages ?? 1}
+                        total={pagination?.total ?? 0}
+                        itemName="orders"
+                        loading={loading}
+                    />
                 </>
             )}
         </div>

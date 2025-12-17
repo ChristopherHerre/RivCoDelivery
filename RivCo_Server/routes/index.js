@@ -13,8 +13,11 @@ function registerRoutes(app, pool, checkRole, orderLimiter, client, passport) {
     const restaurantRoutes = require('./restaurants');
     const publicRoutes = require('./public');
     const ordersRoutes = require('./orders');
+    const likeRoutes = require('./likes');
     
     // Register routes with /api prefix
+    // IMPORTANT: More specific routes (like /restaurants/:id/like-status) must be registered BEFORE
+    // less specific routes (like /restaurants/:restaurant) to ensure proper matching
     app.use('/api', menuIngredientRoutes(app, pool, checkRole));
     app.use('/api', menuItemRoutes(app, pool, checkRole));
     app.use('/api', cartRoutes(app, pool, checkRole));
@@ -22,6 +25,7 @@ function registerRoutes(app, pool, checkRole, orderLimiter, client, passport) {
     app.use('/api', authRoutes(app, pool, checkRole, orderLimiter, client, passport));
     app.use('/api', userAddressRoutes(app, pool, checkRole));
     app.use('/api', userRoutes(app, pool, checkRole));
+    app.use('/api', likeRoutes(app, pool, checkRole)); // Register before restaurantRoutes
     app.use('/api', restaurantRoutes(app, pool, checkRole));
     app.use('/api', publicRoutes(app, pool, checkRole));
     app.use('/api', ordersRoutes(app, pool, checkRole));

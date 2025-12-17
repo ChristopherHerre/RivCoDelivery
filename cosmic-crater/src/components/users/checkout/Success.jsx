@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Button from '../../common/Button';
 
 function Success() {
     const navigate = useNavigate();
@@ -21,11 +22,12 @@ function Success() {
                 <li>Your delivery driver will be notified shortly.</li>
                 <li>We may contact you if there are any issues with your order.</li>
             </ol>
-            <button
+            <Button
                 onClick={(e)=>homeButton(e)} 
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mt-2">
-                    Return to Restaurants list
-            </button>
+                className="mt-2"
+            >
+                Return to Restaurants list
+            </Button>
         </div>
     );
 }

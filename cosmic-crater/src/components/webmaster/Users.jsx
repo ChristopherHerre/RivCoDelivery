@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MAX_RETRY_ATTEMPTS } from '../App';
 import Spinner from '../users/Spinner';
+import Button from '../common/Button';
+import Pagination from '../common/Pagination';
 import axios from 'axios';
 
 function Users() {
@@ -9,6 +11,7 @@ function Users() {
     const [loading, setLoading] = useState(false);
     const [query, setQuery] = useState(""); // Add state for search query
     const [restaurantNames, setRestaurantNames] = useState({}); // Add this state
+    const [pagination, setPagination] = useState({ page: 1, limit: 6, total: 0, totalPages: 1 });
 
     useEffect(() => {
         const fetchUsers = async (attempt = 1) => {
@@ -18,23 +21,69 @@ function Users() {
                     params: { page, limit: 6, query }, // Include query in API request params
                     withCredentials: true
                 });
-                console.log('Users:', res.data);
-                setUsers(res.data);
+                console.log('Users response:', res.data);
+                console.log('Response type:', Array.isArray(res.data) ? 'array' : 'object');
+                console.log('Response keys:', Array.isArray(res.data) ? 'N/A' : Object.keys(res.data));
+                
+                // Handle both old format (array) and new format (object with users and pagination)
+                let usersData;
+                let paginationData;
+                
+                if (Array.isArray(res.data)) {
+                    // Old format - just an array of users
+                    usersData = res.data;
+                    paginationData = { 
+                        page, 
+                        limit: 6, 
+                        total: usersData.length, 
+                        totalPages: Math.ceil(usersData.length / 6) || 1 
+                    };
+                } else {
+                    // New format - object with users and pagination
+                    usersData = res.data.users || [];
+                    paginationData = res.data.pagination || { 
+                        page, 
+                        limit: 6, 
+                        total: usersData.length, 
+                        totalPages: Math.ceil(usersData.length / 6) || 1 
+                    };
+                }
+                
+                console.log('Parsed usersData:', usersData.length, 'users');
+                console.log('Parsed paginationData:', paginationData);
+                
+                // Ensure pagination has valid values
+                if (!paginationData.totalPages || paginationData.totalPages === 0) {
+                    const calculatedTotal = paginationData.total || usersData.length;
+                    const calculatedLimit = paginationData.limit || 6;
+                    paginationData.totalPages = Math.max(1, Math.ceil(calculatedTotal / calculatedLimit));
+                    console.log('Recalculated totalPages:', paginationData.totalPages, 'from total:', calculatedTotal, 'limit:', calculatedLimit);
+                }
+                
+                // Ensure total is set
+                if (!paginationData.total && usersData.length > 0) {
+                    paginationData.total = usersData.length;
+                }
+                
+                console.log('Final pagination data being set:', paginationData);
+                
+                setUsers(usersData);
+                setPagination(paginationData);
                 
                 // Fetch restaurant names for users with restaurant_id
-                const restaurantIds = [...new Set(res.data
+                const restaurantIds = [...new Set(usersData
                     .filter(user => user.restaurant_id)
-                    .map(user => user.restaurant_id)
+                    .map(user => Number(user.restaurant_id)) // Ensure it's a number
                 )];
                 
                 // Fetch restaurant names
                 const restaurantPromises = restaurantIds.map(async (id) => {
                     try {
                         const restaurantRes = await axios.get(`/api/public/restaurants/${id}`);
-                        return { id, name: restaurantRes.data.name };
+                        return { id: Number(id), name: restaurantRes.data.name };
                     } catch (err) {
                         console.error(`Error fetching restaurant ${id}:`, err);
-                        return { id, name: 'Unknown' };
+                        return { id: Number(id), name: 'Unknown' };
                     }
                 });
                 
@@ -57,36 +106,90 @@ function Users() {
         fetchUsers();
     }, [page, query]); // Add query to dependency array
 
-    function Pages() {
-        return (
-            <div className="flex items-center justify-center gap-4 my-4">
-                <button
-                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => setPage(prevPage => Math.max(prevPage - 1, 1))}
-                    disabled={page === 1}>
-                    Previous
-                </button>
-                <b>Page {page}</b>
-                <button
-                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
-                    onClick={() => setPage(prevPage => prevPage + 1)}>
-                    Next
-                </button>
-            </div>
-        );
-    }
-    // Remove unused state variable [value, setValue] if it's not needed elsewhere
-    // const [value, setValue] = useState(1); // This seems unused in the provided context
+
+    const handleClearCart = async (userId) => {
+        if (!window.confirm(`Are you sure you want to clear the cart for user ${userId}?`)) {
+            return;
+        }
+        
+        try {
+            const response = await axios.delete(`/api/users/${userId}/cart`, {
+                withCredentials: true
+            });
+            console.log('Cart cleared:', response.data);
+            alert(`Cart cleared successfully. Removed ${response.data.removed || 0} items.`);
+        } catch (err) {
+            console.error('Error clearing cart:', err);
+            alert(`Error clearing cart: ${err.response?.data?.error || err.message}`);
+        }
+    };
 
     const handleRestaurantIdChange = async (event, userId) => {
-        // ...existing code...
-        const newValue = event.target.value;
+        const inputValue = event.target.value.trim();
+        const newValue = inputValue === '' ? null : (inputValue ? Number(inputValue) : null);
+        
+        // Validate the restaurant ID
+        if (newValue !== null && (isNaN(newValue) || newValue <= 0)) {
+            console.error('Invalid restaurant ID:', inputValue);
+            return;
+        }
+        
+        // Get the old restaurant_id before updating
+        const oldUser = users.find(u => u.id === userId);
+        const oldRestaurantId = oldUser?.restaurant_id;
+        
+        // Update the user's restaurant_id in state
         setUsers(newUsers => newUsers.map(user => {
             if (user.id === userId) {
                 return { ...user, restaurant_id: newValue };
             }
             return user;
         }));
+        
+        // Fetch the new restaurant name if a restaurant ID was provided
+        if (newValue !== null && newValue > 0) {
+            try {
+                const restaurantRes = await axios.get(`/api/public/restaurants/${newValue}`);
+                console.log('Restaurant response:', restaurantRes.data);
+                if (restaurantRes.data && restaurantRes.data.name) {
+                    setRestaurantNames(prevNames => ({
+                        ...prevNames,
+                        [newValue]: restaurantRes.data.name
+                    }));
+                } else {
+                    console.error(`Restaurant ${newValue} response missing name:`, restaurantRes.data);
+                    setRestaurantNames(prevNames => ({
+                        ...prevNames,
+                        [newValue]: 'Restaurant not found'
+                    }));
+                }
+            } catch (err) {
+                console.error(`Error fetching restaurant ${newValue}:`, err.response || err);
+                // Show error message based on the error type
+                if (err.response && err.response.status === 404) {
+                    setRestaurantNames(prevNames => ({
+                        ...prevNames,
+                        [newValue]: 'Restaurant not found'
+                    }));
+                } else {
+                    setRestaurantNames(prevNames => ({
+                        ...prevNames,
+                        [newValue]: 'Error loading restaurant'
+                    }));
+                }
+            }
+        } else if (newValue === null) {
+            // Clear the restaurant name if restaurant_id is cleared
+            if (oldRestaurantId) {
+                setRestaurantNames(prevNames => {
+                    const updated = { ...prevNames };
+                    delete updated[oldRestaurantId];
+                    return updated;
+                });
+            }
+        }
+        
+        // Update on the backend
         try {
             const response = await axios.put(`/api/users/${userId}/restaurant`, { restaurant_id: newValue }, {
                 withCredentials: true
@@ -184,15 +287,25 @@ function Users() {
                             defaultValue={user.restaurant_id}
                             onChange={(e) => handleRestaurantIdChange(e, user.id)}
                         />
-                        {user.restaurant_id && restaurantNames[user.restaurant_id] && (
+                        {user.restaurant_id && (
                             <small className="text-gray-400 block mt-1">
-                                {restaurantNames[user.restaurant_id]}
+                                {restaurantNames[Number(user.restaurant_id)] || 'Loading...'}
                             </small>
                         )}
                     </p>
                     <p className="mb-2">
                         <strong>Created At: </strong>
                         {new Date(user.created_at).toLocaleString()}
+                    </p>
+                    <p className="mb-2">
+                        <Button
+                            variant="danger"
+                            onClick={() => handleClearCart(user.id)}
+                            size="sm"
+                            fullWidth
+                        >
+                            Clear Cart
+                        </Button>
                     </p>
                 </div>
             </div>
@@ -217,7 +330,14 @@ function Users() {
                 <Spinner />
             ) : (
                 <>
-                    {users?.length > 0 ? <Pages /> : ""}
+                    <Pagination
+                        currentPage={page}
+                        onPageChange={setPage}
+                        totalPages={pagination?.totalPages ?? 1}
+                        total={pagination?.total ?? 0}
+                        itemName="users"
+                        loading={loading}
+                    />
                     {users?.length > 0 ? (
                         <div className="flex flex-wrap -mx-2">
                             {users?.map(user => (
@@ -227,7 +347,14 @@ function Users() {
                     ) : (
                         <p>No users found.</p>
                     )}
-                    {users?.length > 0 ? <Pages /> : ""}
+                    <Pagination
+                        currentPage={page}
+                        onPageChange={setPage}
+                        totalPages={pagination?.totalPages ?? 1}
+                        total={pagination?.total ?? 0}
+                        itemName="users"
+                        loading={loading}
+                    />
                 </>
             )}
         </div>

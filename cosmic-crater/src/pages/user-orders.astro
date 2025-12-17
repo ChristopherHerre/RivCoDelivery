@@ -1,0 +1,94 @@
+---
+import '../components/index.css'
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SSRAppWrapper from '../components/SSRAppWrapper.jsx';
+import { SITE_TITLE } from '../consts';
+---
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`My Orders | ${SITE_TITLE}`}
+			description={`View your order history on ${SITE_TITLE}`}
+		/>
+	</head>
+	<body>
+		<Header />
+		
+		<!-- SSR content - visible by default for SEO, hidden if user is logged in -->
+		<div id="ssr-content">
+			<main class="mx-auto p-4">
+				<header class="mb-6">
+					<h1 class="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
+					<p class="text-lg text-gray-700 mb-2">
+						Please sign in to view your order history.
+					</p>
+				</header>
+			</main>
+		</div>
+		
+		<!-- SPA container - wrapper checks auth before rendering App -->
+		<div id="spa-container" style="display: none;">
+			<SSRAppWrapper client:only="react" />
+		</div>
+		
+		<Footer />
+		
+		<!-- Client-side auth check -->
+		<script>
+			function checkAuthAndShowSPA() {
+				const profile = localStorage.getItem('profile');
+				const ssrContent = document.getElementById('ssr-content');
+				const spaContainer = document.getElementById('spa-container');
+				
+				// SSR content is visible by default (good for SEO crawlers)
+				// Only hide it if user is definitely logged in
+				
+				if (profile) {
+					// User might be logged in - verify session first
+					// Hide SSR and show SPA immediately to prevent flicker
+					if (ssrContent) ssrContent.style.display = 'none';
+					if (spaContainer) spaContainer.style.display = 'block';
+					
+					// Then verify session
+					fetch('/api/session', {
+						credentials: 'include'
+					})
+					.then(res => {
+						if (res.status !== 200) {
+							// Session invalid - show SSR (user sees SSR content)
+							if (ssrContent) ssrContent.style.display = 'block';
+							if (spaContainer) spaContainer.style.display = 'none';
+						}
+						// If session is valid, SSR stays hidden, SPA stays visible
+					})
+					.catch(err => {
+						console.error('Error checking session:', err);
+						// On error, show SSR (safer default)
+						if (ssrContent) ssrContent.style.display = 'block';
+						if (spaContainer) spaContainer.style.display = 'none';
+					});
+				} else {
+					// No profile - SSR content is already visible (default state)
+					// Just make sure SPA is hidden
+					if (spaContainer) spaContainer.style.display = 'none';
+					// SSR content doesn't need to be explicitly shown - it's visible by default
+				}
+			}
+			
+			// Check immediately on page load (before DOM fully renders)
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', checkAuthAndShowSPA);
+			} else {
+				checkAuthAndShowSPA();
+			}
+			
+			// Listen for custom event dispatched after login
+			window.addEventListener('profile-changed', () => {
+				checkAuthAndShowSPA();
+			});
+		</script>
+	</body>
+</html>

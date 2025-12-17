@@ -88,13 +88,6 @@ export default function CategoryPage(props) {
         <div className="mx-auto">
             {loaded ? (
                 <>
-                    <nav className="mb-4 text-sm text-gray-600">
-                        <Link to="/" className="text-blue-600 hover:underline">Home</Link>
-                        <span className="mx-2">/</span>
-                        <Link to={`/restaurants/${city}`} className="text-blue-600 hover:underline">{cityName || city}</Link>
-                        <span className="mx-2">/</span>
-                        <span className="text-gray-900">{categoryName || category}</span>
-                    </nav>
                     <header className="mb-6">
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">
                             {categoryName || category} in {cityName || city}
@@ -133,42 +126,40 @@ export default function CategoryPage(props) {
                                 const slug = slugify(r.name);
                                 return (
                                     <div className="w-full md:w-1/2 px-3 mb-3" key={r.id}>
-                                        <article className="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full hover:shadow-md transition-shadow">
-                                            <ResponsiveFlexRow className="h-full">
-                                                <div className="p-4 flex-1 flex flex-col">
-                                                    <h3 className="text-lg font-semibold mb-2">
-                                                        <button
-                                                            onClick={(e) => selectRestaurant(r)}
-                                                            className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
-                                                        >
-                                                            {r.name}
-                                                        </button>
-                                                    </h3>
-                                                    <p className="mb-1 text-base">
-                                                        <strong className="font-semibold text-white">{r.category}</strong>
-                                                    </p>
-                                                    <p className="mb-2 text-base text-gray-300">{r.address}</p>
-                                                    {h && h < 100 && (
-                                                        <p className="mb-2 text-sm text-gray-400">
-                                                            Distance: {roundedToFixed(h, 1)} mi
-                                                            {fee && fee <= maxFee && (
-                                                                <span className="ml-2">
-                                                                    • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
-                                                                </span>
-                                                            )}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div className="p-4 flex items-center">
-                                                    <Link
-                                                        to={getRestaurantMenuUrl(r)}
-                                                        className="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer whitespace-nowrap"
+                                        <ResponsiveFlexRow card align="stretch" variant="restaurant">
+                                            <div className="flex-1 flex flex-col">
+                                                <h3 className="text-lg font-semibold mb-2">
+                                                    <button
+                                                        onClick={(e) => selectRestaurant(r)}
+                                                        className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
                                                     >
-                                                        View menu
-                                                    </Link>
-                                                </div>
-                                            </ResponsiveFlexRow>
-                                        </article>
+                                                        {r.name}
+                                                    </button>
+                                                </h3>
+                                                <p className="mb-1 text-base">
+                                                    <strong className="font-semibold text-white">{r.category}</strong>
+                                                </p>
+                                                <p className="mb-2 text-base text-white/80">{r.address}</p>
+                                                {h && h < 100 && (
+                                                    <p className="mb-2 text-sm text-white/70">
+                                                        Distance: {roundedToFixed(h, 1)} mi
+                                                        {fee && fee <= maxFee && (
+                                                            <span className="ml-2">
+                                                                • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
+                                                            </span>
+                                                        )}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center max-lg:w-full">
+                                                <Link
+                                                    to={getRestaurantMenuUrl(r)}
+                                                    className="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer whitespace-nowrap max-lg:w-full max-lg:whitespace-normal max-lg:text-center"
+                                                >
+                                                    View menu
+                                                </Link>
+                                            </div>
+                                        </ResponsiveFlexRow>
                                     </div>
                                 );
                             })}

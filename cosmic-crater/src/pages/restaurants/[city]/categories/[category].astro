@@ -6,6 +6,7 @@ import Footer from '@/components/Footer.astro';
 import SSRAppWrapper from '@/components/SSRAppWrapper.jsx';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ResponsiveFlexRow from '@/components/common/ResponsiveFlexRow.jsx';
+import LikeDisplay from '@/components/common/LikeDisplay.astro';
 
 const { city, category } = Astro.params;
 
@@ -66,12 +67,12 @@ const slugify = (name) =>
 		.replace(/(^-|-$)/g, '');
 
 const pageTitle = actualCategoryName 
-	? `${actualCategoryName} in ${cityName} | RivCoDelivery`
-	: `Restaurants in ${cityName} | RivCoDelivery`;
+	? `${actualCategoryName} Delivery in ${cityName}, CA | Order Online | RivCoDelivery`
+	: `Food Delivery in ${cityName}, CA | Order Online | RivCoDelivery`;
 
 const pageDescription = actualCategoryName
-	? `Find ${actualCategoryName.toLowerCase()} restaurants in ${cityName}. Browse menus, place orders, and get delivery from top-rated ${actualCategoryName.toLowerCase()} restaurants.`
-	: `Discover restaurants in ${cityName} available for delivery with RivCoDelivery.`;
+	? `Order ${actualCategoryName.toLowerCase()} delivery from top restaurants in ${cityName}, California. Browse ${actualCategoryName.toLowerCase()} menus, compare prices, and get fast delivery. Easy online ordering with RivCoDelivery.`
+	: `Order food delivery from top restaurants in ${cityName}, California. Browse menus, compare prices, and get fast delivery. Easy online ordering with RivCoDelivery.`;
 
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
 
@@ -177,29 +178,28 @@ const breadcrumbData = {
 							const slug = slugify(r.name);
 							return (
 							<div class="w-full md:w-1/2 px-3 mb-3" key={r.id}>
-								<article class="border border-gray-600 rounded-lg shadow-sm bg-gray-900 h-full hover:shadow-md transition-shadow">
-									<ResponsiveFlexRow className="h-full">
-										<div class="p-4 flex-1 flex flex-col">
-											<h2 class="text-lg font-semibold mb-2">
-												<a href={`/restaurants/${city}/${r.id}-${slug}`} class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors">
-													{r.name}
-												</a>
-											</h2>
-											<p class="mb-1 text-base">
-												<strong class="font-semibold text-white">{r.category}</strong>
-											</p>
-											<p class="mb-2 text-base text-gray-300">{r.address}</p>
-										</div>
-										<div class="p-4 flex items-center">
-											<a
-												href={`/restaurants/${city}/${r.id}-${slug}`}
-												class="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline whitespace-nowrap max-[480px]:w-full text-center"
-											>
-												View menu
+								<ResponsiveFlexRow card align="stretch" variant="restaurant">
+									<div class="flex-1 flex flex-col">
+										<h2 class="text-lg font-semibold mb-2">
+											<a href={`/restaurants/${city}/${r.id}-${slug}`} class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors">
+												{r.name}
 											</a>
-										</div>
-									</ResponsiveFlexRow>
-								</article>
+										</h2>
+										<p class="mb-1 text-base">
+											<strong class="font-semibold text-white">{r.category}</strong>
+										</p>
+										<p class="mb-2 text-base text-white/80">{r.address}</p>
+									</div>
+									<div class="flex items-center gap-2 max-lg:w-full">
+										<a
+											href={`/restaurants/${city}/${r.id}-${slug}`}
+											class="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline whitespace-nowrap max-lg:w-full max-lg:whitespace-normal max-lg:text-center"
+										>
+											View menu
+										</a>
+										<LikeDisplay itemId={r.id} itemType="restaurant" likes={r.likes || 0} />
+									</div>
+								</ResponsiveFlexRow>
 							</div>
 							);
 						})}

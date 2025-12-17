@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Spinner from '../users/Spinner';
 import { dbPost } from './Admin';
 import PlaceAutocomplete from '../users/address/PlaceAutocomplete';
+import Button from '../common/Button';
 
 function ManageRestaurant(props) {
     const setSuccess = props.setSuccess;
@@ -112,19 +113,24 @@ function ManageRestaurant(props) {
                         />
                     </div>
                     <div className="w-full xl:flex-shrink-0 xl:w-auto">
-                        <button type="submit" className="w-full xl:w-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors whitespace-nowrap">
-                        {hasRestaurant ? (
-                            <>
-                                <i className="bi bi-pencil-square me-2"> </i>
-                                Save
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-plus me-2"> </i>
-                                Add Restaurants
-                            </>
-                        )}
-                    </button>
+                        <Button 
+                            type="submit" 
+                            fullWidth
+                            className="xl:w-auto whitespace-nowrap"
+                            loading={loading2}
+                        >
+                            {hasRestaurant ? (
+                                <>
+                                    <i className="bi bi-pencil-square me-2"> </i>
+                                    Save
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-plus me-2"> </i>
+                                    Add Restaurants
+                                </>
+                            )}
+                        </Button>
                     </div>
                 </div>
                 <input type="hidden" value={restaurantData?.address || ""} name="address" />

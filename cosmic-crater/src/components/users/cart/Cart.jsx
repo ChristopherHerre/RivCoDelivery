@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ResponsiveFlexRow from '../../common/ResponsiveFlexRow';
+import Button from '../../common/Button';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { roundedToFixed } from '../../App';
 import axios from 'axios';
@@ -129,37 +130,42 @@ export default function Cart(props) {
         const cart = props.cart;
         return (
             <div>
-                <div className="flex">
-                    <div className="w-full">
-                        <span className="p-3">
-                            { cart.length === 0 ? "Empty." : ""}
-                        </span>
+                {cart.length === 0 && (
+                    <div className="flex">
+                        <div className="w-full">
+                            <span className="p-3">Empty.</span>
+                        </div>
                     </div>
-                </div>
+                )}
                 {
                     cart.map((cartItem, key) => {
                         return (
-                            <div className="cartitem p-3" key={key}>
-                                <CartItemDetails
-                                    USDollar={USDollar}
-                                    cartItem={cartItem} />
-                                <ResponsiveFlexRow justify="end" align="stretch" className="gap-2 mt-2">
+                            <div className="cartitem" key={key}>
+                                <ResponsiveFlexRow justify="between" align="center" className="gap-3 flex-wrap">
+                                    <div className="flex-1 min-w-[220px]">
+                                        <CartItemDetails
+                                            USDollar={USDollar}
+                                            cartItem={cartItem}
+                                        />
+                                    </div>
                                     <QuantitySelector 
                                         key2={key} 
                                         cartItem={cartItem} 
                                         setCart={setCart}
                                         setSubtotal={setSubtotal}
                                     />
-                                    <button
-                                        type="button"
-                                        className="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 transition-colors text-sm"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            removeFromCart(key);
-                                        }}>
-                                            <i className="bi bi-trash3"> </i>
-                                            Remove
-                                    </button>
+                                    <Button
+        type="button"
+        variant="danger"
+        size="sm"
+        onClick={(e) => {
+            e.preventDefault();
+            removeFromCart(key);
+        }}
+    >
+                                        <i className="bi bi-trash3"> </i>
+                                        Remove
+                                    </Button>
                                 </ResponsiveFlexRow>
                             </div>
                         );
@@ -216,17 +222,6 @@ export default function Cart(props) {
     // In Cart.jsx
     return (
         <div className="mx-auto">
-            {!cartLoading && cart.length > 0 && restaurantData && (
-                <nav className="mb-4 text-sm text-gray-600">
-                    <Link to="/" className="text-blue-600 hover:underline">Home</Link>
-                    <span className="mx-2">/</span>
-                    <Link to={`/restaurants/${restaurantData.city_slug || city}`} className="text-blue-600 hover:underline">{restaurantData.city_name || city}</Link>
-                    <span className="mx-2">/</span>
-                    <Link to={getMenuUrl()} className="text-blue-600 hover:underline">{restaurantData.name}</Link>
-                    <span className="mx-2">/</span>
-                    <span className="text-gray-900">Cart</span>
-                </nav>
-            )}
             <h1>Shopping Cart</h1>
             <div className="flex flex-wrap">
                 <div className="w-full sm:w-7/12 sm:pr-4">
@@ -243,8 +238,8 @@ export default function Cart(props) {
                     />
                     {/* Add loading check and null check for cart */}
                     {!cartLoading && cart.length > 0 && (
-                        <button 
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full" 
+                        <Button 
+                            fullWidth
                             onClick={async () => {
                                 // Save cart to backend before navigating to ensure checkout has latest data
                                 if (profile?.sub) {
@@ -268,7 +263,7 @@ export default function Cart(props) {
                             }}
                         >
                             Checkout
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -359,24 +354,28 @@ export function QuantitySelector(props) {
     }
     return (
         <span className="flex items-center gap-1">
-            <button
+            <Button
                 type="button"
-                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
-                onClick={(e) => decrement(key, setCart)}>
+                size="sm"
+                onClick={(e) => decrement(key, setCart)}
+                iconOnly
+            >
                 <i className="bi bi-dash-lg"></i>
-            </button>
+            </Button>
             <input
                 className={"input-number text-center w-12"}
                 disabled="disabled"
                 type="textparse"
                 value={cartItem.quantity}
                 size="2" />
-            <button
+            <Button
                 type="button"
-                className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
-                onClick={(e) => increment(key, setCart)}>
+                size="sm"
+                onClick={(e) => increment(key, setCart)}
+                iconOnly
+            >
                 <i className="bi bi-plus-lg"></i>
-            </button>
+            </Button>
         </span>
     );
 }

@@ -1,0 +1,105 @@
+---
+// SSR component for displaying like count (read-only on SSR, interactive via client-side hydration)
+interface Props {
+    itemId: number;
+    itemType: 'restaurant' | 'menu-item';
+    likes: number;
+}
+
+const { itemId, itemType, likes } = Astro.props;
+---
+
+<div class="like-display" data-item-id={itemId} data-item-type={itemType} data-likes={likes}>
+    <span class="text-sm text-white/80">
+        {likes} {likes === 1 ? 'like' : 'likes'}
+    </span>
+</div>
+
+<script>
+    // Client-side hydration: Add like button if user is logged in
+    (function() {
+        const profile = localStorage.getItem('profile');
+        if (!profile) return; // User not logged in, just show count
+        
+        // Find all like displays and add interactive buttons
+        document.querySelectorAll('.like-display').forEach(display => {
+            const itemId = display.dataset.itemId;
+            const itemType = display.dataset.itemType;
+            const likes = parseInt(display.dataset.likes) || 0;
+            
+            // Check if already hydrated
+            if (display.querySelector('button')) return;
+            
+            // Create like button
+            const button = document.createElement('button');
+            button.className = 'flex items-center justify-center p-2 rounded transition-colors bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer ml-2';
+            button.innerHTML = '<i class="bi bi-heart"></i>';
+            button.title = 'Like';
+            button.setAttribute('aria-label', 'Like');
+            
+            let isLiked = false;
+            let currentLikes = likes;
+            
+            // Check initial like status
+            fetch(`/api/${itemType === 'restaurant' ? 'restaurants' : 'menu-items'}/${itemId}/like-status`, {
+                credentials: 'include'
+            })
+            .then(res => res.json())
+            .then(data => {
+                isLiked = data.liked || false;
+                if (isLiked) {
+                    button.className = 'flex items-center justify-center p-2 rounded transition-colors bg-red-500 hover:bg-red-600 text-white cursor-pointer ml-2';
+                    button.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                    button.title = 'Unlike';
+                }
+            })
+            .catch(err => console.error('Error checking like status:', err));
+            
+            // Handle like click
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (button.disabled) return;
+                button.disabled = true;
+                
+                try {
+                    const endpoint = `/api/${itemType === 'restaurant' ? 'restaurants' : 'menu-items'}/${itemId}/like`;
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    const data = await response.json();
+                    currentLikes = data.likes;
+                    isLiked = data.liked;
+                    
+                    // Update button appearance
+                    if (isLiked) {
+                        button.className = 'flex items-center justify-center p-2 rounded transition-colors bg-red-500 hover:bg-red-600 text-white cursor-pointer ml-2';
+                        button.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                        button.title = 'Unlike';
+                    } else {
+                        button.className = 'flex items-center justify-center p-2 rounded transition-colors bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer ml-2';
+                        button.innerHTML = '<i class="bi bi-heart"></i>';
+                        button.title = 'Like';
+                    }
+                    
+                    // Update like count
+                    const countSpan = display.querySelector('span');
+                    if (countSpan) {
+                        countSpan.textContent = `${currentLikes} ${currentLikes === 1 ? 'like' : 'likes'}`;
+                    }
+                } catch (error) {
+                    console.error('Error toggling like:', error);
+                } finally {
+                    button.disabled = false;
+                }
+            });
+            
+            // Insert button before the count
+            display.insertBefore(button, display.firstChild);
+        });
+    })();
+</script>

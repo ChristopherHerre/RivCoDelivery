@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import qs from 'qs';
 import Spinner from '../../../../users/Spinner';
+import Button from '../../../../common/Button';
 
 export function getTooltip(key) {
     if (key === "type") return "The category label for this ingredient";
@@ -142,10 +143,10 @@ function NewIngredient(props) {
                         })}
                         <div className='w-full md:w-1/4 mb-4 md:pr-2'>
                             <strong className="text-white block mb-2">&nbsp;</strong>
-                            <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
-                                <i class="bi bi-plus-lg"> </i>
+                            <Button type="submit" fullWidth loading={loading}>
+                                <i className="bi bi-plus-lg"> </i>
                                 Add Ingredient
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </form>

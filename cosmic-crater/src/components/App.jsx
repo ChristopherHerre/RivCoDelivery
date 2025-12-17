@@ -23,6 +23,7 @@ import DriverOrders from './drivers/orders/DriverOrders';
 import Users from './webmaster/Users';
 import Donate from './users/nav/Donate';
 import BottomNavbar from './users/nav/BottomNavbar';
+import BreadcrumbWrapper from './common/BreadcrumbWrapper';
 import Navbar from './users/nav/Navbar';
 import TaxiFareCalculator from './users/address/TaxiFareCalculator';
 import RedirectToNewUrl from './RedirectToNewUrl';
@@ -37,7 +38,7 @@ export const MAX_RETRY_ATTEMPTS = 3;
 function Layout(props) {
 	const cart = props.cart;
 	return (
-		<div id="wr">
+		<main id="wr">
 			<Navbar 
 				cart={cart}
 				profile={props.profile} 
@@ -65,11 +66,12 @@ function Layout(props) {
 					</ResponsiveFlexRow>
 				</div>
 			)}
-			<div id="white-area" className="blackborder">
+			<BreadcrumbWrapper />
+			<div id="white-area">
 				<Outlet />
 			</div>
 			<BottomNavbar profile={props.profile} />
-		</div>
+		</main>
 	);
 }
 

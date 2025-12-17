@@ -6,6 +6,8 @@ import Footer from '@/components/Footer.astro';
 import SSRAppWrapper from '@/components/SSRAppWrapper.jsx';
 import OrderButtonWithAuth from '@/components/users/nav/OrderButtonWithAuth.jsx';
 import Breadcrumb from '@/components/Breadcrumb.astro';
+import ResponsiveFlexRow from '@/components/common/ResponsiveFlexRow.jsx';
+import Link from '@/components/common/Link.astro';
 
 const { city, restaurant, item } = Astro.params;
 
@@ -82,8 +84,8 @@ const itemSlug = slugify(menuItem.name);
 const canonicalUrl = `${Astro.url.origin}/restaurants/${city}/${restaurant}/menu/${itemSlug}-${menuItemId}`;
 
 // SEO metadata
-const pageTitle = `${menuItem.name} at ${restaurantData.name} in ${restaurantData.city_name} | RivCoDelivery`;
-const pageDescription = `Order ${menuItem.name} from ${restaurantData.name} in ${restaurantData.city_name}. ${menuItem.price ? `$${Number(menuItem.price).toFixed(2)}` : 'Available'} for delivery with RivCoDelivery.`;
+const pageTitle = `${menuItem.name} from ${restaurantData.name} in ${restaurantData.city_name}, CA | Order Online | RivCoDelivery`;
+const pageDescription = `Order ${menuItem.name} from ${restaurantData.name} in ${restaurantData.city_name}, California. ${menuItem.price ? `$${Number(menuItem.price).toFixed(2)}` : 'Available'} for delivery. Customize your order and get fast delivery with RivCoDelivery.`;
 
 // Structured data
 const structuredData = {
@@ -176,53 +178,54 @@ const breadcrumbData = {
 					{ label: menuItem.name }
 				]} />
 
-				<article class="border border-gray-600 rounded-lg shadow-sm bg-gray-900 p-6 mb-6">
-					<header class="mb-4">
-						<h1 class="text-3xl font-bold text-white mb-2">{menuItem.name}</h1>
-						<p class="text-lg text-gray-300 mb-2">
-							at <a href={`/restaurants/${city}/${restaurant}`} class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors font-semibold">{restaurantData.name}</a>
-							{restaurantData.city_name && <span> in {restaurantData.city_name}</span>}
-						</p>
-						<p class="text-sm text-gray-400">{restaurantData.address}</p>
-					</header>
-
-					<div class="mb-4">
-						<div class="text-2xl font-bold text-white mb-4">
-							${menuItem.price ? Number(menuItem.price).toFixed(2) : 'Price varies'}
-						</div>
-						{menuItem.category && (
-							<p class="text-sm text-gray-300 mb-2">
-								Category: <span class="font-semibold text-white">{menuItem.category}</span>
+				<ResponsiveFlexRow margin="mb-6" align="center" variant="menuItem">
+					<div class="flex-1 flex flex-col w-full">
+						<header class="mb-4">
+							<h1 class="text-3xl font-bold text-white mb-2">{menuItem.name}</h1>
+							<p class="text-lg text-white/90 mb-2">
+								at <a href={`/restaurants/${city}/${restaurant}`} class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors font-semibold">{restaurantData.name}</a>
+								{restaurantData.city_name && <span> in {restaurantData.city_name}</span>}
 							</p>
+							<p class="text-sm text-white/70">{restaurantData.address?.replace(/\bCA\b/g, 'California')}</p>
+						</header>
+
+						<div class="mb-4">
+							<div class="text-2xl font-bold text-white mb-4">
+								${menuItem.price ? Number(menuItem.price).toFixed(2) : 'Price varies'}
+							</div>
+							{menuItem.category && (
+								<p class="text-sm text-white/80 mb-2">
+									Category: <span class="font-semibold text-white">{menuItem.category}</span>
+								</p>
+							)}
+						</div>
+
+						{ingredients.length > 0 && (
+							<section class="mb-4">
+								<h2 class="text-xl font-semibold mb-3 text-white">Ingredients</h2>
+								<div class="flex flex-wrap gap-2">
+									{ingredients.map((ing) => {
+										const ingSlug = ing.ingredients_name
+											.toLowerCase()
+											.replace(/[^a-z0-9]+/g, '-')
+											.replace(/(^-|-$)/g, '');
+										return (
+											<a
+												href={`/restaurants/${city}/${restaurant}/ingredients/${ingSlug}`}
+												class="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded hover:bg-white/30 transition-colors text-sm no-underline border border-white/30"
+											>
+												{ing.ingredients_name}
+											</a>
+										);
+									})}
+								</div>
+							</section>
 						)}
 					</div>
-
-					{ingredients.length > 0 && (
-						<section class="mb-4">
-							<h2 class="text-xl font-semibold mb-3 text-white">Ingredients</h2>
-							<div class="flex flex-wrap gap-2">
-								{ingredients.map((ing) => {
-									const ingSlug = ing.ingredients_name
-										.toLowerCase()
-										.replace(/[^a-z0-9]+/g, '-')
-										.replace(/(^-|-$)/g, '');
-									return (
-										<a
-											href={`/restaurants/${city}/${restaurant}/ingredients/${ingSlug}`}
-											class="inline-block px-3 py-1 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors text-sm no-underline"
-										>
-											{ing.ingredients_name}
-										</a>
-									);
-								})}
-							</div>
-						</section>
-					)}
-
-					<div class="mt-6">
+					<div class="flex items-center max-lg:w-full">
 						<OrderButtonWithAuth restaurantId={restaurantData.id} client:only="react" />
 					</div>
-				</article>
+				</ResponsiveFlexRow>
 
 				<section class="mb-6">
 					<h2 class="text-xl font-semibold mb-3 text-gray-900">More from {restaurantData.name}</h2>
