@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import ResponsiveFlexRow from '../../common/ResponsiveFlexRow';
 import axios from 'axios';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
@@ -179,19 +178,19 @@ export default function Menu(props) {
     return (
         <div className="mx-auto">
             {loaded && restaurantData && (
-                <ResponsiveFlexRow margin="mb-6" align="stretch" variant="restaurant">
+                <div className="flex items-stretch mb-6">
                     <div className="flex-1 flex flex-col">
-                        <h1 className="mb-2 text-2xl font-semibold text-white">{restaurantData.name || restaurantName} Menu</h1>
+                        <h1 className="mb-2 text-2xl font-semibold text-base-content">{restaurantData.name || restaurantName} Menu</h1>
                         {restaurantData.category && (
                             <p className="mb-1 text-base">
-                                <strong className="font-semibold text-white">{restaurantData.category}</strong>
+                                <strong className="font-semibold text-base-content">{restaurantData.category}</strong>
                             </p>
                         )}
                         {restaurantData.address && (
-                            <p className="mb-1 text-base text-white/90">{restaurantData.address}</p>
+                            <p className="mb-1 text-base text-base-content/90">{restaurantData.address}</p>
                         )}
                     </div>
-                </ResponsiveFlexRow>
+                </div>
             )}
             
             {
@@ -203,51 +202,52 @@ export default function Menu(props) {
                                 const priceDisplay = getPriceDisplay(data);
                                 return (
                                     <div className="w-full md:w-1/2 px-3 mb-3" key={data.id}>
-                                        <ResponsiveFlexRow card vertical align="stretch" variant="menu">
-                                            <div className="flex-1 flex flex-col">
-                                                <h3 className="text-lg font-semibold mb-2">
-                                                    <button
-                                                        onClick={(e) => changeMenuItem(data)}
-                                                        className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
+                                        <div className="card bg-base-100 shadow-sm h-full">
+                                            <div className="card-body flex flex-col items-stretch">
+                                                <div className="flex-1 flex flex-col">
+                                                    <h3 className="text-lg font-semibold mb-2">
+                                                        <button
+                                                            onClick={(e) => changeMenuItem(data)}
+                                                            className="link link-primary text-base-content hover:text-primary text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
+                                                        >
+                                                            {data.name}
+                                                        </button>
+                                                    </h3>
+                                                    {data.category && (
+                                                        <p className="mb-1 text-base">
+                                                            <strong className="font-semibold text-base-content">{data.category}</strong>
+                                                        </p>
+                                                    )}
+                                                    {data.size_display_name && (
+                                                        <p className="mb-2 text-base text-base-content/80">{data.size_display_name}</p>
+                                                    )}
+                                                    {priceDisplay && (
+                                                        <p className="mb-2 text-base text-base-content/80">
+                                                            <strong className="font-semibold text-base-content">{priceDisplay}</strong>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 items-center justify-end flex-shrink-0 mt-auto">
+                                                    <Link
+                                                        to={restaurantData ? getMenuItemUrl(restaurantData, data) : `/${restaurantId}/menu/item?item=${data.id}`}
+                                                        className="no-underline"
                                                     >
-                                                        {data.name}
-                                                    </button>
-                                                </h3>
-                                                {data.category && (
-                                                    <p className="text-sm text-white/80 mb-2">{data.category}</p>
-                                                )}
-                                                {data.size_display_name && (
-                                                    <p className="text-sm text-white/80 mb-2">{data.size_display_name}</p>
-                                                )}
-                                                {priceDisplay && (
-                                                    <ResponsiveFlexRow borderTop margin="mt-auto" variant="nested">
-                                                        <span className="font-bold text-lg text-white">
-                                                            {priceDisplay}
-                                                        </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <Link
-                                                                to={restaurantData ? getMenuItemUrl(restaurantData, data) : `/${restaurantId}/menu/item?item=${data.id}`}
-                                                                className="no-underline"
-                                                            >
-                                                                <Button
-                                                                    size="md-large"
-                                                                    responsiveFullWidth={true}
-                                                                >
-                                                                    View details
-                                                                </Button>
-                                                            </Link>
-                                                            <LikeButton
-                                                                itemId={data.id}
-                                                                itemType="menu-item"
-                                                                initialLikes={menuItemLikes[data.id]?.likes || data.likes || 0}
-                                                                initialLiked={menuItemLikes[data.id]?.liked || false}
-                                                                profile={profile}
-                                                            />
-                                                        </div>
-                                                    </ResponsiveFlexRow>
-                                                )}
+                                                        <Button
+                                                            size="sm"
+                                                        >
+                                                            View details
+                                                        </Button>
+                                                    </Link>
+                                                    <LikeButton
+                                                        itemId={data.id}
+                                                        itemType="menu-item"
+                                                        initialLikes={menuItemLikes[data.id]?.likes || data.likes || 0}
+                                                        initialLiked={menuItemLikes[data.id]?.liked || false}
+                                                        profile={profile}
+                                                    />
+                                                </div>
                                             </div>
-                                        </ResponsiveFlexRow>
+                                        </div>
                                     </div>
                                 );
                             })}

@@ -36,13 +36,15 @@ export default function Button({
     ...props
 }) {
     // Color variants
-    let colorClasses = 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800';
+    // Default behavior: solid button that becomes an outline on hover,
+    // mirroring the like button interaction pattern.
+    let colorClasses = 'bg-primary text-primary-content border border-primary hover:bg-transparent hover:text-primary';
     if (variant === 'secondary') {
-        colorClasses = 'bg-gray-600 hover:bg-gray-700';
+        colorClasses = 'bg-secondary text-secondary-content border border-secondary hover:bg-transparent hover:text-secondary';
     } else if (variant === 'danger') {
-        colorClasses = 'bg-red-600 hover:bg-red-700';
+        colorClasses = 'bg-red-600 text-white border border-red-600 hover:bg-transparent hover:text-red-600';
     } else if (variant === 'success') {
-        colorClasses = 'bg-green-600 hover:bg-green-700';
+        colorClasses = 'bg-green-600 text-white border border-green-600 hover:bg-transparent hover:text-green-600';
     }
     
     // Size variants
@@ -61,7 +63,7 @@ export default function Button({
     }
     
     // Base classes
-    const baseClasses = 'text-white rounded transition-colors cursor-pointer border-0 font-normal';
+    const baseClasses = 'rounded transition-colors cursor-pointer font-normal';
     
     // Width classes
     const widthClass = fullWidth ? 'w-full' : '';

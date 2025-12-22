@@ -1,5 +1,4 @@
 import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
-import ResponsiveFlexRow from './common/ResponsiveFlexRow';
 import { 
 	BrowserRouter, 
 	Routes, 
@@ -13,6 +12,7 @@ import RestaurantsList from './restaurants/RestaurantsList';
 import CategoryPage from './restaurants/CategoryPage';
 import Cart from './users/cart/Cart';
 import Admin from './restaurants/Admin';
+import SuggestRestaurant from './restaurants/SuggestRestaurant';
 import Checkout from './users/checkout/CheckoutForm';
 import Success from './users/checkout/Success';
 import Failure from './users/checkout/Failure';
@@ -53,17 +53,17 @@ function Layout(props) {
 			/>
 			{/* Display error message if present */}
 			{props.errorMessage && (
-				<div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-					<ResponsiveFlexRow>
-						<p className="text-red-700 font-medium">{props.errorMessage}</p>
+				<div className="alert alert-error mb-4">
+					<div className="flex items-center justify-between max-sm:flex-col max-sm:items-start gap-2">
+						<p className="font-medium">{props.errorMessage}</p>
 						<button
 							onClick={() => props.setErrorMessage(null)}
-							className="text-red-500 hover:text-red-700 max-[480px]:ml-0 ml-4 text-xl font-bold"
+							className="btn btn-sm btn-ghost max-sm:w-full"
 							aria-label="Dismiss error"
 						>
 							×
 						</button>
-					</ResponsiveFlexRow>
+					</div>
 				</div>
 			)}
 			<BreadcrumbWrapper />
@@ -369,6 +369,10 @@ export function App() {
 									cartAmount={cartAmount}
 								/>
 							}
+						/>
+						<Route
+							path="suggest-restaurant"
+							element={<SuggestRestaurant cartAmount={cartAmount} />}
 						/>
 						<Route
 							path="donate"

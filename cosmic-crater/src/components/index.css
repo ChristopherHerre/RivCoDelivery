@@ -6,10 +6,8 @@
     width: 100%;
     max-width: 100%;
     padding: 1.5em;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     margin: 0;
+    background: #6b7280;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }

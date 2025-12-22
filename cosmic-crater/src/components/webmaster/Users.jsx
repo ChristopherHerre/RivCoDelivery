@@ -4,6 +4,7 @@ import Spinner from '../users/Spinner';
 import Button from '../common/Button';
 import Pagination from '../common/Pagination';
 import axios from 'axios';
+import { ROLES, getRoleName } from '../../constants/roles';
 
 function Users() {
     const [users, setUsers] = useState([]);
@@ -262,19 +263,19 @@ function Users() {
                                     type="range"
                                     className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                                     id="roleRange"
-                                    min="0"
-                                    max="2"
+                                    min={ROLES.USER}
+                                    max={ROLES.ADMIN}
                                     step="1"
                                     defaultValue={user.role}
                                     onChange={(e) => handleChange(e, user.id)}
                                 />
                                 <div className="flex justify-between text-sm mt-1">
-                                    <span>Basic</span>
-                                    <span>Driver</span>
-                                    <span>Restaurant</span>
+                                    <span>{getRoleName(ROLES.USER)}</span>
+                                    <span>{getRoleName(ROLES.DRIVER)}</span>
+                                    <span>{getRoleName(ROLES.ADMIN)}</span>
                                 </div>
                                 <small className="text-white text-sm">
-                                    Current role: <strong>{user.role}</strong>
+                                    Current role: <strong>{getRoleName(user.role)} ({user.role})</strong>
                                 </small>
                             </div>
                         </form>

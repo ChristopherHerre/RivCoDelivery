@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getRestaurantMenuUrl } from '../../utils/restaurantUrls';
 import Spinner from '../users/Spinner';
-import ResponsiveFlexRow from '../common/ResponsiveFlexRow';
 
 export default function CategoryPage(props) {
     const params = useParams();
@@ -126,40 +125,42 @@ export default function CategoryPage(props) {
                                 const slug = slugify(r.name);
                                 return (
                                     <div className="w-full md:w-1/2 px-3 mb-3" key={r.id}>
-                                        <ResponsiveFlexRow card align="stretch" variant="restaurant">
-                                            <div className="flex-1 flex flex-col">
-                                                <h3 className="text-lg font-semibold mb-2">
-                                                    <button
-                                                        onClick={(e) => selectRestaurant(r)}
-                                                        className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
-                                                    >
-                                                        {r.name}
-                                                    </button>
-                                                </h3>
-                                                <p className="mb-1 text-base">
-                                                    <strong className="font-semibold text-white">{r.category}</strong>
-                                                </p>
-                                                <p className="mb-2 text-base text-white/80">{r.address}</p>
-                                                {h && h < 100 && (
-                                                    <p className="mb-2 text-sm text-white/70">
-                                                        Distance: {roundedToFixed(h, 1)} mi
-                                                        {fee && fee <= maxFee && (
-                                                            <span className="ml-2">
-                                                                • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
-                                                            </span>
-                                                        )}
+                                        <div className="card bg-base-100 shadow-sm h-full">
+                                            <div className="card-body flex flex-col items-stretch">
+                                                <div className="flex-1 flex flex-col">
+                                                    <h3 className="text-lg font-semibold mb-2">
+                                                        <button
+                                                            onClick={(e) => selectRestaurant(r)}
+                                                            className="link link-primary text-base-content hover:text-primary text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
+                                                        >
+                                                            {r.name}
+                                                        </button>
+                                                    </h3>
+                                                    <p className="mb-1 text-base">
+                                                        <strong className="font-semibold text-base-content">{r.category}</strong>
                                                     </p>
-                                                )}
+                                                    <p className="mb-2 text-base text-base-content/80">{r.address}</p>
+                                                    {h && h < 100 && (
+                                                        <p className="mb-2 text-sm text-base-content/70">
+                                                            Distance: {roundedToFixed(h, 1)} mi
+                                                            {fee && fee <= maxFee && (
+                                                                <span className="ml-2">
+                                                                    • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center max-lg:w-full mt-auto">
+                                                    <Link
+                                                        to={getRestaurantMenuUrl(r)}
+                                                        className="btn btn-primary max-lg:w-full"
+                                                    >
+                                                        View menu
+                                                    </Link>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center max-lg:w-full">
-                                                <Link
-                                                    to={getRestaurantMenuUrl(r)}
-                                                    className="inline-block px-5 py-2.5 bg-blue-600 text-white text-base font-normal rounded hover:bg-blue-700 active:bg-blue-800 transition-colors no-underline cursor-pointer whitespace-nowrap max-lg:w-full max-lg:whitespace-normal max-lg:text-center"
-                                                >
-                                                    View menu
-                                                </Link>
-                                            </div>
-                                        </ResponsiveFlexRow>
+                                        </div>
                                     </div>
                                 );
                             })}

@@ -51,6 +51,7 @@ function NewIngredient(props) {
     });
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
+    const [isExpanded, setIsExpanded] = useState(false);
     
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -100,71 +101,82 @@ function NewIngredient(props) {
         });
     };
     return (
-        <div className="p-4 shadow-lg rounded-2xl bg-gray-900">
-            <h3 className="text-white mb-4">
-                Add New Ingredient
-            </h3>
-            {loading ? <Spinner /> :
-                <form onSubmit={handleSubmit}>
-                    <div className="flex flex-wrap">
-                        {Object.keys(formData).sort((a, b) => {
-                            const order = ["id", "type", "ingredients_name", "price", "easy_price", "extra_price", "customize", "halfable", "selected", "sort_order"];
-                            const indexA = order.indexOf(a);
-                            const indexB = order.indexOf(b);
-                            if (indexA === -1 && indexB === -1) return a > b ? 1 : -1;
-                            if (indexA === -1) return 1;
-                            if (indexB === -1) return -1;
-                            return indexA - indexB;
-                        }).map((key) => {
-                            const tooltipText = getTooltip(key);
-                            return (
-                                <div className="w-full md:w-1/4 mb-4 md:pr-2" key={key}>
-                                    <strong className="text-white block mb-2">{key}:</strong>
-                                    <div className="group relative">
-                                        <input
-                                            {...(isNumericField(key) && ['inputType', 'halfable', 'customize', 'selected'].includes(key) ? {min: "0", max: "1"} : {})}
-                                            {...(isNumericField(key) && key === 'sort_order' ? {min: "0"} : {})}
-                                            {...(isNumericField(key) && key.includes('price') ? {min: "0", step: "0.01"} : {})}
-                                            type={isNumericField(key) ? 'number' : 'text'}
-                                            name={key} 
-                                            value={formData[key]} 
-                                            onChange={handleChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                        />
-                                        {tooltipText && (
-                                            <div className="absolute z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
-                                                {tooltipText}
-                                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        <div className='w-full md:w-1/4 mb-4 md:pr-2'>
-                            <strong className="text-white block mb-2">&nbsp;</strong>
-                            <Button type="submit" fullWidth loading={loading}>
-                                <i className="bi bi-plus-lg"> </i>
-                                Add Ingredient
-                            </Button>
-                        </div>
-                    </div>
-                </form>
-            }
-            <div className="mt-2">
-                {success && (
-                    <p className="text-green-600">
-                        <i className="bi bi-check-circle-fill"> </i>
-                        Ingredient added successfully!
-                    </p>
-                )}
-                {error && (
-                    <p className="text-red-600 mt-2">
-                        <i class="bi bi-exclamation-triangle"> </i>
-                        {error.length > 0 ? error : ""}
-                    </p>
-                )}
+        <div className="mb-4 rounded-lg bg-gray-900">
+            {/* Collapsible Header */}
+            <div 
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-800 transition-colors rounded-t-lg"
+                onClick={() => setIsExpanded(!isExpanded)}
+            >
+                <h3 className="font-semibold text-lg text-white">Add New Ingredient</h3>
+                <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'} text-xl text-white`}></i>
             </div>
+            
+            {/* Collapsible Content */}
+            {isExpanded && (
+                <div className="p-4">
+                    {loading ? <Spinner /> :
+                        <form onSubmit={handleSubmit}>
+                            <div className="flex flex-wrap">
+                                {Object.keys(formData).sort((a, b) => {
+                                    const order = ["id", "type", "ingredients_name", "price", "easy_price", "extra_price", "customize", "halfable", "selected", "sort_order"];
+                                    const indexA = order.indexOf(a);
+                                    const indexB = order.indexOf(b);
+                                    if (indexA === -1 && indexB === -1) return a > b ? 1 : -1;
+                                    if (indexA === -1) return 1;
+                                    if (indexB === -1) return -1;
+                                    return indexA - indexB;
+                                }).map((key) => {
+                                    const tooltipText = getTooltip(key);
+                                    return (
+                                        <div className="w-full md:w-1/4 mb-4 md:pr-2" key={key}>
+                                            <strong className="text-white block mb-2">{key}:</strong>
+                                            <div className="group relative">
+                                                <input
+                                                    {...(isNumericField(key) && ['inputType', 'halfable', 'customize', 'selected'].includes(key) ? {min: "0", max: "1"} : {})}
+                                                    {...(isNumericField(key) && key === 'sort_order' ? {min: "0"} : {})}
+                                                    {...(isNumericField(key) && key.includes('price') ? {min: "0", step: "0.01"} : {})}
+                                                    type={isNumericField(key) ? 'number' : 'text'}
+                                                    name={key} 
+                                                    value={formData[key]} 
+                                                    onChange={handleChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                                />
+                                                {tooltipText && (
+                                                    <div className="absolute z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
+                                                        {tooltipText}
+                                                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                <div className='w-full md:w-1/4 mb-4 md:pr-2'>
+                                    <strong className="text-white block mb-2">&nbsp;</strong>
+                                    <Button type="submit" fullWidth loading={loading}>
+                                        <i className="bi bi-plus-lg"> </i>
+                                        Add Ingredient
+                                    </Button>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                    <div className="mt-2">
+                        {success && (
+                            <p className="text-green-600">
+                                <i className="bi bi-check-circle-fill"> </i>
+                                Ingredient added successfully!
+                            </p>
+                        )}
+                        {error && (
+                            <p className="text-red-600 mt-2">
+                                <i class="bi bi-exclamation-triangle"> </i>
+                                {error.length > 0 ? error : ""}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

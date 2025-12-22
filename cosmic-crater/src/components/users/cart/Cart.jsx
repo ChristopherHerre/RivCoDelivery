@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import ResponsiveFlexRow from '../../common/ResponsiveFlexRow';
 import Button from '../../common/Button';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { roundedToFixed } from '../../App';
@@ -141,7 +140,7 @@ export default function Cart(props) {
                     cart.map((cartItem, key) => {
                         return (
                             <div className="cartitem" key={key}>
-                                <ResponsiveFlexRow justify="between" align="center" className="gap-3 flex-wrap">
+                                <div className="flex justify-between items-center gap-3 flex-wrap">
                                     <div className="flex-1 min-w-[220px]">
                                         <CartItemDetails
                                             USDollar={USDollar}
@@ -166,7 +165,7 @@ export default function Cart(props) {
                                         <i className="bi bi-trash3"> </i>
                                         Remove
                                     </Button>
-                                </ResponsiveFlexRow>
+                                </div>
                             </div>
                         );
                     })

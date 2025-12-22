@@ -11,7 +11,6 @@ function BottomNavbar(props) {
                     full={1}
                 />
             </div>
-            <div className="w-full md:hidden border-t border-gray-300 my-2"></div>
             <div className="w-1/2 hidden md:block">
                 <AdminDropdown
                     className=""

@@ -1,11 +1,12 @@
 const { z } = require('zod');
+const { ROLES } = require('../constants/roles');
 
 function likeRoutes(app, pool, checkRole) {
     const router = require('express').Router();
 
     // POST /api/restaurants/:id/like
     // Toggle like for a restaurant
-    router.post('/restaurants/:id/like', checkRole(0), async (req, res) => {
+    router.post('/restaurants/:id/like', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ error: 'Authentication required' });
         }
@@ -80,7 +81,7 @@ function likeRoutes(app, pool, checkRole) {
 
     // POST /api/menu-items/:id/like
     // Toggle like for a menu item
-    router.post('/menu-items/:id/like', checkRole(0), async (req, res) => {
+    router.post('/menu-items/:id/like', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ error: 'Authentication required' });
         }
@@ -155,7 +156,7 @@ function likeRoutes(app, pool, checkRole) {
 
     // GET /api/restaurants/:id/like-status
     // Get like status for current user (optional, for checking if user liked)
-    router.get('/restaurants/:id/like-status', checkRole(0), async (req, res) => {
+    router.get('/restaurants/:id/like-status', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.json({ liked: false });
         }
@@ -180,7 +181,7 @@ function likeRoutes(app, pool, checkRole) {
 
     // GET /api/menu-items/:id/like-status
     // Get like status for current user (optional, for checking if user liked)
-    router.get('/menu-items/:id/like-status', checkRole(0), async (req, res) => {
+    router.get('/menu-items/:id/like-status', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.json({ liked: false });
         }

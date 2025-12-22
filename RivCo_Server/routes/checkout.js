@@ -5,12 +5,13 @@ const {
     toCents, centsToFixed, safeJsonParse, isSelectedIngredient,
     formatIngredientSummary, buildUserAddress
 } = require('../utils/helpers');
+const { ROLES } = require('../constants/roles');
 
 function checkoutRoutes(app, pool, checkRole, orderLimiter) {
     const router = require('express').Router();
 
     // POST /api/co - Place order (checkout)
-    router.post('/co', checkRole(0), orderLimiter, async (req, res) => {
+    router.post('/co', checkRole(ROLES.USER), orderLimiter, async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
@@ -366,7 +367,7 @@ function checkoutRoutes(app, pool, checkRole, orderLimiter) {
     });
 
     // GET /api/checkout-data/:selected_restaurant?0
-    router.get("/checkout-data/:selected_restaurant?", checkRole(0), async (req, res) => {
+    router.get("/checkout-data/:selected_restaurant?", checkRole(ROLES.USER), async (req, res) => {
         const userId = req.session?.user?.sub;
         if (!userId) {
             return res.status(401).json({ error: "Unauthorized" });

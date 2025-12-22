@@ -1,38 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Spinner from '../users/Spinner';
 import { dbPost } from './Admin';
 import PlaceAutocomplete from '../users/address/PlaceAutocomplete';
 import Button from '../common/Button';
 
-function ManageRestaurant(props) {
-    const setSuccess = props.setSuccess;
-    const setLoading2 = props.setLoading2;
-    const loading2 = props.loading2;
-    const success = props.success;
+function SuggestRestaurant() {
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
-    const [loading, setLoading] = useState(true);
-    const [hasRestaurant, setHasRestaurant] = useState(false);
-    const [restaurantData, setRestaurantData] = useState(null);
-    useEffect(() => {
-        async function fetchRestaurantStatus() {
-            try {
-                const response = await fetch('/api/getUserRestaurant');
-                const data = await response.json();
-                if (data.restaurant) {
-                    setHasRestaurant(true);
-                    setRestaurantData(data.restaurant);
-                }
-            } catch (error) {
-                console.error("Error fetching restaurant data:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchRestaurantStatus();
-    }, []);
+
     async function submitRestaurant(e) {
         e.preventDefault();
-        setLoading2(true);
+        setLoading(true);
+        setError("");
         const form = e.target;
         const inputs = {
           name: form.elements['name'].value,
@@ -42,42 +22,37 @@ function ManageRestaurant(props) {
           longitude: form.elements['longitude'].value,
         };
         try {
-            const response = await dbPost(e, form, inputs, "manageRestaurant");
+            const response = await dbPost(e, form, inputs, "suggestRestaurant");
             if (response.status >= 200 && response.status < 300) {
-                setHasRestaurant(true);
-                setRestaurantData({
-                  name: inputs.name,
-                  address: inputs.address,
-                  category: inputs.category,
-                  latitude: inputs.latitude,
-                  longitude: inputs.longitude,
-                });
                 setSuccess(true);
+                // Reset form
+                form.reset();
                 setTimeout(() => {
                     setSuccess(false);
-                }, 2000);
+                }, 5000);
             } else {
                 console.error("Server returned an error:", response.statusText);
-                setSuccess(false);
+                setError(response.data?.error || "Failed to submit suggestion");
             }
         } catch (err) {
-            console.error("Error submitting restaurant:", err);
-            setSuccess(false);
-            setError(err.message);
+            console.error("Error submitting restaurant suggestion:", err);
+            setError(err.response?.data?.error || err.message || "Failed to submit suggestion");
             setTimeout(() => {
                 setError("");
-            }, 2000);
+            }, 5000);
         } finally {
-            setLoading2(false);
+            setLoading(false);
         }
     }
-    return (loading ? <Spinner /> :
+
+    return (
         <form onSubmit={(e) => submitRestaurant(e)}>
             <div className="flex flex-wrap p-6 shadow-lg rounded-xl bg-gradient-to-r from-blue-500 to-yellow-500">
                 <div className="w-full mb-4">
-                    <h3 className="text-white">
-                        {hasRestaurant ? "Edit Restaurant" : "Add Restaurant"}
-                    </h3>
+                    <h3 className="text-white">Suggest a Restaurant</h3>
+                    <p className="text-white text-sm mt-2 opacity-90">
+                        Submit a restaurant suggestion for review. It will be reviewed by an administrator before being added to the platform.
+                    </p>
                 </div>
                 <div className="flex flex-wrap xl:flex-nowrap gap-4 w-full items-end">
                     <div className="w-full xl:flex-none xl:w-72 xl:min-w-0">
@@ -86,7 +61,6 @@ function ManageRestaurant(props) {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             name="name"
                             type="text"
-                            defaultValue={restaurantData?.name || ""}
                             required
                         />
                     </div>
@@ -96,7 +70,7 @@ function ManageRestaurant(props) {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             name="category"
                             type="text"
-                            defaultValue={restaurantData?.category || ""}
+                            placeholder="e.g., Pizza, Mexican, Italian"
                             required
                         />
                     </div>
@@ -104,7 +78,6 @@ function ManageRestaurant(props) {
                         <b className="block mb-2 text-white">Address: </b>
                         <PlaceAutocomplete
                             className="bg-gray-900 text-white"
-                            defaultValue={restaurantData?.address}
                             onPlaceSelected={({ address, latitude, longitude }) => {
                                 document.querySelector('[name="address"]').value = `${address.streetNumber} ${address.street}, ${address.city}, ${address.state} ${address.zip}`;
                                 document.querySelector('[name="latitude"]').value = latitude;
@@ -115,43 +88,38 @@ function ManageRestaurant(props) {
                     <div className="w-full xl:flex-shrink-0 xl:w-auto">
                         <Button 
                             type="submit" 
+                            variant="secondary"
+                            size="sm"
                             fullWidth
                             className="xl:w-auto whitespace-nowrap"
-                            loading={loading2}
+                            loading={loading}
                         >
-                            {hasRestaurant ? (
-                                <>
-                                    <i className="bi bi-pencil-square me-2"> </i>
-                                    Save
-                                </>
-                            ) : (
-                                <>
-                                    <i className="bi bi-plus me-2"> </i>
-                                    Add Restaurants
-                                </>
-                            )}
+                            <i className="bi bi-plus me-2"> </i>
+                            Submit Suggestion
                         </Button>
                     </div>
                 </div>
-                <input type="hidden" value={restaurantData?.address || ""} name="address" />
-                <input type="hidden" value={restaurantData?.latitude || ""} name="latitude" />
-                <input type="hidden" value={restaurantData?.longitude || ""} name="longitude" />
+                <input type="hidden" value="" name="address" />
+                <input type="hidden" value="" name="latitude" />
+                <input type="hidden" value="" name="longitude" />
                 <div className="w-full mt-2">
-                    {loading2 ? <Spinner /> : ""}
+                    {loading ? <Spinner /> : ""}
                     {success ? (
                         <p className="text-green-600 mt-2">
                             <i className="bi bi-check-circle-fill"> </i>
-                            {hasRestaurant ? "Restaurant updated successfully." : "Restaurant added successfully."}
+                            Restaurant suggestion submitted successfully! It will be reviewed by an administrator.
                         </p>
                     ) : ""}
                     {error && (
                         <p className="text-red-600 mt-2">
                             <i className="bi bi-exclamation-triangle"> </i>
-                            {error.length > 0 ? error : ""}
+                            {error}
                         </p>
                     )}
                 </div>
             </div>
-        </form>);
+        </form>
+    );
 }
-export default ManageRestaurant;
+
+export default SuggestRestaurant;

@@ -149,6 +149,31 @@ function DriverOrders() {
                                     </h5>
                                 </div>
                                 <div className="w-full lg:w-1/2 lg:pr-4">
+                                    <details className="mb-2">
+                                        <summary className="cursor-pointer font-semibold text-gray-900 bg-gray-200 p-2 rounded mb-2 hover:bg-gray-300">
+                                            User ID: {order.user_id || 'N/A'}
+                                        </summary>
+                                        <div className="ml-4">
+                                            <div className="currency-item">
+                                                <b className="label">First Name: </b>
+                                                <span className="amount">
+                                                    {order.firstname || 'N/A'}
+                                                </span>
+                                            </div>
+                                            <div className="currency-item">
+                                                <b className="label">Last Name: </b>
+                                                <span className="amount">
+                                                    {order.lastname || 'N/A'}
+                                                </span>
+                                            </div>
+                                            <div className="currency-item">
+                                                <b className="label">Gmail: </b>
+                                                <span className="amount">
+                                                    {order.email || 'N/A'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </details>
                                     <div className="currency-item">
                                         <b className="label">Date: </b>
                                         <span className="amount">

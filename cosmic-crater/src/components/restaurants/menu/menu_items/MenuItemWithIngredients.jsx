@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import EditIngredients from './ingredients/EditIngredient';
 import EditItem from './EditItem';
-import ResponsiveFlexRow from '../../../common/ResponsiveFlexRow';
 import Button from '../../../common/Button';
 
 function MenuItemWithIngredients(props) {
@@ -14,12 +13,11 @@ function MenuItemWithIngredients(props) {
     
     return (
         <div key={item.id} className="w-full mt-3">
-            <ResponsiveFlexRow 
-                variant="menu"
-                className="cursor-pointer hover:opacity-90 transition-opacity"
+            <div 
+                className="flex justify-between items-center cursor-pointer hover:opacity-90 transition-opacity p-4"
                 onClick={() => setIsExpanded(!isExpanded)}
             >
-                <h3 className="text-lg font-semibold m-0 text-white">{item.name || `Menu Item #${item.id}`}</h3>
+                <h3 className="text-lg font-semibold m-0 text-base-content">{item.name || `Menu Item #${item.id}`}</h3>
                 <Button
                     onClick={(e) => {
                         e.stopPropagation();
@@ -42,7 +40,7 @@ function MenuItemWithIngredients(props) {
                         </>
                     )}
                 </Button>
-            </ResponsiveFlexRow>
+            </div>
             {isExpanded && (
                 <div className="flex flex-wrap">
                     <div className='w-full xl:w-1/4 bg-blue-50 p-4'>

@@ -3,6 +3,7 @@ import axios from 'axios';
 import qs from 'qs';
 import ManageRestaurant from './ManageRestaurant';
 import MenuUpdate from './menu/MenuUpdate';
+import RestaurantSuggestions from './RestaurantSuggestions';
 
 export default function Admin(props) {
     const [success, setSuccess] = useState(false);
@@ -19,6 +20,9 @@ export default function Admin(props) {
                     loading2={loading2}
                     setLoading2={setLoading2}
                 />
+            </div>
+            <div className="mb-6">
+                <RestaurantSuggestions />
             </div>
             <MenuUpdate />
         </div>
