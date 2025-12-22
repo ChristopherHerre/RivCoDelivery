@@ -100,14 +100,23 @@ function EditItem(props) {
                     </div>
                 );
             })}
-            <Button 
-                onClick={(e) => handleSave(e, item.id)} 
-                fullWidth
-                className="mb-3"
-                loading={loading3}
-            >
-                <i className="bi bi-pencil-square"></i> Save
-            </Button>
+            <div className="flex flex-col md:flex-row gap-3 mb-3">
+                <Button 
+                    onClick={(e) => handleSave(e, item.id)} 
+                    className="w-full md:flex-1"
+                    loading={loading3}
+                >
+                    <i className="bi bi-pencil-square"></i> Save
+                </Button>
+                <Button 
+                    onClick={() => handleDeleteMenuItem(item.id)} 
+                    variant="danger"
+                    className="w-full md:flex-1"
+                >
+                    <i className="bi bi-trash"> </i>
+                    Delete
+                </Button>
+            </div>
             <div className="mb-3">
                 {success2 ? (
                     <p className="text-green-600">
@@ -121,22 +130,13 @@ function EditItem(props) {
                         {error.length > 0 ? error : ""}
                     </p>
                 )}
+                {error2 && (
+                    <p className="text-red-600 mt-2">
+                        <i class="bi bi-exclamation-triangle"> </i>
+                        {error2.length > 0 ? error2 : ""}
+                    </p>
+                )}
             </div>
-            <Button 
-                onClick={() => handleDeleteMenuItem(item.id)} 
-                variant="danger"
-                fullWidth
-                className="mb-3"
-            >
-                <i className="bi bi-trash"> </i>
-                Delete
-            </Button>
-            {error2 && (
-                <p className="text-red-600 mt-2">
-                    <i class="bi bi-exclamation-triangle"> </i>
-                    {error2.length > 0 ? error2 : ""}
-                </p>
-            )}
         </>
     );
 }

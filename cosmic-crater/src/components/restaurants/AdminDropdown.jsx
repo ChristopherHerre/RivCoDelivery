@@ -63,6 +63,7 @@ const AdminDropdown = (props) => {
                 <Link to="/donate">
                     <Button
                         variant="secondary"
+                        size="lg"
                         fullWidth={full}
                         className={full ? "mt-1 mr-1" : "mt-1 mr-1"}
                     >

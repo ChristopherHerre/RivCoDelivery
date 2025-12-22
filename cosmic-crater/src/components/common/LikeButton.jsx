@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Button from './Button';
 
 export default function LikeButton({ itemId, itemType, initialLikes = 0, initialLiked = false, profile }) {
     const [likes, setLikes] = useState(initialLikes);
@@ -45,19 +44,30 @@ export default function LikeButton({ itemId, itemType, initialLikes = 0, initial
     return (
         <div className="flex items-center gap-2">
             {profile?.sub && (
-                <Button
+                <button
                     onClick={handleLike}
                     disabled={loading}
-                    variant={liked ? 'danger' : 'secondary'}
-                    size="md-large"
-                    iconOnly={true}
-                    ariaLabel={liked ? 'Unlike' : 'Like'}
-                    className={`${liked ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'} px-5 py-2.5`}
+                    className={`btn btn-sm btn-circle group ${
+                        liked
+                            // Active: solid pink, hover to pink outline (border/background only)
+                            ? 'bg-pink-500 text-white border-pink-500 hover:bg-transparent hover:border-pink-500'
+                            // Inactive: filled primary, hover switches to outline
+                            : 'bg-primary text-primary-content border-primary hover:bg-transparent hover:text-primary hover:border-primary'
+                    }`}
+                    aria-label={liked ? 'Unlike' : 'Like'}
                 >
-                    <i className={`bi bi-heart${liked ? '-fill' : ''}`}></i>
-                </Button>
+                    {loading ? (
+                        <span className="loading loading-spinner loading-xs"></span>
+                    ) : (
+                        <i
+                            className={`bi bi-heart${liked ? '-fill' : ''} ${
+                                liked ? 'text-white group-hover:text-pink-500' : ''
+                            }`}
+                        ></i>
+                    )}
+                </button>
             )}
-            <span className="text-sm text-white/80">
+            <span className="text-sm text-base-content/70">
                 {likes} {likes === 1 ? 'like' : 'likes'}
             </span>
         </div>

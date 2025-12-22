@@ -1,11 +1,12 @@
 const { z } = require('zod');
 const { ingredientBodySchema, ingredientIdParamSchema, ingredientIdParamSchemaAlt } = require('../utils/schemas');
+const { ROLES } = require('../constants/roles');
 
 function menuIngredientRoutes(app, pool, checkRole) {
     const router = require('express').Router();
 
     // DELETE /api/menu-item-ingredients/:ingredient_id
-    router.delete('/menu-item-ingredients/:ingredient_id', checkRole(2), async (req, res) => {
+    router.delete('/menu-item-ingredients/:ingredient_id', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
@@ -75,7 +76,7 @@ function menuIngredientRoutes(app, pool, checkRole) {
     });
 
     // POST /api/menu-item-ingredients
-    router.post('/menu-item-ingredients', checkRole(2), async (req, res) => {
+    router.post('/menu-item-ingredients', checkRole(ROLES.ADMIN), async (req, res) => {
         const parseResult = ingredientBodySchema.safeParse(req.body);
         if (!parseResult.success) {
             return res.status(400).json({
@@ -154,7 +155,7 @@ function menuIngredientRoutes(app, pool, checkRole) {
     });
 
     // PUT /api/menu-ingredients/:id
-    router.put('/menu-ingredients/:id', checkRole(2), async (req, res) => {
+    router.put('/menu-ingredients/:id', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }

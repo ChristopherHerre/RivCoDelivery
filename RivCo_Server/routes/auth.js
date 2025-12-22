@@ -1,4 +1,5 @@
 const rateLimit = require('express-rate-limit');
+const { ROLES } = require('../constants/roles');
 
 function authRoutes(app, pool, checkRole, orderLimiter, client, passport) {
     const router = require('express').Router();
@@ -22,7 +23,7 @@ function authRoutes(app, pool, checkRole, orderLimiter, client, passport) {
             const [userResults] = await pool.execute(
                 'SELECT * FROM users WHERE id = ? LIMIT 1', [sub]
             );
-            const role = 0;
+            const role = ROLES.USER;
             if (userResults.length === 0) {
                 await pool.execute(
                     'INSERT INTO users (id, name, email, role) VALUES (?, ?, ?, ?)',

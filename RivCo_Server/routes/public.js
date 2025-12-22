@@ -1,5 +1,6 @@
 const { haversine_dist } = require('../utils/helpers');
 const { latLngParamSchema } = require('../utils/schemas');
+const { ROLES } = require('../constants/roles');
 
 function publicRoutes(app, pool, checkRole) {
     const router = require('express').Router();
@@ -10,7 +11,7 @@ function publicRoutes(app, pool, checkRole) {
     });
 
     // GET /api/restaurants/:latitude/:longitude
-    router.get('/restaurants/:latitude/:longitude', checkRole(0), async (req, res) => {
+    router.get('/restaurants/:latitude/:longitude', checkRole(ROLES.USER), async (req, res) => {
         // Validate path parameters
         const parseResult = latLngParamSchema.safeParse(req.params);
         if (!parseResult.success) {

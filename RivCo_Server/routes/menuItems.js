@@ -1,11 +1,12 @@
 const { z } = require('zod');
 const { updateMenuItemSchema, addMenuItemSchema, menuItemIdQuerySchema, menuItemIdParamSchema, menuItemSearchSchema } = require('../utils/schemas');
+const { ROLES } = require('../constants/roles');
 
 function menuItemRoutes(app, pool, checkRole) {
     const router = require('express').Router();
 
     // DELETE /api/menu-items/:id
-    router.delete('/menu-items/:id', checkRole(2), async (req, res) => {
+    router.delete('/menu-items/:id', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
@@ -62,7 +63,7 @@ function menuItemRoutes(app, pool, checkRole) {
     });
 
     // POST /api/update-menu-item/:id
-    router.post('/update-menu-item/:id', checkRole(2), async (req, res) => {
+    router.post('/update-menu-item/:id', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
@@ -148,7 +149,7 @@ function menuItemRoutes(app, pool, checkRole) {
     });
 
     // POST /api/menu-items (link ingredient to menu item)
-    router.post('/menu-items', checkRole(2), async (req, res) => {
+    router.post('/menu-items', checkRole(ROLES.ADMIN), async (req, res) => {
         const { menu_item_id, ingredient_id } = req.body;
         if (!menu_item_id || !ingredient_id) {
             return res.status(400).json({ error: 'Menu item ID and Ingredient ID are required' });
@@ -216,7 +217,7 @@ function menuItemRoutes(app, pool, checkRole) {
     });
 
     // POST /api/add-menu-item
-    router.post('/add-menu-item', checkRole(2), async (req, res) => {
+    router.post('/add-menu-item', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
@@ -277,7 +278,7 @@ function menuItemRoutes(app, pool, checkRole) {
     });
 
     // GET /api/menu-items-list
-    router.get('/menu-items-list', checkRole(2), async (req, res) => {
+    router.get('/menu-items-list', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ error: 'Unauthorized: No user session' });
         }
@@ -301,8 +302,53 @@ function menuItemRoutes(app, pool, checkRole) {
         }
     });
 
+    // GET /api/menu-item-categories - Get unique categories for autocomplete
+    router.get('/menu-item-categories', checkRole(ROLES.ADMIN), async (req, res) => {
+        if (!req.session?.user?.sub) {
+            return res.status(401).json({ error: 'Unauthorized: No user session' });
+        }
+        const { query: searchQuery } = req.query;
+        try {
+            const connection = await pool.getConnection();
+            try {
+                // Get user's restaurant_id
+                const [[user]] = await connection.execute(
+                    'SELECT restaurant_id FROM users WHERE id = ?',
+                    [req.session.user.sub]
+                );
+                if (!user?.restaurant_id) {
+                    return res.status(403).json({ error: 'User has no associated restaurant' });
+                }
+
+                // Get unique categories, optionally filtered by search query
+                let sqlQuery = `
+                    SELECT DISTINCT category
+                    FROM menu_items
+                    WHERE restaurant_id = ? AND category IS NOT NULL AND category != ''
+                `;
+                const params = [user.restaurant_id];
+
+                if (searchQuery && searchQuery.trim()) {
+                    sqlQuery += ' AND category LIKE ?';
+                    params.push(`%${searchQuery.trim()}%`);
+                }
+
+                sqlQuery += ' ORDER BY category LIMIT 20';
+
+                const [results] = await connection.execute(sqlQuery, params);
+                const categories = results.map(row => row.category);
+                res.json(categories);
+            } finally {
+                connection.release();
+            }
+        } catch (err) {
+            console.error('Error fetching categories:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
     // GET /api/menu/item/search
-    router.get('/menu/item/search', checkRole(0), async (req, res) => {
+    router.get('/menu/item/search', checkRole(ROLES.USER), async (req, res) => {
         const parseResult = menuItemSearchSchema.safeParse(req.query);
         if (!parseResult.success) {
             return res.status(400).json({
@@ -327,7 +373,7 @@ function menuItemRoutes(app, pool, checkRole) {
     });
 
     // GET /api/menu/item/ingredients
-    router.get('/menu/item/ingredients', checkRole(0), async (req, res) => {
+    router.get('/menu/item/ingredients', checkRole(ROLES.USER), async (req, res) => {
         // Validate query parameters
         const parseResult = menuItemIdQuerySchema.safeParse(req.query);
         if (!parseResult.success) {
@@ -352,7 +398,7 @@ function menuItemRoutes(app, pool, checkRole) {
     });
 
     // GET /api/menu/item
-    router.get('/menu/item', checkRole(0), async (req, res) => {
+    router.get('/menu/item', checkRole(ROLES.USER), async (req, res) => {
         // Validate query parameters
         const parseResult = menuItemIdQuerySchema.safeParse(req.query);
         if (!parseResult.success) {
@@ -391,6 +437,110 @@ function menuItemRoutes(app, pool, checkRole) {
             res.json(results);
         } catch (err) {
             console.error('Error executing query:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // GET /api/menu-item-prices - Get unique prices for autocomplete
+    router.get('/menu-item-prices', checkRole(ROLES.ADMIN), async (req, res) => {
+        if (!req.session?.user?.sub) {
+            return res.status(401).json({ error: 'Unauthorized: No user session' });
+        }
+        const { query: searchQuery, field } = req.query;
+        try {
+            const connection = await pool.getConnection();
+            try {
+                // Get user's restaurant_id
+                const [[user]] = await connection.execute(
+                    'SELECT restaurant_id FROM users WHERE id = ?',
+                    [req.session.user.sub]
+                );
+                if (!user?.restaurant_id) {
+                    return res.status(403).json({ error: 'User has no associated restaurant' });
+                }
+
+                // Determine which price field to query (price, price2, price3, price4)
+                const priceField = field || 'price';
+                const validFields = ['price', 'price2', 'price3', 'price4'];
+                if (!validFields.includes(priceField)) {
+                    return res.status(400).json({ error: 'Invalid price field' });
+                }
+
+                // Get unique prices from the specified field
+                let sqlQuery = `
+                    SELECT DISTINCT ${priceField}
+                    FROM menu_items
+                    WHERE restaurant_id = ? AND ${priceField} IS NOT NULL AND ${priceField} != ''
+                `;
+                const params = [user.restaurant_id];
+
+                if (searchQuery && searchQuery.trim()) {
+                    sqlQuery += ` AND CAST(${priceField} AS CHAR) LIKE ?`;
+                    params.push(`%${searchQuery.trim()}%`);
+                }
+
+                sqlQuery += ` ORDER BY ${priceField} LIMIT 20`;
+
+                const [results] = await connection.execute(sqlQuery, params);
+                const prices = results.map(row => String(row[priceField])).filter(price => price && price.trim());
+                res.json(prices);
+            } finally {
+                connection.release();
+            }
+        } catch (err) {
+            console.error('Error fetching prices:', err);
+            res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // GET /api/menu-item-sizes - Get unique sizes for autocomplete
+    router.get('/menu-item-sizes', checkRole(ROLES.ADMIN), async (req, res) => {
+        if (!req.session?.user?.sub) {
+            return res.status(401).json({ error: 'Unauthorized: No user session' });
+        }
+        const { query: searchQuery, field } = req.query;
+        try {
+            const connection = await pool.getConnection();
+            try {
+                // Get user's restaurant_id
+                const [[user]] = await connection.execute(
+                    'SELECT restaurant_id FROM users WHERE id = ?',
+                    [req.session.user.sub]
+                );
+                if (!user?.restaurant_id) {
+                    return res.status(403).json({ error: 'User has no associated restaurant' });
+                }
+
+                // Determine which size field to query (size1, size2, size3, size4)
+                const sizeField = field || 'size1';
+                const validFields = ['size1', 'size2', 'size3', 'size4'];
+                if (!validFields.includes(sizeField)) {
+                    return res.status(400).json({ error: 'Invalid size field' });
+                }
+
+                // Get unique sizes from the specified field
+                let sqlQuery = `
+                    SELECT DISTINCT ${sizeField}
+                    FROM menu_items
+                    WHERE restaurant_id = ? AND ${sizeField} IS NOT NULL AND ${sizeField} != '' AND TRIM(${sizeField}) != ''
+                `;
+                const params = [user.restaurant_id];
+
+                if (searchQuery && searchQuery.trim()) {
+                    sqlQuery += ` AND LOWER(TRIM(${sizeField})) LIKE LOWER(?)`;
+                    params.push(`%${searchQuery.trim()}%`);
+                }
+
+                sqlQuery += ` ORDER BY ${sizeField} LIMIT 20`;
+
+                const [results] = await connection.execute(sqlQuery, params);
+                const sizes = results.map(row => row[sizeField]).filter(size => size && size.trim());
+                res.json(sizes);
+            } finally {
+                connection.release();
+            }
+        } catch (err) {
+            console.error('Error fetching sizes:', err);
             res.status(500).json({ error: 'Database query failed' });
         }
     });

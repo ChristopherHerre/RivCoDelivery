@@ -4,10 +4,11 @@ import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Badge from '../cart/Badge';
 import Spinner from '../Spinner';
 import DeliveryAddress from '../address/DeliveryAddress';
-import Button from '../../common/Button';
 import { Link } from 'react-router-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import ResponsiveFlexRow from '../../common/ResponsiveFlexRow';
+import Button from '../../common/Button';
 
 function Navbar(props) {
     const cart = props.cart;
@@ -26,13 +27,15 @@ function Navbar(props) {
         const { profile } = props;
         return (
             profile && (
-                <div className="mb-2">
-                    <small className="flex items-center gap-2 flex-wrap">
-                        <span>Welcome,</span>
-                        <img className="google-profile-icon" src={profile.picture} alt={profile.name} /> 
-                        <b>{profile.name}</b>
-                        <a href="#" onClick={handleLogout}>Logout</a>
-                    </small>
+                <div className="flex items-center gap-2 flex-wrap text-sm md:text-base">
+                    <span className="text-base-content font-semibold">Welcome,</span>
+                    <div className="avatar">
+                        <div className="w-8 h-8 rounded-full">
+                            <img src={profile.picture} alt={profile.name} /> 
+                        </div>
+                    </div>
+                    <b className="text-base-content font-semibold">{profile.name}</b>
+                    <button className="btn btn-link btn-sm text-error" onClick={handleLogout}>Logout</button>
                 </div>
             )
         );
@@ -88,81 +91,87 @@ function Navbar(props) {
 
     return (
         <>
-            <div id="navbar" className="flex flex-wrap lg:flex-nowrap items-center gap-4 mb-4 w-full">
-                <div className="w-full lg:flex-1">
-                    {profile ? <ShowGoogleUserInfo profile={profile} /> : ""}
-                    <div className="w-full mb-2">
-                        {profile ? <DeliveryAddress 
-                            showGetLocation={showGetLocation} 
-                            setShowGetLocation={setShowGetLocation} 
-                            address={address} 
-                            setAddress={setAddress}
-                        /> : 
-                        <div>
-                            <label>
-                                <u className="text-red-600">
-                                    You must sign in to place an order!
-                                </u>
-                            </label>
-                        </div>}
-                    </div>
+            <div id="navbar" className="navbar p-4 mb-4 w-full">
+                <div className="navbar-start w-full xl:flex-1">
+                    {profile ? (
+                        <div className="flex flex-row md:flex-row lg:flex-row max-[480px]:flex-col items-center gap-4 mb-2">
+                            <ShowGoogleUserInfo profile={profile} />
+                            <DeliveryAddress 
+                                showGetLocation={showGetLocation} 
+                                setShowGetLocation={setShowGetLocation} 
+                                address={address} 
+                                setAddress={setAddress}
+                            />
+                        </div>
+                    ) : (
+                        <div className="alert alert-warning shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span>You must sign in to place an order!</span>
+                        </div>
+                    )}
                 </div>
-                <div className="w-full lg:flex-1">
-                    <div className="flex flex-col md:flex-row gap-2 w-full items-stretch">
-                        <div className="flex-1 flex flex-col min-w-0">
-                            {
-                                !profile ? 
-                                    <GoogleOAuthProvider className="w-full" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
-                                        {/* Custom GoogleLogin Component */}
-                                        <GoogleLogin
-                                            className="w-full"
-                                            onSuccess={handleGoogleLoginSuccess}
-                                            onFailure={handleGoogleLoginFailure}
-                                            useOneTap
-                                            render={(props) => (
-                                                <Button
-                                                    {...props}
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    fullWidth
-                                                    className="google-login-btn"
-                                                >
-                                                    <i className="bi bi-google google-icon"></i> Sign in with Google
-                                                </Button>
-                                            )}
-                                        />
-                                    </GoogleOAuthProvider>
-                                : ""
-                            }
+                <div className="navbar-end w-full xl:flex-1">
+                    {!profile ? (
+                        <GoogleOAuthProvider className="w-full" clientId="21015588297-aj72ug866rm7j1nh7lsmffp986kbgoeh.apps.googleusercontent.com">
+                            <GoogleLogin
+                                className="w-full"
+                                onSuccess={handleGoogleLoginSuccess}
+                                onFailure={handleGoogleLoginFailure}
+                                useOneTap
+                                render={(props) => (
+                                    <Button
+                                        {...props}
+                                        variant="secondary"
+                                        size="md"
+                                        fullWidth
+                                        type="button"
+                                        className="whitespace-nowrap"
+                                    >
+                                        <i className="bi bi-google"></i> Sign in with Google
+                                    </Button>
+                                )}
+                            />
+                        </GoogleOAuthProvider>
+                    ) : (
+                        <>
                             {profile && loginLoading ? <Spinner /> : ""}
-                            {profile ? 
-                                <Button variant="secondary" size="sm" fullWidth className="h-full" type="button" onClick={() => navigate('/user-orders')}>
-                                    <i className="bi bi-list"></i> My Orders
-                                </Button> : ""
-                            }
-                        </div>
-                        <div className="flex-1 min-w-0 flex">
-                            <Button 
-                                variant="secondary"
-                                size="sm"
-                                fullWidth
-                                className="h-full"
-                                type="button" 
-                                onClick={() => {
-                                    if (cart && cart.length > 0 && cart[0]?.restaurant_id) {
-                                        navigate(`/${cart[0].restaurant_id}/cart`);
-                                    }
-                                }}
-                                disabled={!cart || cart.length === 0 || !cart[0]?.restaurant_id}
-                            >
-                                <i className="bi bi-cart"></i>
-                                <span className="inline-block">
-                                    Cart
-                                    <Badge cartAmount={cartAmount} />
-                                </span>
-                            </Button>
-                        </div>
-                    </div>
+                            {profile && (
+                                <div className="flex flex-row md:flex-row lg:flex-row xl:flex-row max-[400px]:flex-col items-center gap-3">
+                                    <Button 
+                                        variant="secondary"
+                                        size="md"
+                                        fullWidth
+                                        type="button" 
+                                        className="flex-1 max-[400px]:w-full whitespace-nowrap"
+                                        onClick={() => navigate('/user-orders')}
+                                    >
+                                        <i className="bi bi-list"></i> My Orders
+                                    </Button>
+                                    <Button 
+                                        variant="secondary"
+                                        size="md"
+                                        fullWidth
+                                        type="button" 
+                                        className="flex-1 max-[400px]:w-full whitespace-nowrap"
+                                        onClick={() => {
+                                            if (cart && cart.length > 0 && cart[0]?.restaurant_id) {
+                                                navigate(`/${cart[0].restaurant_id}/cart`);
+                                            }
+                                        }}
+                                        disabled={!cart || cart.length === 0 || !cart[0]?.restaurant_id}
+                                    >
+                                        <i className="bi bi-cart"></i>
+                                        <span className="inline-block">
+                                            Cart
+                                            <Badge cartAmount={cartAmount} />
+                                        </span>
+                                    </Button>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </>

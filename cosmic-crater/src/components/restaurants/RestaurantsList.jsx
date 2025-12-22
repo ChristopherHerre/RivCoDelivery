@@ -6,9 +6,9 @@ import Spinner from '../users/Spinner';
 import Welcome from '../users/address/Welcome';
 import { getRestaurantMenuUrl, getRestaurantCategoryUrl } from '../../utils/restaurantUrls';
 import CityFilter from './CityFilter';
-import ResponsiveFlexRow from '../common/ResponsiveFlexRow';
 import LikeButton from '../common/LikeButton';
 import Button from '../common/Button';
+import Carousel, { CarouselItem } from '../common/Carousel';
 
 export function groupBy(array, keyFn) {
     return array.reduce((acc, item) => {
@@ -289,21 +289,44 @@ export default function RestaurantsList(props) {
             }
             {!showGetLocation && loaded ? (
                 <div className="w-full">
-                    {/* City Filter and Search Input */}
-                    <div className="flex flex-wrap gap-3 mb-4">
-                        <CityFilter 
-                            selectedCities={selectedCities}
-                            onCityChange={handleCityChange}
-                        />
-                        <div className="w-full md:w-auto flex-1 md:flex-initial">
-                            <input 
-                                placeholder="Search for item..." 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                value={query} 
-                                onChange={(e) => handleSearch(e)} 
-                                type="text" 
-                            />
+                    {/* City Filter, Search Input, and Ad Space */}
+                    <div className="card bg-base-100 shadow-md mb-4">
+                        <div className="card-body p-4">
+                            <div className="flex flex-wrap md:flex-nowrap gap-4">
+                                <div className="w-full md:w-1/2">
+                                    <CityFilter 
+                                        selectedCities={selectedCities}
+                                        onCityChange={handleCityChange}
+                                    />
+                                </div>
+                                <div className="w-full md:w-1/2">
+                                    <div className="form-control">
+                                        <label className="label">
+                                            <span className="label-text text-base-content">Search for item:</span>
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search for item..." 
+                                            className="input input-bordered w-full bg-base-200 text-base-content placeholder:text-base-content/50" 
+                                            value={query} 
+                                            onChange={(e) => handleSearch(e)} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                    <div className="mb-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="md"
+                            onClick={() => navigate('/suggest-restaurant')}
+                            className="whitespace-nowrap"
+                        >
+                            <i className="bi bi-plus-circle"></i>
+                            Suggest a Restaurant
+                        </Button>
                     </div>
 
                     {/* Restaurants by Category */}
@@ -319,19 +342,23 @@ export default function RestaurantsList(props) {
                             return (
                                 <div key={categoryIndex} className="mb-6">
                                     {categoryUrl ? (
-                                        <h2 className="text-xl font-semibold mb-3">
+                                        <h2 className="text-2xl font-bold mb-4 text-primary px-12">
                                             <button
                                                 onClick={() => navigate(categoryUrl)}
-                                                className="text-gray-900 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer text-left font-semibold"
-                                                style={{ fontSize: 'inherit', fontWeight: 'inherit' }}
+                                                className="link link-hover text-primary"
                                             >
                                                 {category}
                                             </button>
                                         </h2>
                                     ) : (
-                                        <h2 className="text-xl font-semibold mb-3">{category}</h2>
+                                        <h2 className="text-2xl font-bold mb-4 text-primary px-12">{category}</h2>
                                     )}
-                                    <div className="flex flex-wrap -mx-3">
+                                    <Carousel
+                                        id={`carousel-${categoryIndex}`}
+                                        scrollAmount={400}
+                                        carouselClassName="px-12"
+                                        className="py-4 bg-gray-800 rounded-xl"
+                                    >
                                         {result[category].map((data, key) => {
                                         const h = haversine_dist(
                                             data.latitude, 
@@ -354,23 +381,21 @@ export default function RestaurantsList(props) {
                                             console.log("Restaurant selected:", data.id);
                                         }
                                         return (
-                                            <div className="w-full md:w-1/2 px-3 mb-3" key={key}>
-                                                <ResponsiveFlexRow card align="stretch" variant="restaurant">
-                                                    <div className="flex-1 flex flex-col">
-                                                        <h3 className="text-lg font-semibold mb-2">
+                                            <CarouselItem key={key}>
+                                                <div className="card bg-base-100 w-96 shadow-sm">
+                                                    <div className="card-body">
+                                                        <h2 className="card-title">
                                                             <button
                                                                 onClick={(e) => selectRestaurant(data)}
-                                                                className="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
+                                                                className="text-white link link-hover"
                                                             >
                                                                 {data.name}
                                                             </button>
-                                                        </h3>
-                                                        <p className="mb-1 text-base">
-                                                            <strong className="font-semibold text-white">{data.category}</strong>
-                                                        </p>
-                                                        <p className="mb-2 text-base text-white/80">{data.address}</p>
+                                                            <div className="badge badge-secondary badge-lg">{data.category}</div>
+                                                        </h2>
+                                                        <p className="text-base-content/70">{data.address}</p>
                                                         {h < 100 && (
-                                                            <p className="mb-2 text-sm text-white/70">
+                                                            <p className="text-sm text-base-content/60">
                                                                 Distance: {roundedToFixed(h, 1)} mi
                                                                 {fee <= maxFee && (
                                                                     <span className="ml-2">
@@ -379,32 +404,33 @@ export default function RestaurantsList(props) {
                                                                 )}
                                                             </p>
                                                         )}
-                                                    </div>
-                                                    <div className="flex items-center gap-2 max-lg:w-full">
-                                                        <Link
-                                                            to={getRestaurantMenuUrl(data)}
-                                                            className="no-underline"
-                                                        >
-                                                            <Button
-                                                                size="md-large"
-                                                                responsiveFullWidth={true}
+                                                        <div className="card-actions justify-end">
+                                                            <Link
+                                                                to={getRestaurantMenuUrl(data)}
+                                                                className="no-underline"
                                                             >
-                                                                View menu
-                                                            </Button>
-                                                        </Link>
-                                                        <LikeButton
-                                                            itemId={data.id}
-                                                            itemType="restaurant"
-                                                            initialLikes={restaurantLikes[data.id]?.likes || data.likes || 0}
-                                                            initialLiked={restaurantLikes[data.id]?.liked || false}
-                                                            profile={profile}
-                                                        />
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="primary"
+                                                                    type="button"
+                                                                >
+                                                                    View menu
+                                                                </Button>
+                                                            </Link>
+                                                            <LikeButton
+                                                                itemId={data.id}
+                                                                itemType="restaurant"
+                                                                initialLikes={restaurantLikes[data.id]?.likes || data.likes || 0}
+                                                                initialLiked={restaurantLikes[data.id]?.liked || false}
+                                                                profile={profile}
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </ResponsiveFlexRow>
-                                            </div>
+                                                </div>
+                                            </CarouselItem>
                                         );
                                         })}
-                                    </div>
+                                    </Carousel>
                                 </div>
                             );
                         })

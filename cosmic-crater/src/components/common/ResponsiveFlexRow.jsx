@@ -1,11 +1,11 @@
 import React from 'react';
 
 /**
- * A responsive flex container that stacks vertically on screens below 1024px
+ * A responsive flex container that stacks vertically on screens below 640px
  * and displays horizontally on larger screens. Useful for content with buttons on the right.
  * 
  * Note: Buttons/links should include these classes for responsive behavior:
- * `max-lg:w-full max-lg:text-center` (and remove `whitespace-nowrap` on small screens)
+ * `max-sm:w-full max-sm:text-center` (and remove `whitespace-nowrap` on small screens)
  * 
  * Nested ResponsiveFlexRow components should use variant="nested" to blend with the parent gradient.
  * 
@@ -33,36 +33,21 @@ export default function ResponsiveFlexRow({
 }) {
     const justifyClass = justify === 'end' ? 'justify-end' : justify === 'start' ? 'justify-start' : 'justify-between';
     const alignClass = align === 'start' ? 'items-start' : align === 'stretch' ? 'items-stretch' : 'items-center';
-    const alignStackClass = align === 'stretch' ? 'max-lg:items-stretch' : 'max-lg:items-start';
+    const alignStackClass = align === 'stretch' ? 'max-sm:items-stretch' : 'max-sm:items-start';
     
-    // Different gradients for different object types
-    let backgroundClass = 'bg-gradient-to-r from-indigo-500 to-pink-500'; // default/primary
-    if (variant === 'nested') {
-        // Nested components have no background - they blend with parent
-        backgroundClass = 'bg-transparent';
-    } else if (variant === 'city') {
-        backgroundClass = 'bg-gradient-to-r from-yellow-500 to-amber-500';
-    } else if (variant === 'restaurant') {
-        backgroundClass = 'bg-gradient-to-r from-blue-500 to-yellow-500';
-    } else if (variant === 'menu') {
-        backgroundClass = 'bg-gradient-to-r from-blue-900 to-amber-500';
-    } else if (variant === 'menuItem') {
-        backgroundClass = 'bg-gradient-to-r from-red-500 to-orange-500';
-    } else if (variant === 'ingredient') {
-        backgroundClass = 'bg-gradient-to-r from-blue-500 to-cyan-500';
-    }
-    
-    const shadowClass = variant === 'nested' ? '' : 'shadow-lg';
-    const paddingClass = variant === 'nested' ? '' : 'p-6';
-    const roundedClass = variant === 'nested' ? '' : 'rounded-xl';
+    // No background colors, shadows, or borders - completely transparent
+    const backgroundClass = '';
+    const shadowClass = '';
+    const paddingClass = variant === 'nested' ? '' : 'p-4';
+    const roundedClass = '';
     
     // Build base classes
     const baseClasses = `${backgroundClass} ${shadowClass} ${roundedClass} ${paddingClass} flex`;
-    const cardClasses = card ? 'h-full hover:shadow-md transition-shadow' : '';
+    const cardClasses = card ? 'h-full' : '';
     // When vertical is true, always use flex-col; otherwise only on small screens
     const verticalClass = vertical ? 'flex-col' : '';
-    const responsiveVerticalClass = vertical ? '' : 'max-lg:flex-col';
-    const borderTopClass = borderTop && variant !== 'nested' ? 'mt-auto pt-2 border-t border-white/30' : borderTop && variant === 'nested' ? 'mt-auto pt-2' : '';
+    const responsiveVerticalClass = vertical ? '' : 'max-sm:flex-col';
+    const borderTopClass = borderTop ? 'mt-auto pt-2' : '';
     const marginClass = margin || '';
     
     // Combine all classes
@@ -75,9 +60,9 @@ export default function ResponsiveFlexRow({
         borderTopClass,
         marginClass,
         responsiveVerticalClass,
-        'max-lg:gap-2',
+        'max-sm:gap-2',
         alignStackClass,
-        'max-lg:items-stretch',
+        'max-sm:items-stretch',
         className
     ].filter(Boolean).join(' ');
     

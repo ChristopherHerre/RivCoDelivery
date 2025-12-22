@@ -1,10 +1,11 @@
 const { cartItemInputSchema } = require('../utils/schemas');
+const { ROLES } = require('../constants/roles');
 
 function cartRoutes(app, pool, checkRole) {
     const router = require('express').Router();
 
     // POST /api/cart
-    router.post('/cart', checkRole(0), async (req, res) => {
+    router.post('/cart', checkRole(ROLES.USER), async (req, res) => {
         const cartItems = req.body.cart;
         const userId = req.session?.user?.sub;
         if (!userId) {
@@ -129,7 +130,7 @@ function cartRoutes(app, pool, checkRole) {
     });
 
     // DELETE /api/cart
-    router.delete('/cart', checkRole(0), async (req, res) => {
+    router.delete('/cart', checkRole(ROLES.USER), async (req, res) => {
         const userId = req.session?.user?.sub;
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
@@ -150,7 +151,7 @@ function cartRoutes(app, pool, checkRole) {
     });
 
     // GET /api/cart
-    router.get('/cart', checkRole(0), async (req, res) => {
+    router.get('/cart', checkRole(ROLES.USER), async (req, res) => {
         const userId = req.session?.user?.sub;
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });

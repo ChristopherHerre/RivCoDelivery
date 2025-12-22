@@ -97,7 +97,7 @@ function DeliveryAddress(props) {
     }
     
     return (
-        <small>
+        <div className="text-sm md:text-base">
             <b>Deliver to: </b>
             {isLoading ? (
                 <Spinner />
@@ -118,7 +118,7 @@ function DeliveryAddress(props) {
                     </b>
                 </>
             )}
-        </small>
+        </div>
     );
 }
 export default DeliveryAddress;

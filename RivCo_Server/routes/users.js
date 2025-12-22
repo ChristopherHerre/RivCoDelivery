@@ -1,11 +1,12 @@
 const { z } = require('zod');
 const { paginationQuerySchema, userIdParamSchema, restaurantIdBodySchema } = require('../utils/schemas');
+const { ROLES, getRoleName } = require('../constants/roles');
 
 function userRoutes(app, pool, checkRole) {
     const router = require('express').Router();
 
     // PUT /api/users/:id/role
-    router.put('/users/:id/role', checkRole(2), async (req, res) => {
+    router.put('/users/:id/role', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
@@ -22,7 +23,7 @@ function userRoutes(app, pool, checkRole) {
         const { id } = paramParseResult.data;
         console.log("id: " + id);
         const bodySchema = z.object({
-            role: z.coerce.number().int().min(0).max(2, "Role must be 0 (Basic), 1 (Driver), or 2 (Restaurant/Admin)"),
+            role: z.coerce.number().int().min(ROLES.USER).max(ROLES.ADMIN, `Role must be ${ROLES.USER} (${getRoleName(ROLES.USER)}), ${ROLES.DRIVER} (${getRoleName(ROLES.DRIVER)}), or ${ROLES.ADMIN} (${getRoleName(ROLES.ADMIN)})`),
         });
         const bodyParseResult = bodySchema.safeParse(req.body);
         if (!bodyParseResult.success) {
@@ -46,7 +47,7 @@ function userRoutes(app, pool, checkRole) {
             if (!actingUser) {
                 return res.status(403).json({ error: 'Current user not found' });
             }
-            if (actingUser.role !== 2) {
+            if (actingUser.role !== ROLES.ADMIN) {
                 return res.status(403).json({ error: 'Only admins can change roles' });
             }
 
@@ -61,7 +62,7 @@ function userRoutes(app, pool, checkRole) {
                 await connection.rollback();
                 return res.status(404).json({ error: 'User not found' });
             }
-            if (targetUser.role === 2 && role < 2) {
+            if (targetUser.role === ROLES.ADMIN && role < ROLES.ADMIN) {
                 await connection.rollback();
                 return res.status(403).json({ error: 'Cannot lower role of admin users' });
             }
@@ -98,7 +99,7 @@ function userRoutes(app, pool, checkRole) {
     });
 
     // PUT /api/users/:id/restaurant
-    router.put('/users/:id/restaurant', checkRole(2), async (req, res) => {
+    router.put('/users/:id/restaurant', checkRole(ROLES.ADMIN), async (req, res) => {
         // Validate path parameter
         const paramParseResult = userIdParamSchema.safeParse(req.params);
         if (!paramParseResult.success) {
@@ -145,7 +146,7 @@ function userRoutes(app, pool, checkRole) {
     });
 
     // PUT /api/users/:id/selected_restaurant
-    router.put('/users/:id/selected_restaurant', checkRole(0), async (req, res) => {
+    router.put('/users/:id/selected_restaurant', checkRole(ROLES.USER), async (req, res) => {
         // Validate path parameter
         const paramParseResult = userIdParamSchema.safeParse(req.params);
         if (!paramParseResult.success) {
@@ -188,7 +189,7 @@ function userRoutes(app, pool, checkRole) {
     });
 
     // GET /api/users
-    router.get('/users', checkRole(2), async (req, res) => {
+    router.get('/users', checkRole(ROLES.ADMIN), async (req, res) => {
         const parseResult = paginationQuerySchema.safeParse(req.query);
         if (!parseResult.success) {
             return res.status(400).json({
@@ -266,7 +267,7 @@ function userRoutes(app, pool, checkRole) {
     });
 
     // GET /api/users/:id/selected_restaurant
-    router.get('/users/:id/selected_restaurant', checkRole(0), async (req, res) => {
+    router.get('/users/:id/selected_restaurant', checkRole(ROLES.USER), async (req, res) => {
         // Validate path parameter
         const paramParseResult = userIdParamSchema.safeParse(req.params);
         if (!paramParseResult.success) {
@@ -299,7 +300,7 @@ function userRoutes(app, pool, checkRole) {
     });
 
     // GET /api/user/details
-    router.get('/user/details', checkRole(0), async (req, res) => {
+    router.get('/user/details', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session.user || !req.session.user.sub) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
@@ -318,7 +319,7 @@ function userRoutes(app, pool, checkRole) {
     });
 
     // DELETE /api/users/:id/cart (Admin only - clear a specific user's cart)
-    router.delete('/users/:id/cart', checkRole(2), async (req, res) => {
+    router.delete('/users/:id/cart', checkRole(ROLES.ADMIN), async (req, res) => {
         // Validate path parameter
         const paramParseResult = userIdParamSchema.safeParse(req.params);
         if (!paramParseResult.success) {

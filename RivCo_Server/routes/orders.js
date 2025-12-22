@@ -1,11 +1,12 @@
 const { z } = require('zod');
 const { changeOrderOpenSchema, paginationQuerySchema, orderIdQuerySchema } = require('../utils/schemas');
+const { ROLES } = require('../constants/roles');
 
 function ordersRoutes(app, pool, checkRole) {
     const router = require('express').Router();
 
     // POST /api/changeOrderOpen
-    router.post('/changeOrderOpen', checkRole(1), async (req, res) => {
+    router.post('/changeOrderOpen', checkRole(ROLES.DRIVER), async (req, res) => {
         try {
             const { orderId } = changeOrderOpenSchema.parse(req.body);
             const query = 'UPDATE orders SET open = 1 WHERE id = ? LIMIT 1';
@@ -24,7 +25,7 @@ function ordersRoutes(app, pool, checkRole) {
     });
 
     // GET /api/orders
-    router.get('/orders', checkRole(1), async (req, res) => {
+    router.get('/orders', checkRole(ROLES.DRIVER), async (req, res) => {
         const parseResult = paginationQuerySchema.safeParse(req.query);
         if (!parseResult.success) {
             return res.status(400).json({
@@ -37,7 +38,16 @@ function ordersRoutes(app, pool, checkRole) {
         try {
             // Get total count and results in parallel
             const countQuery = `SELECT COUNT(*) as total FROM orders WHERE open = '0'`;
-            const selectQuery = `SELECT * FROM orders WHERE open = '0' ORDER BY date DESC LIMIT ${limit} OFFSET ${offset}`;
+            const selectQuery = `SELECT 
+                o.*,
+                u.name as user_name,
+                u.email as user_email,
+                o.user_id as user_id
+            FROM orders o
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.open = '0' 
+            ORDER BY o.date DESC 
+            LIMIT ${limit} OFFSET ${offset}`;
             
             const [countResult, selectResult] = await Promise.all([
                 pool.execute(countQuery),
@@ -55,18 +65,42 @@ function ordersRoutes(app, pool, checkRole) {
             const total = countRow?.total ?? countRow?.['COUNT(*)'] ?? 0;
             const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
             
+            // Parse user names to extract firstname and lastname
+            const ordersWithUserInfo = results.map(order => {
+                let firstname = '';
+                let lastname = '';
+                
+                if (order.user_name) {
+                    const nameParts = order.user_name.trim().split(/\s+/);
+                    if (nameParts.length > 0) {
+                        firstname = nameParts[0];
+                        if (nameParts.length > 1) {
+                            lastname = nameParts.slice(1).join(' ');
+                        }
+                    }
+                }
+                
+                return {
+                    ...order,
+                    firstname: firstname || order.user_name || '',
+                    lastname: lastname,
+                    email: order.user_email || '',
+                    user_id: order.user_id || ''
+                };
+            });
+            
             console.log('Driver orders pagination:', { 
                 page, 
                 limit, 
                 total, 
                 totalPages, 
-                resultsCount: results.length,
+                resultsCount: ordersWithUserInfo.length,
                 countRow: countRow,
                 countResult: countResult[0]
             });
             
             res.json({
-                orders: results,
+                orders: ordersWithUserInfo,
                 pagination: {
                     page,
                     limit,
@@ -81,7 +115,7 @@ function ordersRoutes(app, pool, checkRole) {
     });
 
     // GET /api/order_items
-    router.get('/order_items', checkRole(0), async (req, res) => {
+    router.get('/order_items', checkRole(ROLES.USER), async (req, res) => {
         // Validate query parameters
         const parseResult = orderIdQuerySchema.safeParse(req.query);
         if (!parseResult.success) {
@@ -102,7 +136,7 @@ function ordersRoutes(app, pool, checkRole) {
     });
 
     // GET /api/user/orders
-    router.get('/user/orders', checkRole(0), async (req, res) => {
+    router.get('/user/orders', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session.user?.sub) {
             return res.status(401).json({ error: 'Not authenticated' });
         }

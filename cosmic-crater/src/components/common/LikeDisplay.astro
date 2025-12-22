@@ -48,7 +48,7 @@ const { itemId, itemType, likes } = Astro.props;
             .then(data => {
                 isLiked = data.liked || false;
                 if (isLiked) {
-                    button.className = 'flex items-center justify-center p-2 rounded transition-colors bg-red-500 hover:bg-red-600 text-white cursor-pointer ml-2';
+                    button.className = 'flex items-center justify-center p-2 rounded transition-colors bg-pink-500 hover:bg-pink-600 text-white cursor-pointer ml-2';
                     button.innerHTML = '<i class="bi bi-heart-fill"></i>';
                     button.title = 'Unlike';
                 }
@@ -77,7 +77,7 @@ const { itemId, itemType, likes } = Astro.props;
                     
                     // Update button appearance
                     if (isLiked) {
-                        button.className = 'flex items-center justify-center p-2 rounded transition-colors bg-red-500 hover:bg-red-600 text-white cursor-pointer ml-2';
+                        button.className = 'flex items-center justify-center p-2 rounded transition-colors bg-pink-500 hover:bg-pink-600 text-white cursor-pointer ml-2';
                         button.innerHTML = '<i class="bi bi-heart-fill"></i>';
                         button.title = 'Unlike';
                     } else {

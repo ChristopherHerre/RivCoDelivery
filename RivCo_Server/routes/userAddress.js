@@ -1,9 +1,10 @@
 function userAddressRoutes(app, pool, checkRole) {
     const router = require('express').Router();
     const { userAddressPostSchema } = require('../utils/schemas');
+    const { ROLES } = require('../constants/roles');
     
     // POST /api/user/address
-    router.post('/user/address', checkRole(0), async (req, res) => {
+    router.post('/user/address', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session.user?.sub) {
             console.log('[userAddress] POST /user/address - Unauthorized: No session user');
             return res.status(401).json({ error: 'Not authenticated' });
@@ -52,7 +53,7 @@ function userAddressRoutes(app, pool, checkRole) {
     });
 
     // PUT /api/user/address
-    router.put('/user/address', checkRole(0), async (req, res) => {
+    router.put('/user/address', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session.user?.sub) {
             console.log('[userAddress] PUT /user/address - Unauthorized: No session user');
             return res.status(401).json({ error: 'Not authenticated' });
@@ -80,7 +81,7 @@ function userAddressRoutes(app, pool, checkRole) {
     });
 
     // GET /api/user/address
-    router.get('/user/address', checkRole(0), async (req, res) => {
+    router.get('/user/address', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session.user?.sub) {
             console.log('[userAddress] GET /user/address - Unauthorized: No session user');
             return res.status(401).json({ error: 'Not authenticated' });
@@ -124,7 +125,7 @@ function userAddressRoutes(app, pool, checkRole) {
     });
 
     // GET /api/user/full-address
-    router.get('/user/full-address', checkRole(0), async (req, res) => {
+    router.get('/user/full-address', checkRole(ROLES.USER), async (req, res) => {
         if (!req.session.user?.sub) {
             console.log('[userAddress] GET /user/full-address - Unauthorized: No session user');
             return res.status(401).json({ error: 'Not authenticated' });

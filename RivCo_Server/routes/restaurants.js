@@ -1,11 +1,12 @@
 const { addRestaurantSchema, restaurantIdParamSchema } = require('../utils/schemas');
 const { extractCityFromAddressString, toCitySlug } = require('../utils/helpers');
+const { ROLES } = require('../constants/roles');
 
 function restaurantRoutes(app, pool, checkRole) {
     const router = require('express').Router();
 
     // POST /api/addRestaurant
-    router.post('/addRestaurant', checkRole(2), async (req, res) => {
+    router.post('/addRestaurant', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
@@ -34,7 +35,7 @@ function restaurantRoutes(app, pool, checkRole) {
     });
 
     // POST /api/manageRestaurant
-    router.post('/manageRestaurant', checkRole(2), async (req, res) => {
+    router.post('/manageRestaurant', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
@@ -87,7 +88,7 @@ function restaurantRoutes(app, pool, checkRole) {
     });
 
     // GET /api/getUserRestaurant
-    router.get('/getUserRestaurant', checkRole(2), async (req, res) => {
+    router.get('/getUserRestaurant', checkRole(ROLES.ADMIN), async (req, res) => {
         if (!req.session?.user?.sub) {
             return res.status(401).json({ message: 'Authentication required' });
         }
@@ -185,7 +186,7 @@ function restaurantRoutes(app, pool, checkRole) {
     });
 
     // GET /api/restaurants/:restaurant
-    router.get('/restaurants/:restaurant', checkRole(0), async (req, res) => {
+    router.get('/restaurants/:restaurant', checkRole(ROLES.USER), async (req, res) => {
         // Map :restaurant to restaurantId for validation
         const parseResult = restaurantIdParamSchema.safeParse({ restaurantId: req.params.restaurant });
         if (!parseResult.success) {
@@ -398,6 +399,142 @@ function restaurantRoutes(app, pool, checkRole) {
         } catch (err) {
             console.error('Error fetching categories for city:', err);
             res.status(500).json({ error: 'Database query failed' });
+        }
+    });
+
+    // POST /api/suggestRestaurant - Allow authenticated users to suggest restaurants
+    router.post('/suggestRestaurant', checkRole(ROLES.USER), async (req, res) => {
+        if (!req.session?.user?.sub) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+        const parseResult = addRestaurantSchema.safeParse(req.body);
+        if (!parseResult.success) {
+            return res.status(400).json({
+                error: "Validation failed",
+                details: parseResult.error.flatten().fieldErrors,
+            });
+        }
+        const { name, address, latitude, longitude, category } = parseResult.data;
+        const cityName = extractCityFromAddressString(address);
+        const citySlug = cityName ? toCitySlug(cityName) : null;
+        try {
+            const [result] = await pool.execute(
+                `INSERT INTO restaurant_suggestions 
+                 (suggested_by, name, address, latitude, longitude, category, city_name, city_slug, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+                [req.session.user.sub, name, address, latitude, longitude, category, cityName, citySlug]
+            );
+            res.status(201).json({ 
+                message: "Restaurant suggestion submitted successfully. It will be reviewed by an administrator.", 
+                id: result.insertId 
+            });
+        } catch (error) {
+            console.error("Database error:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
+
+    // GET /api/restaurant-suggestions - List restaurant suggestions (admin only)
+    router.get('/restaurant-suggestions', checkRole(ROLES.ADMIN), async (req, res) => {
+        if (!req.session?.user?.sub) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+        const status = req.query.status || 'pending';
+        try {
+            const [results] = await pool.execute(
+                `SELECT rs.*, u.name as suggested_by_name, u.email as suggested_by_email
+                 FROM restaurant_suggestions rs
+                 LEFT JOIN users u ON rs.suggested_by = u.id
+                 WHERE rs.status = ?
+                 ORDER BY rs.created_at DESC`,
+                [status]
+            );
+            res.json({ suggestions: results });
+        } catch (error) {
+            console.error("Database error:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
+
+    // POST /api/restaurant-suggestions/:id/approve - Approve a restaurant suggestion (admin only)
+    router.post('/restaurant-suggestions/:id/approve', checkRole(ROLES.ADMIN), async (req, res) => {
+        if (!req.session?.user?.sub) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+        const suggestionId = Number(req.params.id);
+        if (!suggestionId || Number.isNaN(suggestionId)) {
+            return res.status(400).json({ error: 'Invalid suggestion ID' });
+        }
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            
+            // Get the suggestion
+            const [[suggestion]] = await connection.execute(
+                `SELECT * FROM restaurant_suggestions WHERE id = ? AND status = 'pending'`,
+                [suggestionId]
+            );
+            
+            if (!suggestion) {
+                await connection.rollback();
+                return res.status(404).json({ error: 'Suggestion not found or already processed' });
+            }
+            
+            // Insert into restaurants table
+            const [result] = await connection.execute(
+                `INSERT INTO restaurants (name, address, latitude, longitude, category, city_name, city_slug)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [suggestion.name, suggestion.address, suggestion.latitude, suggestion.longitude, 
+                 suggestion.category, suggestion.city_name, suggestion.city_slug]
+            );
+            
+            // Update suggestion status
+            await connection.execute(
+                `UPDATE restaurant_suggestions 
+                 SET status = 'approved', reviewed_at = NOW(), reviewed_by = ?
+                 WHERE id = ?`,
+                [req.session.user.sub, suggestionId]
+            );
+            
+            await connection.commit();
+            res.status(200).json({ 
+                message: "Restaurant suggestion approved and added to restaurants", 
+                restaurantId: result.insertId 
+            });
+        } catch (error) {
+            await connection.rollback();
+            console.error("Database error:", error);
+            res.status(500).json({ error: "Internal server error" });
+        } finally {
+            connection.release();
+        }
+    });
+
+    // POST /api/restaurant-suggestions/:id/reject - Reject a restaurant suggestion (admin only)
+    router.post('/restaurant-suggestions/:id/reject', checkRole(ROLES.ADMIN), async (req, res) => {
+        if (!req.session?.user?.sub) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+        const suggestionId = Number(req.params.id);
+        if (!suggestionId || Number.isNaN(suggestionId)) {
+            return res.status(400).json({ error: 'Invalid suggestion ID' });
+        }
+        try {
+            const [result] = await pool.execute(
+                `UPDATE restaurant_suggestions 
+                 SET status = 'rejected', reviewed_at = NOW(), reviewed_by = ?
+                 WHERE id = ? AND status = 'pending'`,
+                [req.session.user.sub, suggestionId]
+            );
+            
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Suggestion not found or already processed' });
+            }
+            
+            res.status(200).json({ message: "Restaurant suggestion rejected" });
+        } catch (error) {
+            console.error("Database error:", error);
+            res.status(500).json({ error: "Internal server error" });
         }
     });
 
