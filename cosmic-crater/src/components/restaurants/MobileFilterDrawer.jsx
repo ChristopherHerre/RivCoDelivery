@@ -1,6 +1,6 @@
 import React from 'react';
 import CityFilter from './CityFilter';
-import Button from '../common/Button';
+import ActionButtons from './ActionButtons';
 
 /**
  * Mobile filter drawer component
@@ -15,7 +15,8 @@ export default function MobileFilterDrawer({
     onSearchChange, 
     isSearching,
     searchResultsCount,
-    onSuggestClick 
+    onSuggestClick,
+    profile
 }) {
     if (!isOpen) return null;
 
@@ -31,7 +32,7 @@ export default function MobileFilterDrawer({
             {/* Drawer */}
             <div className="fixed bottom-0 left-0 right-0 bg-base-100 rounded-t-2xl shadow-2xl z-50 sm:hidden max-h-[80vh] overflow-y-auto">
                 <div className="sticky top-0 bg-base-100 border-b border-base-300 p-4 flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-base-content">Filters</h3>
+                    <h3 className="text-lg font-bold text-white">Filters</h3>
                     <button
                         onClick={onClose}
                         className="btn btn-sm btn-circle btn-ghost"
@@ -51,8 +52,8 @@ export default function MobileFilterDrawer({
                                 />
                                 <div className="form-control">
                                     <div className="label justify-between items-center">
-                                        <label htmlFor="mobile-search-item-input" className="label-text text-base-content">
-                                            Search for item:
+                                        <label htmlFor="mobile-search-item-input" className="label-text text-base-content font-bold">
+                                            Filter by item name:
                                         </label>
                                         {query && searchResultsCount > 0 && (
                                             <span className="badge badge-primary badge-sm" aria-label={`${searchResultsCount} ${searchResultsCount === 1 ? 'restaurant' : 'restaurants'} found`}>
@@ -83,16 +84,10 @@ export default function MobileFilterDrawer({
                         </div>
                     </div>
                     
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        size="md"
-                        onClick={onSuggestClick}
-                        className="w-full"
-                    >
-                        <i className="bi bi-plus-circle"></i>
-                        Suggest a Restaurant
-                    </Button>
+                    <ActionButtons 
+                        profile={profile}
+                        onSuggestClick={onSuggestClick}
+                    />
                 </div>
             </div>
         </>

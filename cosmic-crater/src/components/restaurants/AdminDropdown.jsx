@@ -5,6 +5,7 @@ import Button from '../common/Button';
 const AdminDropdown = (props) => {
     const full = props.full;
     const profile = props.profile;
+    const size = props.size || (full ? 'md' : undefined);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     
@@ -44,13 +45,14 @@ const AdminDropdown = (props) => {
     };
 
     return (
-        <div className="relative inline-block" ref={dropdownRef}>
-            <div className="flex gap-2">
+        <div className={`relative ${full ? 'w-full' : 'inline-block'}`} ref={dropdownRef}>
+            <div className={full ? "" : "flex gap-2"}>
                 {profile ? (
                     <Button
                         variant="secondary"
+                        size={size}
                         fullWidth={full}
-                        className={full ? "mt-1" : "mt-1"}
+                        className={full ? "whitespace-nowrap w-full" : "mt-1"}
                         onClick={toggleDropdown}
                         aria-haspopup="true"
                         aria-expanded={isOpen}
@@ -60,17 +62,18 @@ const AdminDropdown = (props) => {
                         <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'} text-xs`}></i>
                     </Button>
                 ) : null}
-                <Link to="/donate">
-                    <Button
-                        variant="secondary"
-                        size="lg"
-                        fullWidth={full}
-                        className={full ? "mt-1 mr-1" : "mt-1 mr-1"}
-                    >
-                        <i className="bi bi-credit-card-fill"></i>
-                        Donate
-                    </Button>
-                </Link>
+                {!full && (
+                    <Link to="/donate">
+                        <Button
+                            variant="secondary"
+                            size="lg"
+                            className="mt-1 mr-1"
+                        >
+                            <i className="bi bi-credit-card-fill"></i>
+                            Donate
+                        </Button>
+                    </Link>
+                )}
             </div>
             {profile && isOpen && (
                 <div

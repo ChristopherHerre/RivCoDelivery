@@ -137,7 +137,7 @@ function Navbar(props) {
 
     return (
         <>
-            <div id="navbar" className="card bg-base-100 shadow-md mb-4 w-full">
+            <div id="navbar" className="card bg-base-100 shadow-md mb-4 w-full sticky top-0 z-50">
                 <div className="card-body p-4">
                     <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
                         {/* Left Section - User Info / Sign In Message */}
@@ -145,12 +145,14 @@ function Navbar(props) {
                             {profile ? (
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
                                     <ShowGoogleUserInfo profile={profile} onLogout={handleLogout} />
-                                    <DeliveryAddress 
-                                        showGetLocation={showGetLocation} 
-                                        setShowGetLocation={setShowGetLocation} 
-                                        address={address} 
-                                        setAddress={setAddress}
-                                    />
+                                    <div className="w-full sm:w-auto">
+                                        <DeliveryAddress 
+                                            showGetLocation={showGetLocation} 
+                                            setShowGetLocation={setShowGetLocation} 
+                                            address={address} 
+                                            setAddress={setAddress}
+                                        />
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="alert alert-warning shadow-sm">
@@ -203,7 +205,7 @@ function Navbar(props) {
                                                 variant="secondary"
                                                 size="md"
                                                 type="button" 
-                                                className="flex-1 lg:flex-none whitespace-nowrap min-w-0 overflow-hidden"
+                                                className="flex-1 lg:flex-none whitespace-nowrap min-w-0 overflow-visible relative"
                                                 onClick={() => {
                                                     if (cart && cart.length > 0 && cart[0]?.restaurant_id) {
                                                         navigate(`/${cart[0].restaurant_id}/cart`);
@@ -211,11 +213,11 @@ function Navbar(props) {
                                                 }}
                                                 disabled={!cart || cart.length === 0 || !cart[0]?.restaurant_id}
                                             >
-                                                <span className="relative inline-flex items-center">
+                                                <span className="inline-flex items-center">
                                                     <i className="bi bi-cart"></i>
                                                     <span className="ml-1">Cart</span>
-                                                    <Badge cartAmount={cartAmount} />
                                                 </span>
+                                                <Badge cartAmount={cartAmount} />
                                             </Button>
                                         </div>
                                     )}

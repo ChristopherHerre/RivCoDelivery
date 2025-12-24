@@ -11,6 +11,7 @@ import Carousel, { CarouselItem } from '../common/Carousel';
 import SkeletonCard from '../common/SkeletonCard';
 import EmptyState from '../common/EmptyState';
 import MobileFilterDrawer from './MobileFilterDrawer';
+import ActionButtons from './ActionButtons';
 
 export function groupBy(array, keyFn) {
     return array.reduce((acc, item) => {
@@ -328,9 +329,9 @@ export default function RestaurantsList(props) {
                     
                     <div className="w-full flex flex-col sm:flex-row gap-4">
                         {/* Filters Column - Left Side (Sidebar) - Hidden on mobile */}
-                        <div className="hidden sm:block w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-4 sm:self-start">
-                        <div className="card bg-base-100 shadow-md mb-4">
-                            <div className="card-body p-4">
+                        <div className="hidden sm:block w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-24 sm:self-start">
+                    <div className="card bg-base-100 shadow-md mb-4">
+                        <div className="card-body p-4">
                                 <div className="flex flex-col gap-4">
                                     <CityFilter 
                                         selectedCities={selectedCities}
@@ -338,9 +339,9 @@ export default function RestaurantsList(props) {
                                     />
                                     <div className="form-control">
                                         <div className="label justify-between items-center">
-                                            <label htmlFor="search-item-input" className="label-text text-base-content">
-                                                Search for item:
-                                            </label>
+                                            <label htmlFor="search-item-input" className="label-text text-base-content font-bold">
+                                                Filter by item name:
+                                        </label>
                                             {query && searchResultsCount > 0 && (
                                                 <span className="badge badge-primary badge-sm" aria-label={`${searchResultsCount} ${searchResultsCount === 1 ? 'restaurant' : 'restaurants'} found`}>
                                                     {searchResultsCount} found
@@ -348,13 +349,13 @@ export default function RestaurantsList(props) {
                                             )}
                                         </div>
                                         <div className="relative">
-                                            <input 
+                                        <input 
                                                 id="search-item-input"
-                                                type="text" 
-                                                placeholder="Search for item..." 
+                                            type="text" 
+                                            placeholder="Search for item..." 
                                                 className="input input-bordered w-full bg-base-200 text-base-content placeholder:text-base-content/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100 pr-10" 
-                                                value={query} 
-                                                onChange={(e) => handleSearch(e)}
+                                            value={query} 
+                                            onChange={(e) => handleSearch(e)} 
                                                 aria-describedby="search-item-description"
                                                 aria-busy={isSearching}
                                             />
@@ -369,18 +370,7 @@ export default function RestaurantsList(props) {
                                 </div>
                             </div>
                         </div>
-                        <div className="mb-4">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                size="md"
-                                onClick={() => navigate('/suggest-restaurant')}
-                                className="whitespace-nowrap w-full"
-                            >
-                                <i className="bi bi-plus-circle"></i>
-                                Suggest a Restaurant
-                            </Button>
-                        </div>
+                        <ActionButtons profile={profile} />
                     </div>
 
                     {/* Restaurants Column - Right Side */}
@@ -391,18 +381,71 @@ export default function RestaurantsList(props) {
                         </div>
                         {/* Loading skeleton */}
                         {!loaded && (
-                            <div className="mb-6">
-                                <div className="py-4 bg-gray-800 rounded-xl">
-                                    <div className="h-8 bg-gray-700 rounded w-32 mb-4 mx-4 animate-pulse"></div>
-                                    <Carousel id="skeleton-carousel" scrollAmount={400} carouselClassName="px-12" showNavigation={false}>
-                                        {[...Array(3)].map((_, i) => (
-                                            <SkeletonCard key={i} />
-                                        ))}
-                                    </Carousel>
+                            <>
+                                {/* Mobile Filter Button Skeleton */}
+                                <div className="sm:hidden mb-4">
+                                    <div className="h-12 bg-primary/30 rounded animate-pulse"></div>
                                 </div>
-                            </div>
+                                
+                                <div className="w-full flex flex-col sm:flex-row gap-4">
+                                    {/* Filters Column Skeleton - Left Side */}
+                                    <div className="hidden sm:block w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-24 sm:self-start">
+                                        <div className="card bg-base-100 shadow-md mb-4">
+                                            <div className="card-body p-4">
+                                                <div className="flex flex-col gap-4">
+                                                    {/* City Filter Skeleton */}
+                                                    <div>
+                                                        <div className="h-5 bg-primary/30 rounded w-24 mb-3 animate-pulse"></div>
+                                                        <div className="space-y-2">
+                                                            {[...Array(4)].map((_, i) => (
+                                                                <div key={i} className="h-8 bg-primary/30 rounded animate-pulse"></div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    {/* Search Input Skeleton */}
+                                                    <div>
+                                                        <div className="h-5 bg-primary/30 rounded w-32 mb-3 animate-pulse"></div>
+                                                        <div className="h-10 bg-primary/30 rounded animate-pulse"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Action Buttons Skeleton */}
+                                        <div className="card bg-base-100 shadow-md mb-4">
+                                            <div className="card-body p-4 flex flex-col gap-4">
+                                                <div className="h-12 bg-primary/30 rounded animate-pulse"></div>
+                                                <div className="h-12 bg-primary/30 rounded animate-pulse"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Restaurants Column Skeleton - Right Side */}
+                                    <div className="flex-1 min-w-0">
+                                        {/* Multiple Category Skeletons */}
+                                        {[...Array(3)].map((_, categoryIndex) => (
+                                            <div key={categoryIndex} className="mb-6">
+                                                <div className="py-4 bg-gray-800 rounded-xl">
+                                                    {/* Category Heading Skeleton */}
+                                                    <div className="h-8 bg-primary/30 rounded w-32 mb-4 mx-4 animate-pulse"></div>
+                                                    {/* Carousel Skeleton */}
+                                                    <Carousel 
+                                                        id={`skeleton-carousel-${categoryIndex}`} 
+                                                        scrollAmount={400} 
+                                                        carouselClassName="px-12" 
+                                                        showNavigation={false}
+                                                    >
+                                                        {[...Array(3)].map((_, i) => (
+                                                            <SkeletonCard key={i} />
+                                                        ))}
+                                                    </Carousel>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
                         )}
-                        {/* Restaurants by Category */}
+                    {/* Restaurants by Category */}
                         {loaded && restaurants.length === 0 ? (
                             <EmptyState
                                 title="No restaurants found"
@@ -423,16 +466,16 @@ export default function RestaurantsList(props) {
                             return (
                                 <div key={categoryIndex} className="mb-6">
                                     <div className="py-4 bg-gray-800 rounded-xl">
-                                        {categoryUrl ? (
+                                    {categoryUrl ? (
                                             <h2 className="text-2xl font-bold mb-4 text-primary px-4">
-                                                <button
-                                                    onClick={() => navigate(categoryUrl)}
+                                            <button
+                                                onClick={() => navigate(categoryUrl)}
                                                     className="link link-hover text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100 rounded"
-                                                >
-                                                    {category}
-                                                </button>
-                                            </h2>
-                                        ) : (
+                                            >
+                                                {category}
+                                            </button>
+                                        </h2>
+                                    ) : (
                                             <h2 className="text-2xl font-bold mb-4 text-primary px-4">{category}</h2>
                                         )}
                                         <Carousel
@@ -489,12 +532,12 @@ export default function RestaurantsList(props) {
                                                                         <i className="bi bi-truck text-secondary" aria-hidden="true"></i>
                                                                         <span className="text-sm font-semibold text-base-content">
                                                                             {USDollar.format(roundedToFixed(fee, 2))}
-                                                                        </span>
+                                                                    </span>
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         )}
-                                                        <div className="card-actions justify-end">
+                                                        <div className="card-actions justify-end items-center">
                                                             <Link
                                                                 to={getRestaurantMenuUrl(data)}
                                                                 className="no-underline"
@@ -503,6 +546,7 @@ export default function RestaurantsList(props) {
                                                                     size="sm"
                                                                     variant="primary"
                                                                     type="button"
+                                                                    className="min-h-[32px]"
                                                                 >
                                                                     View menu
                                                                 </Button>
@@ -520,12 +564,12 @@ export default function RestaurantsList(props) {
                                             </CarouselItem>
                                         );
                                         })}
-                                        </Carousel>
+                                    </Carousel>
                                     </div>
                                 </div>
                             );
                         })
-                        )}
+                    )}
                     </div>
                 </div>
                 
@@ -543,41 +587,42 @@ export default function RestaurantsList(props) {
                         setIsFilterDrawerOpen(false);
                         navigate('/suggest-restaurant');
                     }}
+                    profile={profile}
                 />
             </>
             ) : (!showGetLocation ? (
                 <>
                     {/* Mobile Filter Button Skeleton */}
                     <div className="sm:hidden mb-4">
-                        <div className="h-12 bg-gray-300 rounded animate-pulse"></div>
+                        <div className="h-12 bg-primary/30 rounded animate-pulse"></div>
                     </div>
                     
                     <div className="w-full flex flex-col sm:flex-row gap-4">
                         {/* Filters Column Skeleton - Left Side */}
-                        <div className="hidden sm:block w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-4 sm:self-start">
+                        <div className="hidden sm:block w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-24 sm:self-start">
                             <div className="card bg-base-100 shadow-md mb-4">
                                 <div className="card-body p-4">
                                     <div className="flex flex-col gap-4">
                                         {/* City Filter Skeleton */}
                                         <div>
-                                            <div className="h-5 bg-gray-300 rounded w-24 mb-3 animate-pulse"></div>
+                                            <div className="h-5 bg-primary/30 rounded w-24 mb-3 animate-pulse"></div>
                                             <div className="space-y-2">
                                                 {[...Array(4)].map((_, i) => (
-                                                    <div key={i} className="h-8 bg-gray-300 rounded animate-pulse"></div>
+                                                    <div key={i} className="h-8 bg-primary/30 rounded animate-pulse"></div>
                                                 ))}
                                             </div>
                                         </div>
                                         {/* Search Input Skeleton */}
                                         <div>
-                                            <div className="h-5 bg-gray-300 rounded w-32 mb-3 animate-pulse"></div>
-                                            <div className="h-10 bg-gray-300 rounded animate-pulse"></div>
+                                            <div className="h-5 bg-primary/30 rounded w-32 mb-3 animate-pulse"></div>
+                                            <div className="h-10 bg-primary/30 rounded animate-pulse"></div>
+                                        </div>
+                                        {/* Suggest Button Skeleton */}
+                                        <div>
+                                            <div className="h-12 bg-primary/30 rounded animate-pulse"></div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            {/* Suggest Button Skeleton */}
-                            <div className="mb-4">
-                                <div className="h-12 bg-gray-300 rounded animate-pulse"></div>
                             </div>
                         </div>
 
@@ -588,7 +633,7 @@ export default function RestaurantsList(props) {
                                 <div key={categoryIndex} className="mb-6">
                                     <div className="py-4 bg-gray-800 rounded-xl">
                                         {/* Category Heading Skeleton */}
-                                        <div className="h-8 bg-gray-700 rounded w-32 mb-4 mx-4 animate-pulse"></div>
+                                        <div className="h-8 bg-primary/30 rounded w-32 mb-4 mx-4 animate-pulse"></div>
                                         {/* Carousel Skeleton */}
                                         <Carousel 
                                             id={`skeleton-carousel-${categoryIndex}`} 

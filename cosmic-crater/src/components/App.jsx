@@ -22,7 +22,6 @@ import UserOrders from './users/orders/UserOrders';
 import DriverOrders from './drivers/orders/DriverOrders';
 import Users from './webmaster/Users';
 import Donate from './users/nav/Donate';
-import BottomNavbar from './users/nav/BottomNavbar';
 import BreadcrumbWrapper from './common/BreadcrumbWrapper';
 import Navbar from './users/nav/Navbar';
 import TaxiFareCalculator from './users/address/TaxiFareCalculator';
@@ -70,7 +69,6 @@ function Layout(props) {
 			<div id="white-area">
 				<Outlet />
 			</div>
-			<BottomNavbar profile={props.profile} />
 		</main>
 	);
 }
