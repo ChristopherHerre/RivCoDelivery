@@ -35,16 +35,16 @@ export default function Button({
     align = 'center',
     ...props
 }) {
-    // Color variants
+    // Color variants with all states
     // Default behavior: solid button that becomes an outline on hover,
     // mirroring the like button interaction pattern.
-    let colorClasses = 'bg-primary text-primary-content border border-primary hover:bg-transparent hover:text-primary';
+    let colorClasses = 'bg-primary text-primary-content border border-primary hover:bg-transparent hover:text-primary active:scale-95 active:opacity-90';
     if (variant === 'secondary') {
-        colorClasses = 'bg-secondary text-secondary-content border border-secondary hover:bg-transparent hover:text-secondary';
+        colorClasses = 'bg-secondary text-secondary-content border border-secondary hover:bg-transparent hover:text-secondary active:scale-95 active:opacity-90';
     } else if (variant === 'danger') {
-        colorClasses = 'bg-red-600 text-white border border-red-600 hover:bg-transparent hover:text-red-600';
+        colorClasses = 'bg-red-600 text-white border border-red-600 hover:bg-transparent hover:text-red-600 active:scale-95 active:opacity-90';
     } else if (variant === 'success') {
-        colorClasses = 'bg-green-600 text-white border border-green-600 hover:bg-transparent hover:text-green-600';
+        colorClasses = 'bg-green-600 text-white border border-green-600 hover:bg-transparent hover:text-green-600 active:scale-95 active:opacity-90';
     }
     
     // Size variants
@@ -62,8 +62,8 @@ export default function Button({
         textSizeClass = 'text-base';
     }
     
-    // Base classes
-    const baseClasses = 'rounded transition-colors cursor-pointer font-normal';
+    // Base classes with focus indicators and transitions
+    const baseClasses = 'rounded transition-all duration-200 ease-in-out cursor-pointer font-normal focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100';
     
     // Width classes
     const widthClass = fullWidth ? 'w-full' : '';

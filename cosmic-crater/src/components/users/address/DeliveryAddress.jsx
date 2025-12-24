@@ -97,25 +97,28 @@ function DeliveryAddress(props) {
     }
     
     return (
-        <div className="text-sm md:text-base">
-            <b>Deliver to: </b>
+        <div className="text-sm md:text-base flex items-center gap-2 flex-wrap">
+            <b className="text-base-content font-semibold">Deliver to:</b>
             {isLoading ? (
                 <Spinner />
             ) : (
                 <>
                     {!showGetLocation ? (
-                        <mark>{fullAddress}</mark>
+                        <span className="badge badge-primary badge-lg text-primary-content px-3 py-2">
+                            {fullAddress}
+                        </span>
                     ) : (
-                        <u className="text-red-600">
+                        <span className="badge badge-error badge-lg text-error-content px-3 py-2">
                             Address Required!
-                        </u>
+                        </span>
                     )}
-                    <span> </span>
-                    <b>
-                        <a href="#" onClick={(e) => editAddress(e)}>
-                            <i className="bi bi-pencil-square"></i>
-                        </a>
-                    </b>
+                    <button
+                        onClick={(e) => editAddress(e)}
+                        className="btn btn-sm btn-ghost p-1 min-h-0 h-auto focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100"
+                        aria-label="Edit delivery address"
+                    >
+                        <i className="bi bi-pencil-square text-base-content"></i>
+                    </button>
                 </>
             )}
         </div>

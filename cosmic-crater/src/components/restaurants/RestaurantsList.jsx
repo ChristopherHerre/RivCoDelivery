@@ -2,13 +2,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../App';
-import Spinner from '../users/Spinner';
 import Welcome from '../users/address/Welcome';
 import { getRestaurantMenuUrl, getRestaurantCategoryUrl } from '../../utils/restaurantUrls';
 import CityFilter from './CityFilter';
 import LikeButton from '../common/LikeButton';
 import Button from '../common/Button';
 import Carousel, { CarouselItem } from '../common/Carousel';
+import SkeletonCard from '../common/SkeletonCard';
+import EmptyState from '../common/EmptyState';
+import MobileFilterDrawer from './MobileFilterDrawer';
 
 export function groupBy(array, keyFn) {
     return array.reduce((acc, item) => {
@@ -43,6 +45,9 @@ export default function RestaurantsList(props) {
     const [query, setQuery] = useState("");
     const [selectedCities, setSelectedCities] = useState([]);
     const [searchFilteredRestaurants, setSearchFilteredRestaurants] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchResultsCount, setSearchResultsCount] = useState(0);
+    const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
     const result = groupBy(restaurants, r => r.category);
     const [loaded, setLoaded] = useState(false);
     const [profile, setProfile] = useState(null);
@@ -237,17 +242,29 @@ export default function RestaurantsList(props) {
         setQuery(val);
         if (val.length === 0) {
             // Reset search filter, but keep city filter
+            setIsSearching(false);
             setSearchFilteredRestaurants([]);
+            setSearchResultsCount(0);
             applyFilters([], selectedCities, restaurantsCopy);
             return;
         }
+        setIsSearching(true);
         axios.get('/api/menu/item/search', { params: { menuItemName: val } })
             .then(res => {
                 setItemConfig(res.data);
                 setSearchFilteredRestaurants(res.data);
+                // Count unique restaurants in search results
+                const uniqueRestaurants = new Set(res.data.map(item => item.restaurant_id));
+                setSearchResultsCount(uniqueRestaurants.size);
                 applyFilters(res.data, selectedCities, restaurantsCopy);
-            }
-        );
+            })
+            .catch(err => {
+                console.error('Search error:', err);
+                setSearchResultsCount(0);
+            })
+            .finally(() => {
+                setIsSearching(false);
+            });
     }
 
     function handleCityChange(cities) {
@@ -288,52 +305,116 @@ export default function RestaurantsList(props) {
             />) : null
             }
             {!showGetLocation && loaded ? (
-                <div className="w-full">
-                    {/* City Filter, Search Input, and Ad Space */}
-                    <div className="card bg-base-100 shadow-md mb-4">
-                        <div className="card-body p-4">
-                            <div className="flex flex-wrap md:flex-nowrap gap-4">
-                                <div className="w-full md:w-1/2">
-                                    <CityFilter 
-                                        selectedCities={selectedCities}
-                                        onCityChange={handleCityChange}
-                                    />
-                                </div>
-                                <div className="w-full md:w-1/2">
-                                    <div className="form-control">
-                                        <label className="label">
-                                            <span className="label-text text-base-content">Search for item:</span>
-                                        </label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search for item..." 
-                                            className="input input-bordered w-full bg-base-200 text-base-content placeholder:text-base-content/50" 
-                                            value={query} 
-                                            onChange={(e) => handleSearch(e)} 
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mb-4">
+                <>
+                    {/* Mobile Filter Button - Only visible on mobile */}
+                    <div className="sm:hidden mb-4">
                         <Button
                             type="button"
                             variant="secondary"
                             size="md"
-                            onClick={() => navigate('/suggest-restaurant')}
-                            className="whitespace-nowrap"
+                            onClick={() => setIsFilterDrawerOpen(true)}
+                            className="w-full"
+                            aria-label="Open filters"
                         >
-                            <i className="bi bi-plus-circle"></i>
-                            Suggest a Restaurant
+                            <i className="bi bi-funnel"></i>
+                            Filters
+                            {(selectedCities.length > 0 || query) && (
+                                <span className="badge badge-primary badge-sm ml-2">
+                                    {selectedCities.length + (query ? 1 : 0)}
+                                </span>
+                            )}
                         </Button>
                     </div>
+                    
+                    <div className="w-full flex flex-col sm:flex-row gap-4">
+                        {/* Filters Column - Left Side (Sidebar) - Hidden on mobile */}
+                        <div className="hidden sm:block w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-4 sm:self-start">
+                        <div className="card bg-base-100 shadow-md mb-4">
+                            <div className="card-body p-4">
+                                <div className="flex flex-col gap-4">
+                                    <CityFilter 
+                                        selectedCities={selectedCities}
+                                        onCityChange={handleCityChange}
+                                    />
+                                    <div className="form-control">
+                                        <div className="label justify-between items-center">
+                                            <label htmlFor="search-item-input" className="label-text text-base-content">
+                                                Search for item:
+                                            </label>
+                                            {query && searchResultsCount > 0 && (
+                                                <span className="badge badge-primary badge-sm" aria-label={`${searchResultsCount} ${searchResultsCount === 1 ? 'restaurant' : 'restaurants'} found`}>
+                                                    {searchResultsCount} found
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="relative">
+                                            <input 
+                                                id="search-item-input"
+                                                type="text" 
+                                                placeholder="Search for item..." 
+                                                className="input input-bordered w-full bg-base-200 text-base-content placeholder:text-base-content/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100 pr-10" 
+                                                value={query} 
+                                                onChange={(e) => handleSearch(e)}
+                                                aria-describedby="search-item-description"
+                                                aria-busy={isSearching}
+                                            />
+                                            {isSearching && (
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 loading loading-spinner loading-sm text-primary" aria-label="Searching"></span>
+                                            )}
+                                        </div>
+                                        <div id="search-item-description" className="sr-only">
+                                            Search for menu items across all restaurants
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="md"
+                                onClick={() => navigate('/suggest-restaurant')}
+                                className="whitespace-nowrap w-full"
+                            >
+                                <i className="bi bi-plus-circle"></i>
+                                Suggest a Restaurant
+                            </Button>
+                        </div>
+                    </div>
 
-                    {/* Restaurants by Category */}
-                    {restaurants.length === 0 ? (
-                        <p className="text-gray-600">No restaurants found in this area yet.</p>
-                    ) : (
-                        Object.keys(result).map((category, categoryIndex) => {
+                    {/* Restaurants Column - Right Side */}
+                    <div className="flex-1 min-w-0">
+                        {/* ARIA live region for dynamic content updates */}
+                        <div aria-live="polite" aria-atomic="true" className="sr-only">
+                            {!loaded ? 'Loading restaurants' : restaurants.length === 0 ? 'No restaurants found' : `${restaurants.length} restaurants found`}
+                        </div>
+                        {/* Loading skeleton */}
+                        {!loaded && (
+                            <div className="mb-6">
+                                <div className="py-4 bg-gray-800 rounded-xl">
+                                    <div className="h-8 bg-gray-700 rounded w-32 mb-4 mx-4 animate-pulse"></div>
+                                    <Carousel id="skeleton-carousel" scrollAmount={400} carouselClassName="px-12" showNavigation={false}>
+                                        {[...Array(3)].map((_, i) => (
+                                            <SkeletonCard key={i} />
+                                        ))}
+                                    </Carousel>
+                                </div>
+                            </div>
+                        )}
+                        {/* Restaurants by Category */}
+                        {loaded && restaurants.length === 0 ? (
+                            <EmptyState
+                                title="No restaurants found"
+                                message={
+                                    query || selectedCities.length > 0
+                                        ? "Try adjusting your filters or search terms to find more restaurants."
+                                        : "No restaurants are available in this area yet. Check back later!"
+                                }
+                                icon={<i className="bi bi-shop"></i>}
+                            />
+                        ) : loaded && (
+                            Object.keys(result).map((category, categoryIndex) => {
                             // Get city_slug from first restaurant in category (all should have same city)
                             const firstRestaurant = result[category][0];
                             const citySlug = firstRestaurant?.city_slug;
@@ -341,24 +422,25 @@ export default function RestaurantsList(props) {
                             
                             return (
                                 <div key={categoryIndex} className="mb-6">
-                                    {categoryUrl ? (
-                                        <h2 className="text-2xl font-bold mb-4 text-primary px-12">
-                                            <button
-                                                onClick={() => navigate(categoryUrl)}
-                                                className="link link-hover text-primary"
-                                            >
-                                                {category}
-                                            </button>
-                                        </h2>
-                                    ) : (
-                                        <h2 className="text-2xl font-bold mb-4 text-primary px-12">{category}</h2>
-                                    )}
-                                    <Carousel
-                                        id={`carousel-${categoryIndex}`}
-                                        scrollAmount={400}
-                                        carouselClassName="px-12"
-                                        className="py-4 bg-gray-800 rounded-xl"
-                                    >
+                                    <div className="py-4 bg-gray-800 rounded-xl">
+                                        {categoryUrl ? (
+                                            <h2 className="text-2xl font-bold mb-4 text-primary px-4">
+                                                <button
+                                                    onClick={() => navigate(categoryUrl)}
+                                                    className="link link-hover text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100 rounded"
+                                                >
+                                                    {category}
+                                                </button>
+                                            </h2>
+                                        ) : (
+                                            <h2 className="text-2xl font-bold mb-4 text-primary px-4">{category}</h2>
+                                        )}
+                                        <Carousel
+                                            id={`carousel-${categoryIndex}`}
+                                            scrollAmount={400}
+                                            carouselClassName="px-12"
+                                            aria-label={`${category} restaurants carousel`}
+                                        >
                                         {result[category].map((data, key) => {
                                         const h = haversine_dist(
                                             data.latitude, 
@@ -382,27 +464,35 @@ export default function RestaurantsList(props) {
                                         }
                                         return (
                                             <CarouselItem key={key}>
-                                                <div className="card bg-base-100 w-96 shadow-sm">
+                                                <div className="card bg-base-100 w-96 shadow-sm hover:shadow-lg transition-shadow duration-200 ease-in-out">
                                                     <div className="card-body">
                                                         <h2 className="card-title">
                                                             <button
                                                                 onClick={(e) => selectRestaurant(data)}
-                                                                className="text-white link link-hover"
+                                                                className="text-white link link-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100 rounded text-xl font-bold"
                                                             >
                                                                 {data.name}
                                                             </button>
                                                             <div className="badge badge-secondary badge-lg">{data.category}</div>
                                                         </h2>
-                                                        <p className="text-base-content/70">{data.address}</p>
+                                                        <p className="text-base-content/70 text-sm mb-2">{data.address}</p>
                                                         {h < 100 && (
-                                                            <p className="text-sm text-base-content/60">
-                                                                Distance: {roundedToFixed(h, 1)} mi
-                                                                {fee <= maxFee && (
-                                                                    <span className="ml-2">
-                                                                        • Delivery Fee: {USDollar.format(roundedToFixed(fee, 2))}
+                                                            <div className="flex items-center gap-3 mb-3">
+                                                                <div className="flex items-center gap-1">
+                                                                    <i className="bi bi-geo-alt text-primary" aria-hidden="true"></i>
+                                                                    <span className="text-sm font-semibold text-base-content">
+                                                                        {roundedToFixed(h, 1)} mi
                                                                     </span>
+                                                                </div>
+                                                                {fee <= maxFee && (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <i className="bi bi-truck text-secondary" aria-hidden="true"></i>
+                                                                        <span className="text-sm font-semibold text-base-content">
+                                                                            {USDollar.format(roundedToFixed(fee, 2))}
+                                                                        </span>
+                                                                    </div>
                                                                 )}
-                                                            </p>
+                                                            </div>
                                                         )}
                                                         <div className="card-actions justify-end">
                                                             <Link
@@ -430,13 +520,93 @@ export default function RestaurantsList(props) {
                                             </CarouselItem>
                                         );
                                         })}
-                                    </Carousel>
+                                        </Carousel>
+                                    </div>
                                 </div>
                             );
                         })
-                    )}
+                        )}
+                    </div>
                 </div>
-            ) : (!showGetLocation ? <Spinner /> : null)}
+                
+                {/* Mobile Filter Drawer */}
+                <MobileFilterDrawer
+                    isOpen={isFilterDrawerOpen}
+                    onClose={() => setIsFilterDrawerOpen(false)}
+                    selectedCities={selectedCities}
+                    onCityChange={handleCityChange}
+                    query={query}
+                    onSearchChange={(e) => handleSearch(e)}
+                    isSearching={isSearching}
+                    searchResultsCount={searchResultsCount}
+                    onSuggestClick={() => {
+                        setIsFilterDrawerOpen(false);
+                        navigate('/suggest-restaurant');
+                    }}
+                />
+            </>
+            ) : (!showGetLocation ? (
+                <>
+                    {/* Mobile Filter Button Skeleton */}
+                    <div className="sm:hidden mb-4">
+                        <div className="h-12 bg-gray-300 rounded animate-pulse"></div>
+                    </div>
+                    
+                    <div className="w-full flex flex-col sm:flex-row gap-4">
+                        {/* Filters Column Skeleton - Left Side */}
+                        <div className="hidden sm:block w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-4 sm:self-start">
+                            <div className="card bg-base-100 shadow-md mb-4">
+                                <div className="card-body p-4">
+                                    <div className="flex flex-col gap-4">
+                                        {/* City Filter Skeleton */}
+                                        <div>
+                                            <div className="h-5 bg-gray-300 rounded w-24 mb-3 animate-pulse"></div>
+                                            <div className="space-y-2">
+                                                {[...Array(4)].map((_, i) => (
+                                                    <div key={i} className="h-8 bg-gray-300 rounded animate-pulse"></div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {/* Search Input Skeleton */}
+                                        <div>
+                                            <div className="h-5 bg-gray-300 rounded w-32 mb-3 animate-pulse"></div>
+                                            <div className="h-10 bg-gray-300 rounded animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Suggest Button Skeleton */}
+                            <div className="mb-4">
+                                <div className="h-12 bg-gray-300 rounded animate-pulse"></div>
+                            </div>
+                        </div>
+
+                        {/* Restaurants Column Skeleton - Right Side */}
+                        <div className="flex-1 min-w-0">
+                            {/* Multiple Category Skeletons */}
+                            {[...Array(3)].map((_, categoryIndex) => (
+                                <div key={categoryIndex} className="mb-6">
+                                    <div className="py-4 bg-gray-800 rounded-xl">
+                                        {/* Category Heading Skeleton */}
+                                        <div className="h-8 bg-gray-700 rounded w-32 mb-4 mx-4 animate-pulse"></div>
+                                        {/* Carousel Skeleton */}
+                                        <Carousel 
+                                            id={`skeleton-carousel-${categoryIndex}`} 
+                                            scrollAmount={400} 
+                                            carouselClassName="px-12" 
+                                            showNavigation={false}
+                                        >
+                                            {[...Array(3)].map((_, i) => (
+                                                <SkeletonCard key={i} />
+                                            ))}
+                                        </Carousel>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            ) : null)}
         </>
     );
 }
