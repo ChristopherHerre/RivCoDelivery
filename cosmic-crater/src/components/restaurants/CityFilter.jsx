@@ -35,7 +35,7 @@ export default function CityFilter({ selectedCities, onCityChange }) {
             <div className="w-full md:w-auto">
                 <div className="form-control">
                     <label className="label">
-                        <span className="label-text text-base-content">Filter by City:</span>
+                        <span className="label-text text-base-content font-bold">Filter by City:</span>
                     </label>
                     <span className="text-sm text-base-content/50">Loading cities...</span>
                 </div>
@@ -51,7 +51,7 @@ export default function CityFilter({ selectedCities, onCityChange }) {
         <div className="w-full md:w-auto flex-shrink-0">
             <div className="form-control">
                 <div className="label block justify-between items-center">
-                    <span className="label-text text-base-content">Filter by City:</span>
+                    <span className="label-text text-base-content font-bold">Filter by City:</span>
                     {selectedCities.length > 0 && (
                         <span className="badge badge-primary badge-sm" aria-label={`${selectedCities.length} ${selectedCities.length === 1 ? 'city' : 'cities'} selected`}>
                             {selectedCities.length}

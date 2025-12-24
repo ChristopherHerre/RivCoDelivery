@@ -50,7 +50,7 @@ export default function LikeButton({ itemId, itemType, initialLikes = 0, initial
                 <button
                     onClick={handleLike}
                     disabled={loading}
-                    className={`btn btn-sm btn-circle group focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-base-100 transition-all duration-200 ease-in-out min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] ${
+                    className={`btn btn-sm btn-circle group focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-base-100 transition-all duration-200 ease-in-out min-w-[32px] min-h-[32px] ${
                         liked
                             // Active: solid pink, hover to pink outline (border/background only)
                             ? 'bg-pink-500 text-white border-pink-500 hover:bg-transparent hover:border-pink-500 active:scale-95'
