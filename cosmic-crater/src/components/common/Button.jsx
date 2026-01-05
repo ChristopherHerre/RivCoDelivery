@@ -6,7 +6,7 @@ import React from 'react';
  * 
  * @param {Object} props
  * @param {React.ReactNode} props.children - Button content (text, icons, etc.)
- * @param {string} props.variant - Color variant: 'primary' (blue) | 'secondary' (gray) | 'danger' (red) | 'success' (green) (default: 'primary')
+ * @param {string} props.variant - Color variant: 'primary' (blue) | 'secondary' (gray) | 'danger' (red) | 'success' (green) | 'neutral' (light grey, keeps background on hover) | 'light' (very light grey with black text, keeps background on hover) (default: 'primary')
  * @param {string} props.size - Size variant: 'sm' | 'md' | 'lg' (default: 'md')
  * @param {string} props.type - Button type: 'button' | 'submit' | 'reset' (default: 'button')
  * @param {boolean} props.fullWidth - If true, button takes full width (default: false)
@@ -45,12 +45,19 @@ export default function Button({
         colorClasses = 'bg-red-600 text-white border border-red-600 hover:bg-transparent hover:text-red-600 active:scale-95 active:opacity-90';
     } else if (variant === 'success') {
         colorClasses = 'bg-green-600 text-white border border-green-600 hover:bg-transparent hover:text-green-600 active:scale-95 active:opacity-90';
+    } else if (variant === 'neutral') {
+        colorClasses = 'bg-base-100 text-black border border-base-100 hover:bg-base-200 hover:text-black active:scale-95 active:opacity-90';
+    } else if (variant === 'light') {
+        colorClasses = 'bg-gray-300 text-black border border-gray-400 hover:bg-transparent hover:text-gray-300 hover:border-gray-400 active:scale-95 active:opacity-90';
     }
     
     // Size variants
     let sizeClasses = 'px-4 py-2';
     let textSizeClass = 'text-base';
-    if (size === 'sm') {
+    if (size === 'xs') {
+        sizeClasses = 'px-1.5 py-0.5';
+        textSizeClass = 'text-xs';
+    } else if (size === 'sm') {
         sizeClasses = 'px-2 py-1';
         textSizeClass = 'text-sm';
     } else if (size === 'lg') {

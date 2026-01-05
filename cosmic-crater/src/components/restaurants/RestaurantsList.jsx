@@ -12,6 +12,7 @@ import SkeletonCard from '../common/SkeletonCard';
 import EmptyState from '../common/EmptyState';
 import MobileFilterDrawer from './MobileFilterDrawer';
 import ActionButtons from './ActionButtons';
+import TruncatedAddress from '../common/TruncatedAddress';
 
 export function groupBy(array, keyFn) {
     return array.reduce((acc, item) => {
@@ -187,23 +188,50 @@ export default function RestaurantsList(props) {
                 const storedProfile = localStorage.getItem('profile');
                 if (storedProfile) {
                     const likesMap = {};
-                    await Promise.all(restaurants.map(async (restaurant) => {
-                        try {
-                            const likeRes = await axios.get(`/api/restaurants/${restaurant.id}/like-status`, {
-                                withCredentials: true
-                            });
-                            likesMap[restaurant.id] = {
-                                likes: restaurant.likes || 0,
-                                liked: likeRes.data.liked || false
-                            };
-                        } catch (err) {
-                            // If error, just use default values
-                            likesMap[restaurant.id] = {
-                                likes: restaurant.likes || 0,
-                                liked: false
-                            };
-                        }
-                    }));
+                    try {
+                        // Use bulk endpoint for better performance
+                        const restaurantIds = restaurants.map(r => r.id);
+                        const bulkLikeRes = await axios.post('/api/restaurants/like-status/bulk', 
+                            { restaurantIds },
+                            { withCredentials: true }
+                        );
+                        // bulkLikeRes.data format: { restaurantId: { likes: number, liked: boolean }, ... }
+                        restaurants.forEach(restaurant => {
+                            const status = bulkLikeRes.data[restaurant.id];
+                            if (status) {
+                                likesMap[restaurant.id] = {
+                                    likes: status.likes !== undefined ? status.likes : (restaurant.likes || 0),
+                                    liked: status.liked || false
+                                };
+                            } else {
+                                // Fallback if restaurant not in response
+                                likesMap[restaurant.id] = {
+                                    likes: restaurant.likes || 0,
+                                    liked: false
+                                };
+                            }
+                        });
+                    } catch (err) {
+                        // Fallback to individual requests if bulk endpoint fails or doesn't exist
+                        console.warn('Bulk like status endpoint failed, falling back to individual requests:', err);
+                        await Promise.all(restaurants.map(async (restaurant) => {
+                            try {
+                                const likeRes = await axios.get(`/api/restaurants/${restaurant.id}/like-status`, {
+                                    withCredentials: true
+                                });
+                                likesMap[restaurant.id] = {
+                                    likes: restaurant.likes || 0,
+                                    liked: likeRes.data.liked || false
+                                };
+                            } catch (err) {
+                                // If error, just use default values
+                                likesMap[restaurant.id] = {
+                                    likes: restaurant.likes || 0,
+                                    liked: false
+                                };
+                            }
+                        }));
+                    }
                     setRestaurantLikes(likesMap);
                 } else {
                     // User not logged in - just set likes counts
@@ -430,8 +458,8 @@ export default function RestaurantsList(props) {
                                                     {/* Carousel Skeleton */}
                                                     <Carousel 
                                                         id={`skeleton-carousel-${categoryIndex}`} 
-                                                        scrollAmount={400} 
-                                                        carouselClassName="px-12" 
+                                                        scrollAmount={400}
+                                                        carouselClassName="px-4"
                                                         showNavigation={false}
                                                     >
                                                         {[...Array(3)].map((_, i) => (
@@ -481,7 +509,7 @@ export default function RestaurantsList(props) {
                                         <Carousel
                                             id={`carousel-${categoryIndex}`}
                                             scrollAmount={400}
-                                            carouselClassName="px-12"
+                                            carouselClassName="px-4"
                                             aria-label={`${category} restaurants carousel`}
                                         >
                                         {result[category].map((data, key) => {
@@ -518,7 +546,9 @@ export default function RestaurantsList(props) {
                                                             </button>
                                                             <div className="badge badge-secondary badge-lg">{data.category}</div>
                                                         </h2>
-                                                        <p className="text-base-content/70 text-sm mb-2">{data.address}</p>
+                                                        <p className="text-base-content/70 text-sm mb-2">
+                                                            <TruncatedAddress address={data.address} />
+                                                        </p>
                                                         {h < 100 && (
                                                             <div className="flex items-center gap-3 mb-3">
                                                                 <div className="flex items-center gap-1">
@@ -637,8 +667,8 @@ export default function RestaurantsList(props) {
                                         {/* Carousel Skeleton */}
                                         <Carousel 
                                             id={`skeleton-carousel-${categoryIndex}`} 
-                                            scrollAmount={400} 
-                                            carouselClassName="px-12" 
+                                            scrollAmount={400}
+                                            carouselClassName="px-4"
                                             showNavigation={false}
                                         >
                                             {[...Array(3)].map((_, i) => (

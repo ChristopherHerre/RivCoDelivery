@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
-import Spinner from '../../users/Spinner';
 import { groupBy } from '../RestaurantsList';
 import { useParams } from 'react-router-dom';
 import { parseRestaurantId, getRestaurantMenuItemUrl, slugify, getMenuItemUrl } from '../../../utils/restaurantUrls';
 import LikeButton from '../../common/LikeButton';
 import Button from '../../common/Button';
+import Carousel, { CarouselItem } from '../../common/Carousel';
+import SkeletonCard from '../../common/SkeletonCard';
+import EmptyState from '../../common/EmptyState';
 
 export default function Menu(props) {
     const params = useParams();
@@ -91,23 +93,50 @@ export default function Menu(props) {
                 const storedProfile = localStorage.getItem('profile');
                 if (storedProfile) {
                     const likesMap = {};
-                    await Promise.all(menuRes.data.map(async (item) => {
-                        try {
-                            const likeRes = await axios.get(`/api/menu-items/${item.id}/like-status`, {
-                                withCredentials: true
-                            });
-                            likesMap[item.id] = {
-                                likes: item.likes || 0,
-                                liked: likeRes.data.liked || false
-                            };
-                        } catch (err) {
-                            // If error, just use default values
-                            likesMap[item.id] = {
-                                likes: item.likes || 0,
-                                liked: false
-                            };
-                        }
-                    }));
+                    try {
+                        // Use bulk endpoint for better performance
+                        const menuItemIds = menuRes.data.map(item => item.id);
+                        const bulkLikeRes = await axios.post('/api/menu-items/like-status/bulk',
+                            { menuItemIds },
+                            { withCredentials: true }
+                        );
+                        // bulkLikeRes.data format: { menuItemId: { likes: number, liked: boolean }, ... }
+                        menuRes.data.forEach(item => {
+                            const status = bulkLikeRes.data[item.id];
+                            if (status) {
+                                likesMap[item.id] = {
+                                    likes: status.likes !== undefined ? status.likes : (item.likes || 0),
+                                    liked: status.liked || false
+                                };
+                            } else {
+                                // Fallback if menu item not in response
+                                likesMap[item.id] = {
+                                    likes: item.likes || 0,
+                                    liked: false
+                                };
+                            }
+                        });
+                    } catch (err) {
+                        // Fallback to individual requests if bulk endpoint fails or doesn't exist
+                        console.warn('Bulk like status endpoint failed, falling back to individual requests:', err);
+                        await Promise.all(menuRes.data.map(async (item) => {
+                            try {
+                                const likeRes = await axios.get(`/api/menu-items/${item.id}/like-status`, {
+                                    withCredentials: true
+                                });
+                                likesMap[item.id] = {
+                                    likes: item.likes || 0,
+                                    liked: likeRes.data.liked || false
+                                };
+                            } catch (err) {
+                                // If error, just use default values
+                                likesMap[item.id] = {
+                                    likes: item.likes || 0,
+                                    liked: false
+                                };
+                            }
+                        }));
+                    }
                     setMenuItemLikes(likesMap);
                 } else {
                     // User not logged in - just set likes counts
@@ -176,87 +205,125 @@ export default function Menu(props) {
     };
     
     return (
-        <div className="mx-auto">
-            {loaded && restaurantData && (
-                <div className="flex items-stretch mb-6">
-                    <div className="flex-1 flex flex-col">
-                        <h1 className="mb-2 text-2xl font-semibold text-base-content">{restaurantData.name || restaurantName} Menu</h1>
-                        {restaurantData.category && (
-                            <p className="mb-1 text-base">
-                                <strong className="font-semibold text-base-content">{restaurantData.category}</strong>
-                            </p>
-                        )}
-                        {restaurantData.address && (
-                            <p className="mb-1 text-base text-base-content/90">{restaurantData.address}</p>
-                        )}
-                    </div>
+        <div className="w-full">
+            <div className="w-full flex flex-col sm:flex-row gap-4">
+                {/* Left Column - Empty */}
+                <div className="w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-24 sm:self-start">
                 </div>
-            )}
-            
-            {
-                loaded ? Object.keys(result).map((category, categoryIndex) => (
-                    <section className="mb-6" key={categoryIndex}>
-                        <h2 className="text-xl font-semibold mb-3 text-gray-900">{category}</h2>
-                        <div className="flex flex-wrap -mx-3">
-                            {result[category].map((data, key) => {
-                                const priceDisplay = getPriceDisplay(data);
-                                return (
-                                    <div className="w-full md:w-1/2 px-3 mb-3" key={data.id}>
-                                        <div className="card bg-base-100 shadow-sm h-full">
-                                            <div className="card-body flex flex-col items-stretch">
-                                                <div className="flex-1 flex flex-col">
-                                                    <h3 className="text-lg font-semibold mb-2">
+
+                {/* Right Column - Heading and Menu Categories */}
+                <div className="flex-1 min-w-0">
+                    {loaded && restaurantData && (
+                        <div className="mb-6">
+                            <div className="py-4 bg-gray-800 rounded-xl">
+                                <h1 className="text-2xl font-bold mb-2 text-white px-4">{restaurantData.name || restaurantName} Menu</h1>
+                                {restaurantData.category && (
+                                    <p className="mb-1 text-base px-4">
+                                        <strong className="font-semibold text-base-content">{restaurantData.category}</strong>
+                                    </p>
+                                )}
+                                {restaurantData.address && (
+                                    <p className="mb-1 text-base text-base-content/70 px-4">
+                                        {restaurantData.address}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {!loaded ? (
+                        // Loading skeleton
+                        <div className="mb-6">
+                            <div className="py-4 bg-gray-800 rounded-xl">
+                                <div className="h-8 bg-primary/30 rounded w-32 mb-4 mx-4 animate-pulse"></div>
+                                <Carousel 
+                                    id="skeleton-menu-carousel" 
+                                    scrollAmount={400} 
+                                    carouselClassName="px-4"
+                                    showNavigation={false}
+                                >
+                                    {[...Array(3)].map((_, i) => (
+                                        <SkeletonCard key={i} />
+                                    ))}
+                                </Carousel>
+                            </div>
+                        </div>
+                    ) : Object.keys(result).length === 0 ? (
+                        <EmptyState
+                            title="No menu items found"
+                            message="This restaurant doesn't have any menu items available yet."
+                            icon={<i className="bi bi-menu-button"></i>}
+                        />
+                    ) : (
+                        Object.keys(result).map((category, categoryIndex) => (
+                            <div key={categoryIndex} className="mb-6">
+                                <div className="py-4 bg-gray-800 rounded-xl">
+                                    <h2 className="text-2xl font-bold mb-4 text-primary px-4">{category}</h2>
+                                    <Carousel
+                                        id={`menu-carousel-${categoryIndex}`}
+                                        scrollAmount={400}
+                                        carouselClassName="px-4"
+                                        aria-label={`${category} menu items carousel`}
+                                    >
+                                {result[category].map((data, key) => {
+                                    const priceDisplay = getPriceDisplay(data);
+                                    return (
+                                        <CarouselItem key={data.id}>
+                                            <div className="card bg-base-100 w-96 shadow-sm hover:shadow-lg transition-shadow duration-200 ease-in-out">
+                                                <div className="card-body">
+                                                    <h2 className="card-title">
                                                         <button
                                                             onClick={(e) => changeMenuItem(data)}
-                                                            className="link link-primary text-base-content hover:text-primary text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
+                                                            className="text-white link link-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100 rounded text-xl font-bold"
                                                         >
                                                             {data.name}
                                                         </button>
-                                                    </h3>
-                                                    {data.category && (
-                                                        <p className="mb-1 text-base">
-                                                            <strong className="font-semibold text-base-content">{data.category}</strong>
-                                                        </p>
-                                                    )}
+                                                        {data.category && (
+                                                            <div className="badge badge-secondary badge-lg">{data.category}</div>
+                                                        )}
+                                                    </h2>
                                                     {data.size_display_name && (
-                                                        <p className="mb-2 text-base text-base-content/80">{data.size_display_name}</p>
+                                                        <p className="text-base-content/70 text-sm mb-2">{data.size_display_name}</p>
                                                     )}
                                                     {priceDisplay && (
-                                                        <p className="mb-2 text-base text-base-content/80">
-                                                            <strong className="font-semibold text-base-content">{priceDisplay}</strong>
+                                                        <p className="text-sm font-semibold text-base-content mb-3">
+                                                            {priceDisplay}
                                                         </p>
                                                     )}
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 items-center justify-end flex-shrink-0 mt-auto">
-                                                    <Link
-                                                        to={restaurantData ? getMenuItemUrl(restaurantData, data) : `/${restaurantId}/menu/item?item=${data.id}`}
-                                                        className="no-underline"
-                                                    >
-                                                        <Button
-                                                            size="sm"
+                                                    <div className="card-actions justify-end items-center">
+                                                        <Link
+                                                            to={restaurantData ? getMenuItemUrl(restaurantData, data) : `/${restaurantId}/menu/item?item=${data.id}`}
+                                                            className="no-underline"
                                                         >
-                                                            View details
-                                                        </Button>
-                                                    </Link>
-                                                    <LikeButton
-                                                        itemId={data.id}
-                                                        itemType="menu-item"
-                                                        initialLikes={menuItemLikes[data.id]?.likes || data.likes || 0}
-                                                        initialLiked={menuItemLikes[data.id]?.liked || false}
-                                                        profile={profile}
-                                                    />
+                                                            <Button
+                                                                size="sm"
+                                                                variant="primary"
+                                                                type="button"
+                                                                className="min-h-[32px]"
+                                                            >
+                                                                View details
+                                                            </Button>
+                                                        </Link>
+                                                        <LikeButton
+                                                            itemId={data.id}
+                                                            itemType="menu-item"
+                                                            initialLikes={menuItemLikes[data.id]?.likes || data.likes || 0}
+                                                            initialLiked={menuItemLikes[data.id]?.liked || false}
+                                                            profile={profile}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </section>
-                )) : (
-                    <Spinner />
-                )
-            }
+                                        </CarouselItem>
+                                    );
+                                })}
+                                    </Carousel>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

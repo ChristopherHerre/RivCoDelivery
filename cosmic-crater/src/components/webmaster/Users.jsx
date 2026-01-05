@@ -5,6 +5,7 @@ import Button from '../common/Button';
 import Pagination from '../common/Pagination';
 import axios from 'axios';
 import { ROLES, getRoleName } from '../../constants/roles';
+import TruncatedAddress from '../common/TruncatedAddress';
 
 function Users() {
     const [users, setUsers] = useState([]);
@@ -241,11 +242,9 @@ function Users() {
                     </p>
                     <p className="mb-2">
                         <strong>Address: </strong>
-                        <span>{user.address_street_number} </span>
-                        <span>{user.address_street}, </span>
-                        <span>{user.address_city}, </span>
-                        <span>{user.address_state} </span>
-                        <span>{user.address_zip}</span>
+                        <TruncatedAddress 
+                            address={`${user.address_street_number || ''} ${user.address_street || ''}, ${user.address_city || ''}, ${user.address_state || ''} ${user.address_zip || ''}`.trim().replace(/,\s*,/g, ',').replace(/^\s*,|,\s*$/g, '')} 
+                        />
                     </p>
                     <p className="mb-2">
                         <strong>Latitude: </strong>

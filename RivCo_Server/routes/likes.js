@@ -204,6 +204,134 @@ function likeRoutes(app, pool, checkRole) {
         }
     });
 
+    // POST /api/restaurants/like-status/bulk
+    // Get like status for multiple restaurants at once
+    router.post('/restaurants/like-status/bulk', async (req, res) => {
+        // Allow unauthenticated users (they just won't have any liked items)
+        const userId = req.session?.user?.sub;
+
+        const { restaurantIds } = req.body;
+        if (!Array.isArray(restaurantIds) || restaurantIds.length === 0) {
+            return res.status(400).json({ error: 'restaurantIds must be a non-empty array' });
+        }
+
+        // Validate all IDs are numbers
+        const validIds = restaurantIds
+            .map(id => Number(id))
+            .filter(id => !Number.isNaN(id) && id > 0);
+
+        if (validIds.length === 0) {
+            return res.status(400).json({ error: 'No valid restaurant IDs provided' });
+        }
+
+        try {
+            // Get like counts for all restaurants
+            const placeholders = validIds.map(() => '?').join(',');
+            const [restaurants] = await pool.execute(
+                `SELECT id, COALESCE(likes, 0) as likes FROM restaurants WHERE id IN (${placeholders})`,
+                validIds
+            );
+
+            // Get which restaurants the user has liked (if authenticated)
+            let likedSet = new Set();
+            if (userId) {
+                const [userLikes] = await pool.execute(
+                    `SELECT restaurant_id FROM restaurant_likes WHERE user_id = ? AND restaurant_id IN (${placeholders})`,
+                    [userId, ...validIds]
+                );
+                likedSet = new Set(userLikes.map(like => like.restaurant_id));
+            }
+
+            // Build response object: { restaurantId: { likes: number, liked: boolean }, ... }
+            const result = {};
+            restaurants.forEach(restaurant => {
+                result[restaurant.id] = {
+                    likes: restaurant.likes,
+                    liked: likedSet.has(restaurant.id)
+                };
+            });
+
+            // Include restaurants that weren't found (with default values)
+            validIds.forEach(id => {
+                if (!result[id]) {
+                    result[id] = {
+                        likes: 0,
+                        liked: false
+                    };
+                }
+            });
+
+            return res.json(result);
+        } catch (error) {
+            console.error('Error fetching bulk restaurant like status:', error);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+    });
+
+    // POST /api/menu-items/like-status/bulk
+    // Get like status for multiple menu items at once
+    router.post('/menu-items/like-status/bulk', async (req, res) => {
+        // Allow unauthenticated users (they just won't have any liked items)
+        const userId = req.session?.user?.sub;
+
+        const { menuItemIds } = req.body;
+        if (!Array.isArray(menuItemIds) || menuItemIds.length === 0) {
+            return res.status(400).json({ error: 'menuItemIds must be a non-empty array' });
+        }
+
+        // Validate all IDs are numbers
+        const validIds = menuItemIds
+            .map(id => Number(id))
+            .filter(id => !Number.isNaN(id) && id > 0);
+
+        if (validIds.length === 0) {
+            return res.status(400).json({ error: 'No valid menu item IDs provided' });
+        }
+
+        try {
+            // Get like counts for all menu items
+            const placeholders = validIds.map(() => '?').join(',');
+            const [menuItems] = await pool.execute(
+                `SELECT id, COALESCE(likes, 0) as likes FROM menu_items WHERE id IN (${placeholders})`,
+                validIds
+            );
+
+            // Get which menu items the user has liked (if authenticated)
+            let likedSet = new Set();
+            if (userId) {
+                const [userLikes] = await pool.execute(
+                    `SELECT menu_item_id FROM menu_item_likes WHERE user_id = ? AND menu_item_id IN (${placeholders})`,
+                    [userId, ...validIds]
+                );
+                likedSet = new Set(userLikes.map(like => like.menu_item_id));
+            }
+
+            // Build response object: { menuItemId: { likes: number, liked: boolean }, ... }
+            const result = {};
+            menuItems.forEach(menuItem => {
+                result[menuItem.id] = {
+                    likes: menuItem.likes,
+                    liked: likedSet.has(menuItem.id)
+                };
+            });
+
+            // Include menu items that weren't found (with default values)
+            validIds.forEach(id => {
+                if (!result[id]) {
+                    result[id] = {
+                        likes: 0,
+                        liked: false
+                    };
+                }
+            });
+
+            return res.json(result);
+        } catch (error) {
+            console.error('Error fetching bulk menu item like status:', error);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+    });
+
     return router;
 }
 

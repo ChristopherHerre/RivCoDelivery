@@ -4,11 +4,13 @@ import { MAX_RETRY_ATTEMPTS } from '../../App';
 import Badge from '../cart/Badge';
 import Spinner from '../Spinner';
 import DeliveryAddress from '../address/DeliveryAddress';
+import NavbarSkeleton from '../../common/NavbarSkeleton';
 import { Link } from 'react-router-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import ResponsiveFlexRow from '../../common/ResponsiveFlexRow';
 import Button from '../../common/Button';
+import BreadcrumbWrapper from '../../common/BreadcrumbWrapper';
 
 function Navbar(props) {
     const cart = props.cart;
@@ -28,7 +30,7 @@ function Navbar(props) {
         const [dropdownOpen, setDropdownOpen] = useState(false);
         const dropdownRef = useRef(null);
 
-        // Close dropdown when clicking outside
+        // Close dropdown when clicking outside (but not when clicking the button itself)
         useEffect(() => {
             const handleClickOutside = (event) => {
                 if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -37,36 +39,42 @@ function Navbar(props) {
             };
 
             if (dropdownOpen) {
-                document.addEventListener('mousedown', handleClickOutside);
+                // Use click instead of mousedown and add a small delay to let button click toggle first
+                const timeoutId = setTimeout(() => {
+                    document.addEventListener('click', handleClickOutside);
+                }, 100);
+                return () => {
+                    clearTimeout(timeoutId);
+                    document.removeEventListener('click', handleClickOutside);
+                };
             }
-
-            return () => {
-                document.removeEventListener('mousedown', handleClickOutside);
-            };
         }, [dropdownOpen]);
 
         return (
             profile && (
                 <div className={`dropdown dropdown-end ${dropdownOpen ? 'dropdown-open' : ''}`} ref={dropdownRef}>
-                    <button
-                        tabIndex={0}
-                        className="flex items-center gap-2 flex-wrap text-sm md:text-base hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100 rounded-lg p-1"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
-                        aria-label="User menu"
-                        aria-expanded={dropdownOpen}
-                    >
-                        <span className="text-base-content font-semibold">Welcome,</span>
+                        <Button
+                            variant="primary"
+                            size="md"
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setDropdownOpen(!dropdownOpen);
+                            }}
+                            className="flex items-center gap-2 whitespace-nowrap text-xs sm:text-sm md:text-base max-[320px]:!px-2 max-[320px]:!py-1 max-[320px]:!text-xs"
+                            aria-label={`User menu for ${profile.name}`}
+                            aria-expanded={dropdownOpen}
+                        >
                         <div className="avatar">
-                            <div className="w-10 h-10 rounded-full ring ring-primary ring-offset-2 ring-offset-base-100">
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full ring ring-primary ring-offset-2 ring-offset-base-100">
                                 <img src={profile.picture} alt={profile.name} /> 
                             </div>
                         </div>
-                        <b className="text-base-content font-semibold">{profile.name}</b>
-                        <i className={`bi bi-chevron-down text-base-content transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}></i>
-                    </button>
+                        <i className={`bi bi-chevron-down transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}></i>
+                    </Button>
                     <ul
                         tabIndex={0}
-                        className="dropdown-content menu bg-base-100 rounded-box z-[100] w-52 p-2 shadow-lg border border-base-300 mt-2"
+                        className="dropdown-content menu bg-primary text-primary-content rounded-box z-[200] w-52 p-2 shadow-lg border border-primary mt-2"
                     >
                         <li>
                             <button
@@ -75,7 +83,7 @@ function Navbar(props) {
                                     onLogout(e);
                                     setDropdownOpen(false);
                                 }}
-                                className="text-error hover:bg-error hover:text-error-content focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-2 focus:ring-offset-base-100"
+                                className="text-error hover:bg-error hover:text-error-content focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-2 focus:ring-offset-primary"
                             >
                                 <i className="bi bi-box-arrow-right"></i>
                                 Logout
@@ -135,6 +143,11 @@ function Navbar(props) {
         logout().catch(error => console.error('Error in logout:', error));
     }
 
+    // Show skeleton during login loading
+    if (loginLoading) {
+        return <NavbarSkeleton />;
+    }
+
     return (
         <>
             <div id="navbar" className="card bg-base-100 shadow-md mb-4 w-full sticky top-0 z-50">
@@ -143,15 +156,17 @@ function Navbar(props) {
                         {/* Left Section - User Info / Sign In Message */}
                         <div className="w-full lg:flex-1">
                             {profile ? (
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
-                                    <ShowGoogleUserInfo profile={profile} onLogout={handleLogout} />
-                                    <div className="w-full sm:w-auto">
+                                <div className="flex flex-row flex-wrap min-[380px]:flex-nowrap items-center gap-4">
+                                    <div className="flex-shrink-0">
                                         <DeliveryAddress 
                                             showGetLocation={showGetLocation} 
                                             setShowGetLocation={setShowGetLocation} 
                                             address={address} 
                                             setAddress={setAddress}
                                         />
+                                    </div>
+                                    <div className="ml-auto lg:ml-0 w-full min-[380px]:w-auto flex justify-center min-[380px]:justify-start">
+                                        <ShowGoogleUserInfo profile={profile} onLogout={handleLogout} />
                                     </div>
                                 </div>
                             ) : (
@@ -180,7 +195,7 @@ function Navbar(props) {
                                                 size="md"
                                                 fullWidth
                                                 type="button"
-                                                className="whitespace-nowrap"
+                                                className="whitespace-nowrap max-[320px]:!px-2 max-[320px]:!py-1 max-[320px]:!text-sm"
                                             >
                                                 <i className="bi bi-google"></i> Sign in with Google
                                             </Button>
@@ -189,14 +204,13 @@ function Navbar(props) {
                                 </GoogleOAuthProvider>
                             ) : (
                                 <>
-                                    {profile && loginLoading ? <Spinner /> : ""}
                                     {profile && (
-                                        <div className="flex flex-row sm:flex-row gap-3 w-full lg:w-auto min-w-0">
+                                        <div className="flex flex-row md:flex-row gap-3 w-full lg:w-auto min-w-0">
                                             <Button 
                                                 variant="secondary"
                                                 size="md"
                                                 type="button" 
-                                                className="flex-1 lg:flex-none whitespace-nowrap min-w-0"
+                                                className="flex-1 lg:flex-none whitespace-nowrap min-w-0 max-[320px]:!px-2 max-[320px]:!py-1 max-[320px]:!text-sm"
                                                 onClick={() => navigate('/user-orders')}
                                             >
                                                 <i className="bi bi-list"></i> My Orders
@@ -205,7 +219,7 @@ function Navbar(props) {
                                                 variant="secondary"
                                                 size="md"
                                                 type="button" 
-                                                className="flex-1 lg:flex-none whitespace-nowrap min-w-0 overflow-visible relative"
+                                                className="flex-1 lg:flex-none whitespace-nowrap min-w-0 overflow-visible relative max-[320px]:!px-2 max-[320px]:!py-1 max-[320px]:!text-sm"
                                                 onClick={() => {
                                                     if (cart && cart.length > 0 && cart[0]?.restaurant_id) {
                                                         navigate(`/${cart[0].restaurant_id}/cart`);
@@ -224,6 +238,10 @@ function Navbar(props) {
                                 </>
                             )}
                         </div>
+                    </div>
+                    {/* Breadcrumbs */}
+                    <div className="mt-4">
+                        <BreadcrumbWrapper />
                     </div>
                 </div>
             </div>
