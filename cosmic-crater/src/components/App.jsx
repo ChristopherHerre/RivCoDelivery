@@ -22,7 +22,6 @@ import UserOrders from './users/orders/UserOrders';
 import DriverOrders from './drivers/orders/DriverOrders';
 import Users from './webmaster/Users';
 import Donate from './users/nav/Donate';
-import BreadcrumbWrapper from './common/BreadcrumbWrapper';
 import Navbar from './users/nav/Navbar';
 import TaxiFareCalculator from './users/address/TaxiFareCalculator';
 import RedirectToNewUrl from './RedirectToNewUrl';
@@ -65,7 +64,6 @@ function Layout(props) {
 					</div>
 				</div>
 			)}
-			<BreadcrumbWrapper />
 			<div id="white-area">
 				<Outlet />
 			</div>

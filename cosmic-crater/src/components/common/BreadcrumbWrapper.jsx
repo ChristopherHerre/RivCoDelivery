@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { parseRestaurantId } from '../../utils/restaurantUrls';
 import { generateBreadcrumbJsonLd } from '../../utils/breadcrumbUtils';
+import Button from './Button';
 
 /**
  * BreadcrumbWrapper component that generates breadcrumbs based on the current route
@@ -10,6 +11,7 @@ import { generateBreadcrumbJsonLd } from '../../utils/breadcrumbUtils';
  */
 export default function BreadcrumbWrapper() {
     const location = useLocation();
+    const navigate = useNavigate();
     const [breadcrumbItems, setBreadcrumbItems] = useState([]);
     const jsonLdScriptRef = useRef(null);
 
@@ -169,27 +171,43 @@ export default function BreadcrumbWrapper() {
         return null;
     }
 
-    // Render breadcrumb HTML matching the Astro component structure exactly
+    // Render breadcrumb HTML with styled links and proper contrast
     return (
         <nav className="breadcrumb-nav" aria-label="Breadcrumb">
-            <ol className="breadcrumb-list">
+            <ol className="breadcrumb-list flex flex-wrap items-center gap-2 text-sm">
                 {breadcrumbItems.map((item, index) => {
                     const isLast = index === breadcrumbItems.length - 1;
                     const isLink = item.href && !isLast;
                     
                     return (
-                        <li key={index} className="breadcrumb-item">
+                        <li key={index} className="breadcrumb-item flex items-center gap-2">
                             {isLink ? (
-                                <Link to={item.href} className="breadcrumb-link">
+                                <Button
+                                    variant="light"
+                                    size="sm"
+                                    type="button"
+                                    onClick={() => navigate(item.href)}
+                                    className="whitespace-nowrap max-[320px]:!px-1.5 max-[320px]:!py-0.5 max-[320px]:!text-xs"
+                                >
                                     {item.label}
-                                </Link>
+                                </Button>
                             ) : (
-                                <span className="breadcrumb-current" aria-current="page">
+                                <span 
+                                    className="breadcrumb-current text-white font-semibold" 
+                                    aria-current="page"
+                                >
                                     {item.label}
                                 </span>
                             )}
                             {!isLast && (
-                                <svg className="breadcrumb-separator" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
+                                <svg 
+                                    className="breadcrumb-separator text-secondary/50" 
+                                    aria-hidden="true" 
+                                    viewBox="0 0 16 16" 
+                                    fill="currentColor"
+                                    width="16"
+                                    height="16"
+                                >
                                     <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0L10.94 8a.75.75 0 0 1 0 1.06l-3.66 3.78a.75.75 0 1 1-1.06-1.06L9.38 8.5 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                                 </svg>
                             )}

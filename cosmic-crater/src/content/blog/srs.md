@@ -5,15 +5,10 @@ pubDate: 2025-01-15
 heroImage: '/hero.jpg'
 slug: 'software-requirements'
 ---
-# Software Requirements Specification (SRS)
-## RivCoDelivery - Full-Stack Delivery Application
-
 **Version:** 2.0  
 **Date:** January 2025  
 **Document Status:** Current
-
 ---
-
 ## Table of Contents
 
 1. [Introduction](#1-introduction)

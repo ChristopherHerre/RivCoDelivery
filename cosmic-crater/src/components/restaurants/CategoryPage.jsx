@@ -7,6 +7,7 @@ import LikeButton from '../common/LikeButton';
 import Carousel, { CarouselItem } from '../common/Carousel';
 import SkeletonCard from '../common/SkeletonCard';
 import EmptyState from '../common/EmptyState';
+import TruncatedAddress from '../common/TruncatedAddress';
 
 export default function CategoryPage(props) {
     const params = useParams();
@@ -69,22 +70,49 @@ export default function CategoryPage(props) {
                             const storedProfile = localStorage.getItem('profile');
                             if (storedProfile) {
                                 const likesMap = {};
-                                await Promise.all(restaurantsData.map(async (restaurant) => {
-                                    try {
-                                        const likeRes = await axios.get(`/api/restaurants/${restaurant.id}/like-status`, {
-                                            withCredentials: true
-                                        });
-                                        likesMap[restaurant.id] = {
-                                            likes: restaurant.likes || 0,
-                                            liked: likeRes.data.liked || false
-                                        };
-                                    } catch (err) {
-                                        likesMap[restaurant.id] = {
-                                            likes: restaurant.likes || 0,
-                                            liked: false
-                                        };
-                                    }
-                                }));
+                                try {
+                                    // Use bulk endpoint for better performance
+                                    const restaurantIds = restaurantsData.map(r => r.id);
+                                    const bulkLikeRes = await axios.post('/api/restaurants/like-status/bulk', 
+                                        { restaurantIds },
+                                        { withCredentials: true }
+                                    );
+                                    // bulkLikeRes.data format: { restaurantId: { likes: number, liked: boolean }, ... }
+                                    restaurantsData.forEach(restaurant => {
+                                        const status = bulkLikeRes.data[restaurant.id];
+                                        if (status) {
+                                            likesMap[restaurant.id] = {
+                                                likes: status.likes !== undefined ? status.likes : (restaurant.likes || 0),
+                                                liked: status.liked || false
+                                            };
+                                        } else {
+                                            // Fallback if restaurant not in response
+                                            likesMap[restaurant.id] = {
+                                                likes: restaurant.likes || 0,
+                                                liked: false
+                                            };
+                                        }
+                                    });
+                                } catch (err) {
+                                    // Fallback to individual requests if bulk endpoint fails or doesn't exist
+                                    console.warn('Bulk like status endpoint failed, falling back to individual requests:', err);
+                                    await Promise.all(restaurantsData.map(async (restaurant) => {
+                                        try {
+                                            const likeRes = await axios.get(`/api/restaurants/${restaurant.id}/like-status`, {
+                                                withCredentials: true
+                                            });
+                                            likesMap[restaurant.id] = {
+                                                likes: restaurant.likes || 0,
+                                                liked: likeRes.data.liked || false
+                                            };
+                                        } catch (err) {
+                                            likesMap[restaurant.id] = {
+                                                likes: restaurant.likes || 0,
+                                                liked: false
+                                            };
+                                        }
+                                    }));
+                                }
                                 setRestaurantLikes(likesMap);
                             } else {
                                 const likesMap = {};
@@ -125,35 +153,44 @@ export default function CategoryPage(props) {
         <div className="w-full">
             {loaded ? (
                 <>
-                    <div className="mb-6">
-                        <div className="py-4 bg-gray-800 rounded-xl">
-                            <h1 className="text-2xl font-bold mb-4 text-white px-4">
-                                {categoryName || category} in {cityName || city}
-                            </h1>
-                            {restaurants.length > 0 && (
-                                <p className="text-base-content/70 px-4 mb-4">
-                                    Found {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''} in this category
-                                </p>
-                            )}
+                    <div className="w-full flex flex-col sm:flex-row gap-4">
+                        {/* Left Column - Empty */}
+                        <div className="w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-24 sm:self-start">
                         </div>
-                    </div>
 
-                    {restaurants.length === 0 ? (
-                        <EmptyState
-                            title="No Restaurants Found"
-                            message={`No restaurants found in this category for ${cityName || city} yet.`}
-                            icon="bi-emoji-frown"
-                        />
-                    ) : (
-                        <div className="mb-6">
-                            <div className="py-4 bg-gray-800 rounded-xl">
-                                <Carousel
-                                    id="category-carousel"
-                                    scrollAmount={400}
-                                    carouselClassName="px-12"
-                                    ariaLabel={`${categoryName || category} restaurants carousel`}
-                                >
-                                    {restaurants.map((r) => {
+                        {/* Right Column - Heading and Carousel */}
+                        <div className="flex-1 min-w-0">
+                            {/* Heading */}
+                            <div className="mb-6">
+                                <div className="py-4 bg-gray-800 rounded-xl">
+                                    <h1 className="text-2xl font-bold mb-4 text-white px-4">
+                                        {categoryName || category} in {cityName || city}
+                                    </h1>
+                                    {restaurants.length > 0 && (
+                                        <p className="text-base-content/70 px-4 mb-4">
+                                            Found {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''} in this category
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Carousel */}
+                            {restaurants.length === 0 ? (
+                                <EmptyState
+                                    title="No Restaurants Found"
+                                    message={`No restaurants found in this category for ${cityName || city} yet.`}
+                                    icon="bi-emoji-frown"
+                                />
+                            ) : (
+                                <div className="mb-6">
+                                    <div className="py-4 bg-gray-800 rounded-xl">
+                                        <Carousel
+                                            id="category-carousel"
+                                            scrollAmount={400}
+                                            carouselClassName="px-4"
+                                            ariaLabel={`${categoryName || category} restaurants carousel`}
+                                        >
+                                            {restaurants.map((r) => {
                                         const h = latitude && longitude ? haversine_dist(
                                             r.latitude,
                                             r.longitude,
@@ -186,7 +223,9 @@ export default function CategoryPage(props) {
                                                             </button>
                                                             <div className="badge badge-secondary badge-lg">{r.category}</div>
                                                         </h2>
-                                                        <p className="text-base-content/70 text-sm mb-2">{r.address}</p>
+                                                        <p className="text-base-content/70 text-sm mb-2">
+                                                            <TruncatedAddress address={r.address} />
+                                                        </p>
                                                         {h && h < 100 && (
                                                             <div className="flex items-center gap-3 mb-3">
                                                                 <div className="flex items-center gap-1">
@@ -232,25 +271,45 @@ export default function CategoryPage(props) {
                                             </CarouselItem>
                                         );
                                     })}
+                                        </Carousel>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            ) : (
+                <div className="w-full flex flex-col sm:flex-row gap-4">
+                    {/* Left Column Skeleton - Empty */}
+                    <div className="w-full sm:w-64 flex-shrink-0 sm:sticky sm:top-24 sm:self-start">
+                    </div>
+
+                    {/* Right Column Skeleton - Heading and Carousel */}
+                    <div className="flex-1 min-w-0">
+                        {/* Heading Skeleton */}
+                        <div className="mb-6">
+                            <div className="py-4 bg-gray-800 rounded-xl">
+                                <div className="h-8 bg-primary/30 rounded w-3/4 mb-4 mx-4 animate-pulse"></div>
+                                <div className="h-4 bg-primary/30 rounded w-1/2 mx-4 animate-pulse"></div>
+                            </div>
+                        </div>
+
+                        {/* Carousel Skeleton */}
+                        <div className="mb-6">
+                            <div className="py-4 bg-gray-800 rounded-xl">
+                                <div className="h-8 bg-primary/30 rounded w-32 mb-4 mx-4 animate-pulse"></div>
+                                <Carousel 
+                                    id="skeleton-category-carousel" 
+                                    scrollAmount={400} 
+                                    carouselClassName="px-4" 
+                                    showNavigation={false}
+                                >
+                                    {[...Array(3)].map((_, i) => (
+                                        <SkeletonCard key={i} />
+                                    ))}
                                 </Carousel>
                             </div>
                         </div>
-                    )}
-                </>
-            ) : (
-                <div className="mb-6">
-                    <div className="py-4 bg-gray-800 rounded-xl">
-                        <div className="h-8 bg-primary/30 rounded w-32 mb-4 mx-4 animate-pulse"></div>
-                        <Carousel 
-                            id="skeleton-carousel" 
-                            scrollAmount={400} 
-                            carouselClassName="px-12" 
-                            showNavigation={false}
-                        >
-                            {[...Array(3)].map((_, i) => (
-                                <SkeletonCard key={i} />
-                            ))}
-                        </Carousel>
                     </div>
                 </div>
             )}

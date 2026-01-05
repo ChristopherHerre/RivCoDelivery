@@ -2,7 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { MAX_RETRY_ATTEMPTS } from '../../App';
-import Spinner from '../Spinner';
+import Button from '../../common/Button';
+import TruncatedAddress from '../../common/TruncatedAddress';
+import DeliveryAddressSkeleton from '../../common/DeliveryAddressSkeleton';
 
 export async function getFullAddress(address) {
     if (!address || !address.streetNumber || !address.zip) {
@@ -30,38 +32,11 @@ function DeliveryAddress(props) {
     const address = props.address;
     const setAddress = props.setAddress;
     const [fullAddress, setFullAddress] = useState("");
-    const [displayAddress, setDisplayAddress] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
-
-    // Function to truncate address based on screen size
-    const truncateAddress = (address, screenWidth) => {
-        if (!address) return "";
-        // Define max lengths for different screen sizes
-        if (screenWidth >= 1024) { // lg and above
-            return address.length > 50 ? address.slice(0, 50) + "..." : address;
-        } else if (screenWidth >= 640) { // sm to md
-            return address.length > 35 ? address.slice(0, 35) + "..." : address;
-        } else { // xs
-            return address.length > 20 ? address.slice(0, 20) + "..." : address;
-        }
-    };
-
-    // Update displayed address when fullAddress or window size changes
-    useEffect(() => {
-        const updateDisplayAddress = () => {
-            if (fullAddress) {
-                setDisplayAddress(truncateAddress(fullAddress, window.innerWidth));
-            }
-        };
-
-        updateDisplayAddress();
-        window.addEventListener('resize', updateDisplayAddress);
-        return () => window.removeEventListener('resize', updateDisplayAddress);
-    }, [fullAddress]);
     useEffect(() => {
         const loadAddress = async () => {
             setError(null);
@@ -89,7 +64,7 @@ function DeliveryAddress(props) {
         loadAddress();
     }, [address, setFullAddress, setShowGetLocation]);
 
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside (but not when clicking the button itself)
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -98,12 +73,15 @@ function DeliveryAddress(props) {
         };
 
         if (dropdownOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
+            // Use click instead of mousedown and add a small delay to let button click toggle first
+            const timeoutId = setTimeout(() => {
+                document.addEventListener('click', handleClickOutside);
+            }, 100);
+            return () => {
+                clearTimeout(timeoutId);
+                document.removeEventListener('click', handleClickOutside);
+            };
         }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
     }, [dropdownOpen]);
 
     async function editAddress(e) {
@@ -143,34 +121,34 @@ function DeliveryAddress(props) {
     }
     
     return (
-        <div className="text-sm md:text-base flex items-center gap-2 flex-wrap">
+        <div className="text-xs sm:text-sm md:text-base flex items-center gap-2">
             {isLoading ? (
-                <Spinner />
+                <DeliveryAddressSkeleton />
             ) : (
-                <div className={`dropdown dropdown-end ${dropdownOpen ? 'dropdown-open' : ''}`} ref={dropdownRef}>
-                    <button
-                        tabIndex={0}
-                        className="flex items-center justify-between gap-2 w-full text-sm md:text-base hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100 rounded-lg p-1"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                <div className={`dropdown dropdown-center ${dropdownOpen ? 'dropdown-open' : ''}`} ref={dropdownRef}>
+                    <Button
+                        variant={!showGetLocation ? "primary" : "danger"}
+                        size="md"
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setDropdownOpen(!dropdownOpen);
+                        }}
+                        className="flex items-center gap-2 whitespace-nowrap text-xs sm:text-sm md:text-base max-[320px]:!px-2 max-[320px]:!py-1 max-[320px]:!text-xs"
                         aria-label="Delivery address menu"
                         aria-expanded={dropdownOpen}
+                        title={fullAddress}
                     >
-                        <b className="text-base-content font-semibold">Deliver to:</b>
-                        {!showGetLocation ? (
-                            <span className="badge badge-primary badge-lg text-primary-content px-3 py-2 flex items-center gap-2">
-                                <span className="whitespace-nowrap" title={fullAddress}>{displayAddress || fullAddress}</span>
-                                <i className={`bi bi-chevron-down text-primary-content transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}></i>
-                            </span>
-                        ) : (
-                            <span className="badge badge-error badge-lg text-error-content px-3 py-2 flex items-center gap-2">
-                                <span>Address Required!</span>
-                                <i className={`bi bi-chevron-down text-error-content transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}></i>
-                            </span>
-                        )}
-                    </button>
+                        <b className="font-semibold">Deliver to:</b>
+                        <TruncatedAddress 
+                            address={fullAddress} 
+                            fallback="Address Required!"
+                        />
+                        <i className={`bi bi-chevron-down transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}></i>
+                    </Button>
                     <ul
                         tabIndex={0}
-                        className="dropdown-content menu bg-base-100 rounded-box z-[100] w-52 p-2 shadow-lg border border-base-300 mt-2"
+                        className="dropdown-content menu bg-primary text-primary-content rounded-box z-[200] w-52 p-2 shadow-lg border border-primary mt-2"
                     >
                         <li>
                             <button
@@ -179,10 +157,10 @@ function DeliveryAddress(props) {
                                     editAddress(e);
                                     setDropdownOpen(false);
                                 }}
-                                className="text-base-content focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100"
+                                className="text-primary-content hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary-content focus:ring-offset-2 focus:ring-offset-primary"
                             >
                                 <i className="bi bi-pencil-square"></i>
-                                <span className="text-base-content">Edit Address</span>
+                                <span className="text-primary-content">Edit Address</span>
                             </button>
                         </li>
                     </ul>

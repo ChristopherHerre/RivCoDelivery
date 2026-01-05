@@ -4,6 +4,7 @@ import { dbPost2, MAX_RETRY_ATTEMPTS } from '../../App';
 import Spinner from '../../users/Spinner';
 import Button from '../../common/Button';
 import Pagination from '../../common/Pagination';
+import TruncatedAddress from '../../common/TruncatedAddress';
 
 function DriverOrders() {
     const [driverOrders, setDriverOrders] = useState([]);
@@ -145,7 +146,7 @@ function DriverOrders() {
                             <div key={order.id} className="flex flex-wrap mb-4">
                                 <div className="w-full">
                                     <h5 className="bg-gray-900 text-white text-center p-1">
-                                        {order.restaurant} - {order.restaurant_address}
+                                        {order.restaurant} - <TruncatedAddress address={order.restaurant_address} className="text-white" />
                                     </h5>
                                 </div>
                                 <div className="w-full lg:w-1/2 lg:pr-4">
@@ -187,13 +188,13 @@ function DriverOrders() {
                                     <div className="currency-item">
                                         <b className="label">Your Address: </b>
                                         <span className="amount">
-                                            {order.address}
+                                            <TruncatedAddress address={order.address} />
                                         </span>
                                     </div>
                                     <div className="currency-item">
                                         <b className="label">Restaurant's Address: </b>
                                         <span className="amount">
-                                            {order.restaurant_address}
+                                            <TruncatedAddress address={order.restaurant_address} />
                                         </span>
                                     </div>
                                     <div className="currency-item">

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Button from './Button';
 
 /**
@@ -44,6 +44,95 @@ export default function Carousel({
         setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
     };
 
+    const scrollToNext = (direction) => {
+        const carousel = carouselRef.current;
+        if (!carousel) return;
+
+        // Find all carousel item elements
+        const items = carousel.querySelectorAll('.carousel-item');
+        if (items.length === 0) {
+            // Fallback to fixed scroll amount if no items found
+            carousel.scrollBy({ 
+                left: direction === 'next' ? scrollAmount : -scrollAmount, 
+                behavior: 'smooth' 
+            });
+            return;
+        }
+
+        // Find the first visible item (fully or partially visible)
+        let firstVisibleIndex = -1;
+        const carouselRect = carousel.getBoundingClientRect();
+        
+        // First try to find a fully visible item
+        items.forEach((item, index) => {
+            const rect = item.getBoundingClientRect();
+            // Check if item is fully visible (not cut off on either side)
+            if (rect.left >= carouselRect.left && rect.right <= carouselRect.right) {
+                if (firstVisibleIndex === -1) {
+                    firstVisibleIndex = index;
+                }
+            }
+        });
+
+        // If no fully visible item, use the first partially visible one
+        if (firstVisibleIndex === -1) {
+            items.forEach((item, index) => {
+                const rect = item.getBoundingClientRect();
+                // Check if item is at least partially visible
+                if (rect.left < carouselRect.right && rect.right > carouselRect.left) {
+                    if (firstVisibleIndex === -1) {
+                        firstVisibleIndex = index;
+                    }
+                }
+            });
+        }
+
+        // If still no visible item, use the first item
+        if (firstVisibleIndex === -1) {
+            firstVisibleIndex = 0;
+        }
+
+        // Calculate target index
+        let targetIndex;
+        if (direction === 'next') {
+            targetIndex = firstVisibleIndex + 1;
+            if (targetIndex >= items.length) targetIndex = items.length - 1;
+        } else {
+            targetIndex = firstVisibleIndex - 1;
+            if (targetIndex < 0) targetIndex = 0;
+        }
+
+        // Scroll to the target item
+        if (targetIndex >= 0 && targetIndex < items.length) {
+            items[targetIndex].scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest', 
+                inline: 'start' 
+            });
+        }
+    };
+
+    // Reset scroll position to align first card with heading padding on initial load
+    // This ensures cards align with heading padding on initial load
+    useLayoutEffect(() => {
+        const carousel = carouselRef.current;
+        if (!carousel) return;
+        
+        // Force scroll to 0 to show the spacer div and align with heading padding
+        carousel.scrollLeft = 0;
+        
+        // Use a small timeout to ensure this happens after any CSS centering effects
+        // from carousel-center class
+        const timeoutId = setTimeout(() => {
+            carousel.scrollLeft = 0;
+            updateScrollState();
+        }, 0);
+        
+        updateScrollState();
+        
+        return () => clearTimeout(timeoutId);
+    }, [children]);
+
     useEffect(() => {
         const carousel = carouselRef.current;
         if (!carousel) return;
@@ -56,9 +145,35 @@ export default function Carousel({
             updateScrollState();
         };
 
-        // Update on resize
+        // Update on resize and reset scroll position if needed
+        let resizeTimeout;
         const handleResize = () => {
-            updateScrollState();
+            // Clear any pending resize calls
+            clearTimeout(resizeTimeout);
+            
+            // Debounce resize to avoid excessive calls
+            resizeTimeout = setTimeout(() => {
+                // Reset scroll position to ensure proper centering after orientation change
+                const currentScroll = carousel.scrollLeft;
+                
+                // If scroll position is near the start, reset to 0 to ensure centering
+                // This helps with orientation changes where the layout recalculates
+                if (currentScroll < 50) {
+                    carousel.scrollLeft = 0;
+                }
+                
+                updateScrollState();
+            }, 100);
+        };
+
+        // Handle orientation change specifically
+        const handleOrientationChange = () => {
+            // Small delay to allow layout to recalculate
+            setTimeout(() => {
+                // Reset to start to ensure proper centering
+                carousel.scrollLeft = 0;
+                updateScrollState();
+            }, 150);
         };
 
         // Touch/swipe support for mobile
@@ -80,11 +195,11 @@ export default function Carousel({
 
             if (Math.abs(diff) > swipeThreshold) {
                 if (diff > 0 && canScrollRight) {
-                    // Swipe left - scroll right
-                    carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    // Swipe left - scroll right (next)
+                    scrollToNext('next');
                 } else if (diff < 0 && canScrollLeft) {
-                    // Swipe right - scroll left
-                    carousel.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                    // Swipe right - scroll left (previous)
+                    scrollToNext('prev');
                 }
             }
         };
@@ -93,6 +208,7 @@ export default function Carousel({
         carousel.addEventListener('touchstart', handleTouchStart, { passive: true });
         carousel.addEventListener('touchend', handleTouchEnd, { passive: true });
         window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleOrientationChange);
 
         // Check periodically for dynamic content
         const interval = setInterval(updateScrollState, 100);
@@ -102,7 +218,9 @@ export default function Carousel({
             carousel.removeEventListener('touchstart', handleTouchStart);
             carousel.removeEventListener('touchend', handleTouchEnd);
             window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleOrientationChange);
             clearInterval(interval);
+            clearTimeout(resizeTimeout);
         };
     }, [children, scrollAmount, canScrollLeft, canScrollRight]);
 
@@ -116,11 +234,11 @@ export default function Carousel({
             switch (e.key) {
                 case 'ArrowLeft':
                     e.preventDefault();
-                    carousel.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                    scrollToNext('prev');
                     break;
                 case 'ArrowRight':
                     e.preventDefault();
-                    carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    scrollToNext('next');
                     break;
                 case 'Home':
                     e.preventDefault();
@@ -145,7 +263,7 @@ export default function Carousel({
         <div className={`relative w-full ${className}`}>
             <div 
                 ref={carouselRef}
-                className={`carousel w-full carousel-center rounded-box ${space} overflow-x-auto flex items-center`} 
+                className={`carousel w-full ${carouselClassName ? '' : 'carousel-center'} rounded-box ${space} overflow-x-auto flex items-center`} 
                 id={id}
                 role="region"
                 aria-label={ariaLabel}
@@ -168,19 +286,16 @@ export default function Carousel({
             {showNavigation && (
                 <>
                     {canScrollLeft && (
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
                             <Button
                                 variant="primary"
                                 size="sm"
                                 type="button"
-                                className="btn-circle !px-0 !py-0 w-11 h-11 min-[640px]:w-8 min-[640px]:h-8"
+                                className="btn-circle !px-0 !py-0 w-8 h-8"
                                 aria-label="Previous"
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    const carousel = carouselRef.current;
-                                    if (carousel) {
-                                        carousel.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-                                    }
+                                    scrollToNext('prev');
                                 }}
                             >
                                 ❮
@@ -188,19 +303,16 @@ export default function Carousel({
                         </div>
                     )}
                     {canScrollRight && (
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10">
                             <Button
                                 variant="primary"
                                 size="sm"
                                 type="button"
-                                className="btn-circle !px-0 !py-0 w-11 h-11 min-[640px]:w-8 min-[640px]:h-8"
+                                className="btn-circle !px-0 !py-0 w-8 h-8"
                                 aria-label="Next"
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    const carousel = carouselRef.current;
-                                    if (carousel) {
-                                        carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-                                    }
+                                    scrollToNext('next');
                                 }}
                             >
                                 ❯
