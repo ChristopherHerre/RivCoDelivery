@@ -27,19 +27,26 @@ const ingredientsRes = await fetch(`${apiBase}/api/public/ingredients/${ingredie
 if (ingredientsRes.ok) {
 	menuItems = await ingredientsRes.json();
 	if (menuItems.length > 0) {
-		ingredientName = menuItems[0].ingredients_name || ingredient.replace(/-/g, ' ');
+		ingredientName = sanitizeForJson(menuItems[0].ingredients_name || ingredient.replace(/-/g, ' '));
 		// Group by restaurant
 		menuItems.forEach(item => {
 			if (!restaurantsMap.has(item.restaurant_id)) {
 				restaurantsMap.set(item.restaurant_id, {
 					restaurant_id: item.restaurant_id,
-					restaurant_name: item.restaurant_name,
-					city_name: item.city_name,
+					restaurant_name: sanitizeForJson(item.restaurant_name || ''),
+					city_name: sanitizeForJson(item.city_name || ''),
 					city_slug: item.city_slug,
 					items: []
 				});
 			}
-			restaurantsMap.get(item.restaurant_id).items.push(item);
+			// Sanitize item data
+			const sanitizedItem = {
+				...item,
+				name: sanitizeForJson(item.name || ''),
+				category: item.category ? sanitizeForJson(item.category) : null,
+				restaurant_name: sanitizeForJson(item.restaurant_name || '')
+			};
+			restaurantsMap.get(item.restaurant_id).items.push(sanitizedItem);
 		});
 	}
 }
@@ -49,6 +56,22 @@ if (menuItems.length === 0) {
 }
 
 const restaurants = Array.from(restaurantsMap.values());
+
+// Helper function to sanitize user input for JSON/JSON-LD - removes HTML tags only
+// JSON.stringify will handle JSON escaping, so we just need to strip HTML/script tags
+const sanitizeForJson = (str) => {
+	if (!str) return '';
+	// Remove HTML/script tags completely
+	return String(str).replace(/<[^>]*>/g, '').trim();
+};
+
+// Helper function to sanitize user input for HTML display - removes HTML tags
+// Astro automatically escapes HTML entities when using {variable}, so we just need to strip tags
+const sanitizeForHtml = (str) => {
+	if (!str) return '';
+	// Remove HTML/script tags completely
+	return String(str).replace(/<[^>]*>/g, '').trim();
+};
 
 // Helper function to slugify
 const slugify = (name) => {
@@ -152,13 +175,13 @@ const breadcrumbData = {
 			<main class="mx-auto">
 				<Breadcrumb items={[
 					{ label: 'Home', href: '/' },
-					{ label: ingredientName }
+					{ label: sanitizeForHtml(ingredientName) }
 				]} />
 
 				<ResponsiveFlexRow margin="mb-6" align="center" variant="ingredient">
 					<div class="flex-1 flex flex-col w-full">
 						<header class="mb-4">
-							<h1 class="text-3xl font-bold text-white mb-2">Menu Items with {ingredientName}</h1>
+							<h1 class="text-3xl font-bold text-white mb-2">Menu Items with {sanitizeForHtml(ingredientName)}</h1>
 							<p class="text-lg text-white/90 mb-2">
 								Found {menuItems.length} menu item{menuItems.length !== 1 ? 's' : ''} from {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''} in the Inland Empire.
 							</p>
@@ -180,7 +203,7 @@ const breadcrumbData = {
 											href={`/restaurants/${restaurant.city_slug}/${restaurant.restaurant_id}-${restaurantSlug}`}
 											variant="heading"
 										>
-											{restaurant.restaurant_name}{restaurant.city_name && ` in ${restaurant.city_name}`}
+											{sanitizeForHtml(restaurant.restaurant_name)}{restaurant.city_name && ` in ${sanitizeForHtml(restaurant.city_name)}`}
 										</Link>
 									</h2>
 									<div class="flex flex-wrap -mx-3">
@@ -195,11 +218,11 @@ const breadcrumbData = {
 																	href={`/restaurants/${restaurant.city_slug}/${restaurant.restaurant_id}-${restaurantSlug}/menu/${itemSlug}-${item.id}`}
 																	class="text-white no-underline hover:text-blue-400 text-left bg-transparent border-none p-0 cursor-pointer transition-colors"
 																>
-																	{item.name}
+																	{sanitizeForHtml(item.name)}
 																</a>
 															</h3>
 															{item.category && (
-																<p class="text-sm text-white/80 mb-2">{item.category}</p>
+																<p class="text-sm text-white/80 mb-2">{sanitizeForHtml(item.category)}</p>
 															)}
 															<ResponsiveFlexRow borderTop margin="mt-auto" variant="nested">
 																<span class="font-bold text-lg text-white">
@@ -226,7 +249,7 @@ const breadcrumbData = {
 											href={`/restaurants/${restaurant.city_slug}/${restaurant.restaurant_id}-${restaurantSlug}/ingredients/${ingredient}`}
 											variant="text-sm"
 										>
-											View all items with {ingredientName} at {restaurant.restaurant_name}
+											View all items with {sanitizeForHtml(ingredientName)} at {sanitizeForHtml(restaurant.restaurant_name)}
 										</Link>
 									</div>
 								</section>
